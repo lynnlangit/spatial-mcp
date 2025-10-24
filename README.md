@@ -20,6 +20,8 @@ This project demonstrates the power of **Model Context Protocol (MCP)** in orche
 
 ## Architecture
 
+![Spatial MCP Architecture](https://github.com/lynnlangit/spatial-mcp/blob/main/spatial-mcp-arch.png)
+
 ### Pipeline Flow
 
 ```
