@@ -35,14 +35,14 @@ This project demonstrates the power of **Model Context Protocol (MCP)** in orche
 
 | Server | Status | Purpose |
 |--------|--------|---------|
-| **mcp-FGbio** | ✅ Implemented | Genomic reference data & FASTQ processing |
-| **mcp-tcga** | 📋 Planned | TCGA cancer genomics data |
-| **mcp-spatialtools** | 📋 Planned | Core spatial transcriptomics processing |
-| **mcp-huggingFace** | 📋 Planned | ML models for genomics (DNABERT, Geneformer) |
-| **mcp-mockEpic** | 📋 Planned | Mock Epic EHR integration |
-| **mcp-openImageData** | 📋 Planned | Histology image processing |
-| **mcp-seqera** | 📋 Planned | Nextflow workflow orchestration |
-| **mcp-deepcell** | 📋 Planned | Deep learning cell segmentation |
+| **mcp-FGbio** | ✅ Phase 1 | Genomic reference data & FASTQ processing |
+| **mcp-spatialtools** | ✅ Phase 2 | Core spatial transcriptomics processing (QC, alignment, segmentation) |
+| **mcp-openImageData** | ✅ Phase 2 | Histology image processing & spatial registration |
+| **mcp-tcga** | 📋 Phase 3 | TCGA cancer genomics data |
+| **mcp-huggingFace** | 📋 Phase 3 | ML models for genomics (DNABERT, Geneformer) |
+| **mcp-mockEpic** | 📋 Phase 3 | Mock Epic EHR integration |
+| **mcp-seqera** | 📋 Phase 3 | Nextflow workflow orchestration |
+| **mcp-deepcell** | 📋 Phase 3 | Deep learning cell segmentation |
 
 ## Quick Start
 
@@ -121,12 +121,13 @@ Can you fetch information about the hg38 reference genome?
 - [x] Claude Desktop configuration
 - [x] Documentation and README files
 
-### 📋 Phase 2: Core Processing (Planned)
+### ✅ Phase 2: Core Processing (Complete)
 
-- [ ] mcp-spatialtools server
-- [ ] mcp-openImageData server
-- [ ] End-to-end alignment pipeline
-- [ ] Real spatial transcriptomics test data
+- [x] mcp-spatialtools server with 4 processing tools
+- [x] mcp-openImageData server with 3 image tools
+- [x] End-to-end pipeline orchestration capability
+- [x] Quality control → Segmentation → Alignment workflow
+- [x] Updated Claude Desktop config for all 3 servers
 
 ### 📋 Phase 3: Advanced Analysis (Planned)
 
