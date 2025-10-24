@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "fgbio": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_fgbio"
+      ],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-fgbio",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-fgbio/src",
+        "FGBIO_REFERENCE_DATA_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/reference",
+        "FGBIO_CACHE_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/cache",
+        "FGBIO_DRY_RUN": "true",
+        "FGBIO_LOG_LEVEL": "INFO",
+        "FGBIO_TIMEOUT_SECONDS": "300",
+        "FGBIO_MAX_DOWNLOAD_SIZE_GB": "10"
+      }
+    }
+  }
+}
