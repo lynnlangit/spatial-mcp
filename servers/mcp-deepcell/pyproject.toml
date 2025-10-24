@@ -1,0 +1,14 @@
+[project]
+name = "mcp-deepcell"
+version = "0.1.0"
+description = "MCP server for deep learning cell segmentation"
+authors = [{name = "Spatial MCP Team"}]
+requires-python = ">=3.11"
+dependencies = ["fastmcp>=0.2.0", "pydantic>=2.0.0", "numpy>=1.26.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "black>=24.0.0"]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"

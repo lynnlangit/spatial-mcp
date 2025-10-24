@@ -1,0 +1,71 @@
+{
+  "mcpServers": {
+    "fgbio": {
+      "command": "python",
+      "args": ["-m", "mcp_fgbio"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-fgbio",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-fgbio/src",
+        "FGBIO_REFERENCE_DATA_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/reference",
+        "FGBIO_CACHE_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/cache",
+        "FGBIO_DRY_RUN": "true"
+      }
+    },
+    "spatialtools": {
+      "command": "python",
+      "args": ["-m", "mcp_spatialtools"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-spatialtools",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-spatialtools/src",
+        "SPATIAL_DATA_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data",
+        "SPATIAL_DRY_RUN": "true"
+      }
+    },
+    "openimagedata": {
+      "command": "python",
+      "args": ["-m", "mcp_openimagedata"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-openimagedata",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-openimagedata/src",
+        "IMAGE_DATA_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/images",
+        "IMAGE_DRY_RUN": "true"
+      }
+    },
+    "seqera": {
+      "command": "python",
+      "args": ["-m", "mcp_seqera"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-seqera",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-seqera/src",
+        "SEQERA_DRY_RUN": "true"
+      }
+    },
+    "huggingface": {
+      "command": "python",
+      "args": ["-m", "mcp_huggingface"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-huggingface",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-huggingface/src",
+        "HF_DRY_RUN": "true"
+      }
+    },
+    "deepcell": {
+      "command": "python",
+      "args": ["-m", "mcp_deepcell"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-deepcell",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-deepcell/src",
+        "DEEPCELL_DRY_RUN": "true"
+      }
+    },
+    "mockepic": {
+      "command": "python",
+      "args": ["-m", "mcp_mockepic"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-mockepic",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-mockepic/src",
+        "EPIC_DRY_RUN": "true"
+      }
+    }
+  }
+}
