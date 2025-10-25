@@ -242,7 +242,7 @@ cp ~/Desktop/claude_desktop_config_backup.json ~/Library/Application\ Support/Cl
 - **Installation Guide:** `../manual_testing/README.md`
 - **Test Prompts:** `../manual_testing/CLAUDE_DESKTOP_TEST_PROMPTS.md`
 - **Pre-flight Checklist:** `../manual_testing/PRE_FLIGHT_CHECKLIST.md`
-- **Testing Status:** `../TESTING_STATUS.md`
+- **Testing Status:** `../manual_testing/TESTING_STATUS.md`
 - **Main README:** `../README.md`
 
 ---

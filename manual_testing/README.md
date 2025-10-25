@@ -19,6 +19,7 @@ This folder contains scripts and documentation for manually testing the Spatial 
 |------|---------|
 | `MANUAL_TESTING_GUIDE.md` | **Comprehensive step-by-step testing guide** |
 | `TESTING_SUMMARY.md` | Quick reference summary |
+| `TESTING_STATUS.md` | Complete testing status and verification checklist |
 | `CLAUDE_DESKTOP_TEST_PROMPTS.md` | **8 ready-to-paste test prompts with absolute paths for Claude Desktop** |
 
 ---

@@ -139,7 +139,7 @@ cp claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_deskt
 Updated references in documentation files:
 - `manual_testing/README.md`
 - `manual_testing/PRE_FLIGHT_CHECKLIST.md`
-- `TESTING_STATUS.md`
+- `manual_testing/TESTING_STATUS.md`
 
 **Before:** `claude_desktop_config_fixed.json`
 **After:** `claude_desktop_config.json`
