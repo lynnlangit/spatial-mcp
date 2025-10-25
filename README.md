@@ -44,7 +44,7 @@ This project demonstrates the power of **Model Context Protocol (MCP)** in orche
 
 ## Architecture
 
-![Spatial MCP Architecture](https://github.com/lynnlangit/spatial-mcp/blob/main/spatial-mcp-arch.png)
+![Spatial MCP Architecture](https://github.com/lynnlangit/spatial-mcp/blob/main/architecture/spatial-mcp-arch.png)
 
 ### Pipeline Flow
 
@@ -131,8 +131,8 @@ Can you fetch information about the hg38 reference genome?
 ## Documentation
 
 - 📖 **[Setup Guide](docs/setup_guide.md)** - Complete installation and configuration
-- 🏗️ **[Architecture Document](Spatial_MCP_POC_Architecture.md)** - Full technical architecture
-- 🎨 **[Visual Diagram](Spatial_MCP_Architecture_Diagram.html)** - One-page architecture overview
+- 🏗️ **[Architecture Document](architecture/Spatial_MCP_POC_Architecture.md)** - Full technical architecture
+- 🎨 **[Visual Diagram](architecture/Spatial_MCP_Architecture_Diagram.html)** - One-page architecture overview
 - 🔧 **[mcp-FGbio README](servers/mcp-fgbio/README.md)** - FGbio server documentation
 
 ## Project Status
