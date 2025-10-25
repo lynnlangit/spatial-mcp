@@ -157,6 +157,10 @@ Each MCP server follows a focused, single-responsibility design pattern:
 - `split_by_region` - Segment data by spatial regions
 - `align_spatial_data` - Align reads to reference genome
 - `merge_tiles` - Combine multiple spatial tiles
+- `calculate_spatial_autocorrelation` - Compute Moran's I or Geary's C statistics for spatial pattern detection
+- `perform_differential_expression` - Statistical testing between sample groups (Wilcoxon, t-test, DESeq2)
+- `perform_batch_correction` - Batch effect removal across multiple samples (ComBat, Harmony, Scanorama)
+- `perform_pathway_enrichment` - Gene set enrichment analysis (GO, KEGG, Reactome, Hallmark)
 
 **Resources:**
 - `data://spatial/raw` - Raw spatial transcriptomics data
