@@ -7,9 +7,10 @@ import pytest
 from mcp_fgbio import server
 
 # Get the underlying functions from the decorated resources
-get_hg38_reference = server.get_hg38_reference.__wrapped__
-get_mm10_reference = server.get_mm10_reference.__wrapped__
-get_gencode_annotations = server.get_gencode_annotations.__wrapped__
+# FastMCP 2.11.4+ uses .fn attribute instead of __wrapped__
+get_hg38_reference = server.get_hg38_reference.fn
+get_mm10_reference = server.get_mm10_reference.fn
+get_gencode_annotations = server.get_gencode_annotations.fn
 
 
 class TestResources:

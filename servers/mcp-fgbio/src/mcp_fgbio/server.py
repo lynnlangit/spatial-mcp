@@ -17,14 +17,35 @@ from fastmcp import FastMCP
 # Initialize the MCP server
 mcp = FastMCP("fgbio", dependencies=["httpx", "aiofiles"])
 
-# Configuration (loaded from environment or defaults)
-REFERENCE_DATA_DIR = Path(os.getenv("FGBIO_REFERENCE_DATA_DIR", "/workspace/data/reference"))
-CACHE_DIR = Path(os.getenv("FGBIO_CACHE_DIR", "/workspace/cache"))
+# Configuration helper functions (read from environment at runtime for testability)
+def _get_reference_data_dir() -> Path:
+    """Get reference data directory from environment."""
+    return Path(os.getenv("FGBIO_REFERENCE_DATA_DIR", "/workspace/data/reference"))
+
+def _get_cache_dir() -> Path:
+    """Get cache directory from environment."""
+    return Path(os.getenv("FGBIO_CACHE_DIR", "/workspace/cache"))
+
+def _is_dry_run() -> bool:
+    """Check if DRY_RUN mode is enabled."""
+    return os.getenv("FGBIO_DRY_RUN", "false").lower() == "true"
+
+def _get_timeout_seconds() -> int:
+    """Get timeout seconds from environment."""
+    return int(os.getenv("FGBIO_TIMEOUT_SECONDS", "300"))
+
+def _get_max_download_size_gb() -> int:
+    """Get max download size from environment."""
+    return int(os.getenv("FGBIO_MAX_DOWNLOAD_SIZE_GB", "10"))
+
+# Legacy module-level constants (for backward compatibility)
+REFERENCE_DATA_DIR = _get_reference_data_dir()
+CACHE_DIR = _get_cache_dir()
 FGBIO_JAR = os.getenv("FGBIO_JAR_PATH", "/opt/fgbio/fgbio.jar")
 JAVA_EXECUTABLE = os.getenv("FGBIO_JAVA_EXECUTABLE", "java")
-MAX_DOWNLOAD_SIZE_GB = int(os.getenv("FGBIO_MAX_DOWNLOAD_SIZE_GB", "10"))
-TIMEOUT_SECONDS = int(os.getenv("FGBIO_TIMEOUT_SECONDS", "300"))
-DRY_RUN = os.getenv("FGBIO_DRY_RUN", "false").lower() == "true"
+MAX_DOWNLOAD_SIZE_GB = _get_max_download_size_gb()
+TIMEOUT_SECONDS = _get_timeout_seconds()
+DRY_RUN = _is_dry_run()
 
 # Reference genome metadata
 REFERENCE_GENOMES = {
@@ -56,8 +77,8 @@ REFERENCE_GENOMES = {
 
 def _ensure_directories() -> None:
     """Ensure required directories exist."""
-    REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    _get_reference_data_dir().mkdir(parents=True, exist_ok=True)
+    _get_cache_dir().mkdir(parents=True, exist_ok=True)
 
 
 def _run_fgbio_command(
@@ -77,7 +98,7 @@ def _run_fgbio_command(
         subprocess.TimeoutExpired: If command times out
         subprocess.CalledProcessError: If command fails
     """
-    if DRY_RUN:
+    if _is_dry_run():
         # In dry-run mode, just return a mock successful result
         return subprocess.CompletedProcess(
             args=["java", "-jar", FGBIO_JAR] + args,
@@ -115,7 +136,7 @@ async def _download_file(url: str, output_path: Path) -> Dict[str, Any]:
     import httpx
     import aiofiles
 
-    if DRY_RUN:
+    if _is_dry_run():
         # In dry-run mode, create a small mock file
         output_path.parent.mkdir(parents=True, exist_ok=True)
         async with aiofiles.open(output_path, "w") as f:
@@ -256,6 +277,116 @@ async def _fetch_reference_genome_impl(
     }
 
 
+# ============================================================================
+# TOOL 1: fetch_reference_genome
+# ============================================================================
+
+
+@mcp.tool()
+async def fetch_reference_genome(
+    genome: str,
+    output_dir: str
+) -> Dict[str, Any]:
+    """Download reference genome sequences.
+
+    Args:
+        genome: Genome identifier (hg38, mm10, hg19, mm39, rn6, danRer11)
+        output_dir: Directory to save the downloaded genome
+
+    Returns:
+        Dictionary with path, size, checksum, and metadata
+
+    Raises:
+        ValueError: If genome ID is not supported
+        IOError: If download fails
+
+    Example:
+        >>> result = await fetch_reference_genome("hg38", "/data/reference")
+        >>> print(f"Downloaded to: {result['path']}")
+    """
+    _ensure_directories()
+
+    # Validate genome ID
+    supported_genomes = ["hg38", "mm10", "hg19", "mm39", "rn6", "danRer11"]
+    if genome not in supported_genomes:
+        raise ValueError(
+            f"Unsupported genome: {genome}. "
+            f"Supported genomes: {', '.join(supported_genomes)}"
+        )
+
+    output_path = Path(output_dir) / f"{genome}.fna.gz"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if _is_dry_run():
+        # Mock genome download
+        genome_sizes = {
+            "hg38": 938,  # MB
+            "mm10": 782,
+            "hg19": 920,
+            "mm39": 785,
+            "rn6": 740,
+            "danRer11": 410
+        }
+
+        # Check if file already exists
+        already_exists = output_path.exists() and output_path.stat().st_size > 0
+
+        # Create a small mock file if it doesn't exist
+        if not already_exists:
+            output_path.write_text(f"Mock genome data for {genome}\n")
+
+        status = "already_exists" if already_exists else "downloaded"
+
+        return {
+            "path": str(output_path),
+            "size_mb": genome_sizes.get(genome, 800),
+            "md5sum": f"mock_md5_{genome}",
+            "metadata": {
+                "genome_id": genome,
+                "assembly": {
+                    "hg38": "GRCh38",
+                    "mm10": "GRCm38",
+                    "hg19": "GRCh37",
+                    "mm39": "GRCm39",
+                    "rn6": "Rnor_6.0",
+                    "danRer11": "GRCz11"
+                }.get(genome, "unknown"),
+                "organism": {
+                    "hg38": "Homo sapiens",
+                    "mm10": "Mus musculus",
+                    "hg19": "Homo sapiens",
+                    "mm39": "Mus musculus",
+                    "rn6": "Rattus norvegicus",
+                    "danRer11": "Danio rerio"
+                }.get(genome, "unknown"),
+                "source": "NCBI/Ensembl",
+                "status": status,
+                "mode": "dry_run"
+            }
+        }
+
+    # Real implementation would download from NCBI
+    # This is placeholder for actual implementation
+    url = f"https://ftp.ncbi.nlm.nih.gov/genomes/{genome}/genome.fna.gz"
+    download_result = await _download_file(url, output_path)
+
+    return {
+        "path": download_result["path"],
+        "size_mb": download_result["size_bytes"] / (1024 * 1024),
+        "md5sum": download_result["md5sum"],
+        "metadata": {
+            "genome_id": genome,
+            "source": "NCBI",
+            "url": url
+        }
+    }
+
+
+# ============================================================================
+# TOOL 2: validate_fastq
+# ============================================================================
+
+
 @mcp.tool()
 async def validate_fastq(
     fastq_path: str,
@@ -295,7 +426,7 @@ async def validate_fastq(
     if not fastq_file.exists():
         raise IOError(f"FASTQ file not found: {fastq_path}")
 
-    if DRY_RUN:
+    if _is_dry_run():
         # Return mock validation results
         return {
             "valid": True,
@@ -433,7 +564,7 @@ async def extract_umis(
     output_path = Path(output_dir) / f"{fastq_file.stem}_with_umis.fastq.gz"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if DRY_RUN:
+    if _is_dry_run():
         # Return mock results
         return {
             "output_fastq": str(output_path),

@@ -14,10 +14,11 @@ from mcp_fgbio.server import (
 )
 
 # Get the underlying functions from the decorated tools
-extract_umis = server.extract_umis.__wrapped__
-fetch_reference_genome = server.fetch_reference_genome.__wrapped__
-query_gene_annotations = server.query_gene_annotations.__wrapped__
-validate_fastq = server.validate_fastq.__wrapped__
+# FastMCP 2.11.4+ uses .fn attribute instead of __wrapped__
+extract_umis = server.extract_umis.fn
+fetch_reference_genome = server.fetch_reference_genome.fn
+query_gene_annotations = server.query_gene_annotations.fn
+validate_fastq = server.validate_fastq.fn
 
 
 # ============================================================================

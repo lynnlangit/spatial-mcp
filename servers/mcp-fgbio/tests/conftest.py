@@ -83,9 +83,9 @@ def mock_low_quality_fastq(temp_dir: Path) -> Path:
     with open(fastq_path, "w") as f:
         for i in range(100):
             f.write(f"@READ{i:05d}\n")
-            f.write("ACGTACGTACGTACGTACGTACGTACGTACGTACGT\n")
+            f.write("ACGTACGTACGTACGTACGTACGTACGTACGTACGT\n")  # 36 bp
             f.write("+\n")
-            f.write("+++++++++++++++++++++++++++++++++++++\n")  # Low quality scores
+            f.write("++++++++++++++++++++++++++++++++++++\n")  # 36 quality scores (Phred ~10)
 
     return fastq_path
 
