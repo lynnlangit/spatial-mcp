@@ -1,0 +1,152 @@
+[
+  {
+    "patient_id": "PT00000",
+    "age": 95,
+    "sex": "M",
+    "ethnicity": "Hispanic",
+    "diagnosis": {
+      "icd10": "C18.9",
+      "description": "Colon cancer, unspecified",
+      "stage": "III"
+    },
+    "treatment": "Chemotherapy",
+    "survival_months": null,
+    "response": "Partial Response",
+    "sample_id": "SAMPLE00000"
+  },
+  {
+    "patient_id": "PT00001",
+    "age": 55,
+    "sex": "M",
+    "ethnicity": "Hispanic",
+    "diagnosis": {
+      "icd10": "C50.9",
+      "description": "Breast cancer, unspecified",
+      "stage": "IV"
+    },
+    "treatment": "Combined",
+    "survival_months": null,
+    "response": "Complete Response",
+    "sample_id": "SAMPLE00001"
+  },
+  {
+    "patient_id": "PT00002",
+    "age": 92,
+    "sex": "M",
+    "ethnicity": "Caucasian",
+    "diagnosis": {
+      "icd10": "C18.9",
+      "description": "Colon cancer, unspecified",
+      "stage": "I"
+    },
+    "treatment": "Chemotherapy",
+    "survival_months": 19,
+    "response": "Partial Response",
+    "sample_id": "SAMPLE00002"
+  },
+  {
+    "patient_id": "PT00003",
+    "age": 46,
+    "sex": "M",
+    "ethnicity": "Other",
+    "diagnosis": {
+      "icd10": "C50.9",
+      "description": "Breast cancer, unspecified",
+      "stage": "I"
+    },
+    "treatment": "Combined",
+    "survival_months": 146,
+    "response": "Stable Disease",
+    "sample_id": "SAMPLE00003"
+  },
+  {
+    "patient_id": "PT00004",
+    "age": 88,
+    "sex": "F",
+    "ethnicity": "Asian",
+    "diagnosis": {
+      "icd10": "C16.9",
+      "description": "Gastric cancer, unspecified",
+      "stage": "II"
+    },
+    "treatment": "Surgery",
+    "survival_months": 17,
+    "response": "Stable Disease",
+    "sample_id": "SAMPLE00004"
+  },
+  {
+    "patient_id": "PT00005",
+    "age": 59,
+    "sex": "F",
+    "ethnicity": "Hispanic",
+    "diagnosis": {
+      "icd10": "C18.9",
+      "description": "Colon cancer, unspecified",
+      "stage": "I"
+    },
+    "treatment": "Radiation",
+    "survival_months": 46,
+    "response": "Stable Disease",
+    "sample_id": "SAMPLE00005"
+  },
+  {
+    "patient_id": "PT00006",
+    "age": 45,
+    "sex": "F",
+    "ethnicity": "Caucasian",
+    "diagnosis": {
+      "icd10": "C18.9",
+      "description": "Colon cancer, unspecified",
+      "stage": "II"
+    },
+    "treatment": "Immunotherapy",
+    "survival_months": 40,
+    "response": "Partial Response",
+    "sample_id": "SAMPLE00006"
+  },
+  {
+    "patient_id": "PT00007",
+    "age": 57,
+    "sex": "F",
+    "ethnicity": "Asian",
+    "diagnosis": {
+      "icd10": "C18.9",
+      "description": "Colon cancer, unspecified",
+      "stage": "III"
+    },
+    "treatment": "Immunotherapy",
+    "survival_months": null,
+    "response": "Stable Disease",
+    "sample_id": "SAMPLE00007"
+  },
+  {
+    "patient_id": "PT00008",
+    "age": 68,
+    "sex": "F",
+    "ethnicity": "Other",
+    "diagnosis": {
+      "icd10": "C34.9",
+      "description": "Lung cancer, unspecified",
+      "stage": "I"
+    },
+    "treatment": "Immunotherapy",
+    "survival_months": 6,
+    "response": "Stable Disease",
+    "sample_id": "SAMPLE00008"
+  },
+  {
+    "patient_id": "PT00009",
+    "age": 59,
+    "sex": "M",
+    "ethnicity": "Other",
+    "diagnosis": {
+      "icd10": "C16.9",
+      "description": "Gastric cancer, unspecified",
+      "stage": "IV"
+    },
+    "treatment": "Radiation",
+    "survival_months": 7,
+    "response": "Stable Disease",
+    "sample_id": "SAMPLE00009"
+  }
+]
