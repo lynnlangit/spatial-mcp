@@ -9,7 +9,7 @@ AI-Orchestrated Spatial Transcriptomics Bioinformatics Pipeline using Model Cont
 
 ## What's In It For You?
 
-**Are you tired of writing glue code to connect bioinformatics tools?** This POC demonstrates a fundamentally different approach to spatial transcriptomics analysis: instead of manually chaining together FASTQ validators, aligners, expression quantifiers, and statistical tools through brittle shell scripts, you **describe your analysis goals in natural language** and let Claude orchestrate the entire pipeline.
+**Are you tired of writing glue code to connect bioinformatics tools?** This POC demonstrates a fundamentally different approach to spatial transcriptomics analysis: instead of manually chaining together FASTQ validators, aligners, expression quantifiers, and statistical tools through brittle shell scripts, you **describe your analysis goals in natural language** and let Claude orchestrate the entire pipeline (example screenshot shown below).
 
 **Why this matters for bioinformaticians:**
 - ✅ **No more bash scripts from hell** - Replace complex pipeline code with conversational analysis requests
@@ -28,6 +28,7 @@ Claude, I have 10x Visium spatial transcriptomics data. Please:
 5. Run pathway enrichment on upregulated genes
 6. Compare key marker genes to TCGA breast cancer cohorts
 ```
+<img src="https://github.com/lynnlangit/spatial-mcp/blob/main/data/images/Claude-client.png" width=800>
 
 This single prompt orchestrates **6 different tools across 4 MCP servers**, generates statistical results, biological interpretations, and TCGA comparisons—all without writing a single line of pipeline code.
 
