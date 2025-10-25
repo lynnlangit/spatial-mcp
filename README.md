@@ -74,7 +74,7 @@ This project demonstrates the power of **Model Context Protocol (MCP)** in orche
 ### Prerequisites
 
 - Python 3.11+
-- Claude Desktop
+- Claude Desktop (standalone app, not VSCode extension)
 - 16GB+ RAM
 - 50GB free disk space
 
@@ -85,19 +85,16 @@ This project demonstrates the power of **Model Context Protocol (MCP)** in orche
 git clone https://github.com/your-org/spatial-mcp.git
 cd spatial-mcp
 
-# Run setup script
-chmod +x scripts/setup_environment.sh
-./scripts/setup_environment.sh
+# Install all 8 MCP servers (one command!)
+cd manual_testing
+./install_dependencies.sh
 
-# Install mcp-fgbio (Phase 1)
-cd servers/mcp-fgbio
-python -m venv venv
-source venv/bin/activate
-pip install -e ".[dev]"
-
-# Run tests
-pytest
+# Verify all servers are working
+./verify_servers.sh
+# Expected: "Servers working: 8/8"
 ```
+
+For detailed testing instructions, see [Manual Testing Guide](manual_testing/README.md).
 
 ### Configure Claude Desktop
 
@@ -130,10 +127,12 @@ Can you fetch information about the hg38 reference genome?
 
 ## Documentation
 
+- 🧪 **[Manual Testing Guide](manual_testing/README.md)** - Scripts and guides for testing all servers
+- 📋 **[Example Prompts](docs/MCP_POC_Example_Prompts.md)** - 18 test prompts from QC to analysis
 - 📖 **[Setup Guide](docs/setup_guide.md)** - Complete installation and configuration
 - 🏗️ **[Architecture Document](architecture/Spatial_MCP_POC_Architecture.md)** - Full technical architecture
 - 🎨 **[Visual Diagram](architecture/Spatial_MCP_Architecture_Diagram.html)** - One-page architecture overview
-- 🔧 **[mcp-FGbio README](servers/mcp-fgbio/README.md)** - FGbio server documentation
+- 🔧 **[Server Documentation](servers/mcp-fgbio/README.md)** - Individual server READMEs
 
 ## Project Status
 
