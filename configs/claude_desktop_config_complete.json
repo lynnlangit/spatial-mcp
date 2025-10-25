@@ -66,6 +66,15 @@
         "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-mockepic/src",
         "EPIC_DRY_RUN": "true"
       }
+    },
+    "tcga": {
+      "command": "python",
+      "args": ["-m", "mcp_tcga"],
+      "cwd": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-tcga",
+      "env": {
+        "PYTHONPATH": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-tcga/src",
+        "TCGA_DRY_RUN": "true"
+      }
     }
   }
 }

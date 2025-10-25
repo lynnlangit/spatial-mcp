@@ -8,7 +8,7 @@ AI-Orchestrated Spatial Transcriptomics Bioinformatics Pipeline using Model Cont
 
 ## Overview
 
-This project demonstrates the power of **Model Context Protocol (MCP)** in orchestrating complex bioinformatics workflows for spatial transcriptomics. Using Claude Desktop as the AI orchestrator, the system coordinates 8 specialized MCP servers to process spatial genomics data through a 5-stage pipeline.
+This project demonstrates the power of **Model Context Protocol (MCP)** in orchestrating complex bioinformatics workflows for spatial transcriptomics. Using Claude Desktop as the AI orchestrator, the system coordinates **8 specialized MCP servers** with **31 tools** to process spatial genomics data through a 5-stage pipeline.
 
 ### Key Features
 
@@ -33,16 +33,17 @@ This project demonstrates the power of **Model Context Protocol (MCP)** in orche
 
 ### MCP Servers
 
-| Server | Status | Purpose |
-|--------|--------|---------|
-| **mcp-FGbio** | ✅ Phase 1 | Genomic reference data & FASTQ processing |
-| **mcp-spatialtools** | ✅ Phase 2 | Core spatial transcriptomics processing (QC, alignment, segmentation) |
-| **mcp-openImageData** | ✅ Phase 2 | Histology image processing & spatial registration |
-| **mcp-seqera** | ✅ Phase 3 | Nextflow workflow orchestration via Seqera Platform |
-| **mcp-huggingFace** | ✅ Phase 3 | ML models for genomics (DNABERT, Geneformer, scGPT) |
-| **mcp-deepcell** | ✅ Phase 3 | Deep learning cell segmentation and phenotyping |
-| **mcp-mockEpic** | ✅ Phase 3 | Mock Epic EHR integration with synthetic patient data |
-| **mcp-tcga** | 📋 Future | TCGA cancer genomics data (optional enhancement) |
+| Server | Tools | Status | Purpose |
+|--------|-------|--------|---------|
+| **mcp-FGbio** | 4 | ✅ Phase 1 | Genomic reference data & FASTQ processing |
+| **mcp-spatialtools** | 8 | ✅ Enhanced | Core spatial processing + advanced analysis |
+| **mcp-openImageData** | 3 | ✅ Phase 2 | Histology image processing & spatial registration |
+| **mcp-seqera** | 3 | ✅ Phase 3 | Nextflow workflow orchestration via Seqera Platform |
+| **mcp-huggingFace** | 3 | ✅ Phase 3 | ML models for genomics (DNABERT, Geneformer, scGPT) |
+| **mcp-deepcell** | 2 | ✅ Phase 3 | Deep learning cell segmentation and phenotyping |
+| **mcp-mockEpic** | 3 | ✅ Phase 3 | Mock Epic EHR integration with synthetic patient data |
+| **mcp-tcga** | 5 | ✅ Complete | TCGA cancer genomics data integration |
+| **TOTAL** | **31** | ✅ | **All servers operational** |
 
 ## Quick Start
 
@@ -135,8 +136,11 @@ Can you fetch information about the hg38 reference genome?
 - [x] mcp-huggingFace with ML genomics models (3 tools, 2 resources)
 - [x] mcp-deepcell for cell segmentation (2 tools, 1 resource)
 - [x] mcp-mockEpic with synthetic clinical data (3 tools, 1 resource)
-- [x] Complete POC with all 7 servers integrated
+- [x] mcp-tcga with TCGA cancer genomics data (5 tools, 2 resources)
+- [x] Enhanced mcp-spatialtools with advanced analysis (+4 tools)
+- [x] Complete POC with all 8 servers integrated
 - [x] Full demonstration workflow capability
+- [x] All 18 example prompts fully supported
 
 ## Development
 

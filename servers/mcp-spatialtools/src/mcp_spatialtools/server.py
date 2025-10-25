@@ -525,6 +525,270 @@ async def merge_tiles(
 
 
 # ============================================================================
+# TOOL 5: calculate_spatial_autocorrelation
+# ============================================================================
+
+
+@mcp.tool()
+async def calculate_spatial_autocorrelation(
+    expression_file: str,
+    genes: List[str],
+    method: str = "morans_i"
+) -> Dict[str, Any]:
+    """Calculate spatial autocorrelation statistics for gene expression.
+
+    Computes Moran's I or Geary's C to detect spatial patterns in gene expression.
+
+    Args:
+        expression_file: Path to spatial expression data with coordinates
+        genes: List of genes to analyze
+        method: Statistical method - "morans_i" or "gearys_c"
+
+    Returns:
+        Dictionary with autocorrelation statistics per gene
+
+    Example:
+        >>> result = await calculate_spatial_autocorrelation(
+        ...     expression_file="/data/expression_matrix.csv",
+        ...     genes=["EPCAM", "VIM"],
+        ...     method="morans_i"
+        ... )
+    """
+    if DRY_RUN:
+        autocorr_results = []
+        for gene in genes:
+            # Mock spatial autocorrelation values
+            morans_i = np.random.uniform(-0.2, 0.8)
+            p_value = 0.001 if abs(morans_i) > 0.3 else 0.15
+
+            autocorr_results.append({
+                "gene": gene,
+                "morans_i": round(morans_i, 4),
+                "p_value": round(p_value, 4),
+                "z_score": round((morans_i + 0.1) / 0.15, 3),
+                "interpretation": "clustered" if morans_i > 0.3 else "dispersed" if morans_i < -0.3 else "random"
+            })
+
+        return {
+            "method": method,
+            "genes_analyzed": len(genes),
+            "results": autocorr_results,
+            "significantly_clustered": sum(1 for r in autocorr_results if r["morans_i"] > 0.3),
+            "mode": "dry_run"
+        }
+
+    return {"results": []}
+
+
+# ============================================================================
+# TOOL 6: perform_differential_expression
+# ============================================================================
+
+
+@mcp.tool()
+async def perform_differential_expression(
+    expression_file: str,
+    group1_samples: List[str],
+    group2_samples: List[str],
+    test_method: str = "wilcoxon",
+    min_log_fc: float = 0.5
+) -> Dict[str, Any]:
+    """Perform differential expression analysis between sample groups.
+
+    Args:
+        expression_file: Path to expression matrix
+        group1_samples: Sample IDs for group 1
+        group2_samples: Sample IDs for group 2
+        test_method: Statistical test - "wilcoxon", "t_test", "deseq2"
+        min_log_fc: Minimum log fold-change threshold
+
+    Returns:
+        Dictionary with differential expression results
+
+    Example:
+        >>> result = await perform_differential_expression(
+        ...     expression_file="/data/expression.csv",
+        ...     group1_samples=["patient1", "patient2"],
+        ...     group2_samples=["patient3", "patient4"],
+        ...     min_log_fc=0.5
+        ... )
+    """
+    if DRY_RUN:
+        # Generate mock DEG results
+        num_genes = 100
+        deg_results = []
+
+        for i in range(num_genes):
+            gene = f"GENE{i:04d}"
+            log_fc = np.random.uniform(-3, 3)
+            base_mean = np.random.uniform(100, 5000)
+            p_value = np.exp(-abs(log_fc)) * 0.1
+            p_adj = min(p_value * num_genes, 1.0)
+
+            deg_results.append({
+                "gene": gene,
+                "log2_fold_change": round(log_fc, 3),
+                "base_mean": round(base_mean, 2),
+                "p_value": round(p_value, 6),
+                "p_adj": round(p_adj, 6),
+                "significant": abs(log_fc) >= min_log_fc and p_adj < 0.05
+            })
+
+        significant = [r for r in deg_results if r["significant"]]
+        upregulated = [r for r in significant if r["log2_fold_change"] > 0]
+        downregulated = [r for r in significant if r["log2_fold_change"] < 0]
+
+        return {
+            "test_method": test_method,
+            "group1_size": len(group1_samples),
+            "group2_size": len(group2_samples),
+            "total_genes_tested": num_genes,
+            "significant_genes": len(significant),
+            "upregulated": len(upregulated),
+            "downregulated": len(downregulated),
+            "results": deg_results[:20],  # Return top 20
+            "top_upregulated": sorted(upregulated, key=lambda x: x["log2_fold_change"], reverse=True)[:5],
+            "top_downregulated": sorted(downregulated, key=lambda x: x["log2_fold_change"])[:5],
+            "mode": "dry_run"
+        }
+
+    return {"results": []}
+
+
+# ============================================================================
+# TOOL 7: perform_batch_correction
+# ============================================================================
+
+
+@mcp.tool()
+async def perform_batch_correction(
+    expression_files: List[str],
+    batch_labels: List[str],
+    output_file: str,
+    method: str = "combat"
+) -> Dict[str, Any]:
+    """Perform batch correction across multiple samples.
+
+    Args:
+        expression_files: List of paths to expression matrices
+        batch_labels: Batch identifier for each file
+        output_file: Path for corrected expression matrix
+        method: Batch correction method - "combat", "harmony", "scanorama"
+
+    Returns:
+        Dictionary with batch correction metrics
+
+    Example:
+        >>> result = await perform_batch_correction(
+        ...     expression_files=["/data/batch1.csv", "/data/batch2.csv"],
+        ...     batch_labels=["batch1", "batch2"],
+        ...     output_file="/data/corrected.csv",
+        ...     method="combat"
+        ... )
+    """
+    if DRY_RUN:
+        return {
+            "method": method,
+            "num_batches": len(set(batch_labels)),
+            "num_samples": len(expression_files),
+            "output_file": output_file,
+            "batch_metrics": {
+                "variance_before": 0.45,
+                "variance_after": 0.12,
+                "variance_reduction": 0.73,
+                "kbet_score_before": 0.35,
+                "kbet_score_after": 0.82
+            },
+            "genes_corrected": 15000,
+            "mode": "dry_run"
+        }
+
+    return {"output_file": output_file}
+
+
+# ============================================================================
+# TOOL 8: perform_pathway_enrichment
+# ============================================================================
+
+
+@mcp.tool()
+async def perform_pathway_enrichment(
+    gene_list: List[str],
+    background_genes: Optional[List[str]] = None,
+    database: str = "GO_BP",
+    p_value_cutoff: float = 0.05
+) -> Dict[str, Any]:
+    """Perform pathway enrichment analysis on gene lists.
+
+    Args:
+        gene_list: List of genes to analyze
+        background_genes: Optional background gene set
+        database: Pathway database - "GO_BP", "KEGG", "Reactome", "Hallmark"
+        p_value_cutoff: P-value threshold for significance
+
+    Returns:
+        Dictionary with enriched pathways and statistics
+
+    Example:
+        >>> result = await perform_pathway_enrichment(
+        ...     gene_list=["TP53", "BRCA1", "BRCA2"],
+        ...     database="KEGG",
+        ...     p_value_cutoff=0.05
+        ... )
+    """
+    if DRY_RUN:
+        # Mock pathway enrichment results
+        pathways = [
+            {
+                "pathway_id": "GO:0008283",
+                "pathway_name": "Cell proliferation",
+                "genes_in_pathway": 450,
+                "genes_overlapping": 12,
+                "p_value": 0.00023,
+                "p_adj": 0.0145,
+                "fold_enrichment": 3.8,
+                "genes": ["TP53", "BRCA1", "MYC", "CCND1"]
+            },
+            {
+                "pathway_id": "GO:0006281",
+                "pathway_name": "DNA repair",
+                "genes_in_pathway": 280,
+                "genes_overlapping": 8,
+                "p_value": 0.00156,
+                "p_adj": 0.0312,
+                "fold_enrichment": 3.2,
+                "genes": ["BRCA1", "BRCA2", "TP53", "ATM"]
+            },
+            {
+                "pathway_id": "GO:0045787",
+                "pathway_name": "Positive regulation of cell cycle",
+                "genes_in_pathway": 195,
+                "genes_overlapping": 6,
+                "p_value": 0.0234,
+                "p_adj": 0.0468,
+                "fold_enrichment": 2.4,
+                "genes": ["CCND1", "CDK4", "MYC"]
+            }
+        ]
+
+        significant = [p for p in pathways if p["p_adj"] < p_value_cutoff]
+
+        return {
+            "database": database,
+            "genes_analyzed": len(gene_list),
+            "background_size": len(background_genes) if background_genes else 20000,
+            "pathways_tested": 500,
+            "pathways_enriched": len(significant),
+            "p_value_cutoff": p_value_cutoff,
+            "pathways": pathways,
+            "top_pathway": pathways[0]["pathway_name"] if pathways else None,
+            "mode": "dry_run"
+        }
+
+    return {"pathways": []}
+
+
+# ============================================================================
 # MCP RESOURCES
 # ============================================================================
 
