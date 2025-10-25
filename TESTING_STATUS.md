@@ -2,12 +2,15 @@
 
 **Date:** October 25, 2025
 **Status:** ✅ **READY FOR MANUAL TESTING IN CLAUDE DESKTOP**
+**Last Update:** All 3 failing servers fixed - 8/8 servers now working!
 
 ---
 
 ## 🎉 Summary
 
 The Spatial MCP POC is **fully configured and ready for manual testing**. All 8 MCP servers with 31 tools are installed, configured, and verified. Test prompts with absolute file paths are ready to paste into Claude Desktop.
+
+**Recent Fix (Oct 25):** Fixed 3 failing servers (spatialtools, openimagedata, tcga) - see `configs/FIX_SUMMARY.md` for details.
 
 ---
 

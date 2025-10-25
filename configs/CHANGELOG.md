@@ -1,5 +1,34 @@
 # Configuration Files Changelog
 
+## October 25, 2025 - Bug Fixes (Critical)
+
+### 🐛 Fixed 3 Failing Servers
+
+**Issues Found:**
+- ❌ spatialtools failed: Missing `SPATIAL_CACHE_DIR` environment variable
+- ❌ openimagedata failed: Missing `IMAGE_CACHE_DIR` environment variable
+- ❌ tcga failed: Missing `__main__.py` file
+
+**Fixes Applied:**
+
+1. **Added missing environment variables** to `claude_desktop_config.json`:
+   - spatialtools: Added `SPATIAL_CACHE_DIR`
+   - openimagedata: Added `IMAGE_CACHE_DIR`
+
+2. **Created missing __main__.py** for tcga server:
+   - File: `servers/mcp-tcga/src/mcp_tcga/__main__.py`
+
+3. **Created required data directories:**
+   - `data/cache/images/`
+   - `data/images/he/` and `data/images/if/`
+   - `data/raw/`, `data/filtered/`, `data/aligned/`
+
+**Result:** ✅ **All 8 servers now working (5/8 → 8/8)**
+
+See `FIX_SUMMARY.md` for complete details.
+
+---
+
 ## October 25, 2025 - Cleanup and Reorganization
 
 ### 🧹 Cleanup Actions
