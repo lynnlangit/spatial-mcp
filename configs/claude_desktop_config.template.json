@@ -1,0 +1,80 @@
+{
+  "mcpServers": {
+    "fgbio": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-fgbio/venv/bin/python",
+      "args": ["-m", "mcp_fgbio"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-fgbio",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-fgbio/src",
+        "FGBIO_REFERENCE_DATA_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/reference",
+        "FGBIO_CACHE_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/cache",
+        "FGBIO_DRY_RUN": "true"
+      }
+    },
+    "spatialtools": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-spatialtools/venv/bin/python",
+      "args": ["-m", "mcp_spatialtools"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-spatialtools",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-spatialtools/src",
+        "SPATIAL_DATA_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data",
+        "SPATIAL_DRY_RUN": "true"
+      }
+    },
+    "openimagedata": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-openimagedata/venv/bin/python",
+      "args": ["-m", "mcp_openimagedata"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-openimagedata",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-openimagedata/src",
+        "IMAGE_DATA_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/images",
+        "IMAGE_DRY_RUN": "true"
+      }
+    },
+    "seqera": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-seqera/venv/bin/python",
+      "args": ["-m", "mcp_seqera"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-seqera",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-seqera/src",
+        "SEQERA_DRY_RUN": "true"
+      }
+    },
+    "huggingface": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-huggingface/venv/bin/python",
+      "args": ["-m", "mcp_huggingface"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-huggingface",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-huggingface/src",
+        "HF_DRY_RUN": "true"
+      }
+    },
+    "deepcell": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-deepcell/venv/bin/python",
+      "args": ["-m", "mcp_deepcell"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-deepcell",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-deepcell/src",
+        "DEEPCELL_DRY_RUN": "true"
+      }
+    },
+    "mockepic": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-mockepic/venv/bin/python",
+      "args": ["-m", "mcp_mockepic"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-mockepic",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-mockepic/src",
+        "EPIC_DRY_RUN": "true"
+      }
+    },
+    "tcga": {
+      "command": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-tcga/venv/bin/python",
+      "args": ["-m", "mcp_tcga"],
+      "cwd": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-tcga",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-tcga/src",
+        "TCGA_DRY_RUN": "true"
+      }
+    }
+  }
+}
