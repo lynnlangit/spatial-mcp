@@ -177,7 +177,7 @@ Add to Claude Desktop config (`~/Library/Application Support/Claude/claude_deskt
 {
   "mcpServers": {
     "tcga": {
-      "command": "python",
+      "command": "/absolute/path/to/spatial-mcp/servers/mcp-tcga/venv/bin/python",
       "args": ["-m", "mcp_tcga"],
       "cwd": "/absolute/path/to/spatial-mcp/servers/mcp-tcga",
       "env": {
@@ -188,6 +188,10 @@ Add to Claude Desktop config (`~/Library/Application Support/Claude/claude_deskt
   }
 }
 ```
+
+**Important:** Use the full path to the venv Python executable, not just `python`. Claude Desktop requires absolute paths.
+
+For a complete working config with all 8 servers, see `../../configs/claude_desktop_config.json`.
 
 ## DRY_RUN Mode
 

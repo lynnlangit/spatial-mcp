@@ -98,13 +98,19 @@ For detailed testing instructions, see [Manual Testing Guide](manual_testing/REA
 
 ### Configure Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Copy the production config to Claude Desktop:
+
+```bash
+cp configs/claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+Or use the template and customize for your installation path:
 
 ```json
 {
   "mcpServers": {
     "fgbio": {
-      "command": "python",
+      "command": "/absolute/path/to/spatial-mcp/servers/mcp-fgbio/venv/bin/python",
       "args": ["-m", "mcp_fgbio"],
       "cwd": "/absolute/path/to/spatial-mcp/servers/mcp-fgbio",
       "env": {
@@ -118,11 +124,14 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop and try:
+**Important:** Use the full path to the venv Python executable, not just `python`.
+
+For complete configuration with all 8 servers, see [`configs/claude_desktop_config.json`](configs/claude_desktop_config.json).
+
+Restart Claude Desktop and verify:
 
 ```
 What MCP servers are available?
-Can you fetch information about the hg38 reference genome?
 ```
 
 ## Documentation

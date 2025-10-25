@@ -75,7 +75,7 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 {
   "mcpServers": {
     "fgbio": {
-      "command": "python",
+      "command": "/path/to/spatial-mcp/servers/mcp-fgbio/venv/bin/python",
       "args": ["-m", "mcp_fgbio"],
       "cwd": "/path/to/spatial-mcp/servers/mcp-fgbio",
       "env": {
@@ -88,6 +88,10 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
   }
 }
 ```
+
+**Important:** Use the full path to the venv Python executable, not just `python`. Claude Desktop requires absolute paths to Python executables.
+
+For a complete working config with all 8 servers, see `../../configs/claude_desktop_config.json`.
 
 ## Available Tools
 
