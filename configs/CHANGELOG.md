@@ -4,28 +4,63 @@
 
 ### 🐛 Fixed 3 Failing Servers
 
-**Issues Found:**
-- ❌ spatialtools failed: Missing `SPATIAL_CACHE_DIR` environment variable
-- ❌ openimagedata failed: Missing `IMAGE_CACHE_DIR` environment variable
-- ❌ tcga failed: Missing `__main__.py` file
+When testing in Claude Desktop, 3 out of 8 servers failed to start with errors like:
+```
+OSError: [Errno 30] Read-only file system: '/workspace'
+```
+
+**Root Causes:**
+
+1. **Missing Cache Directory Environment Variables**
+   - `spatialtools` expected `SPATIAL_CACHE_DIR` but it wasn't in config
+   - `openimagedata` expected `IMAGE_CACHE_DIR` but it wasn't in config
+   - Without these env vars, servers defaulted to `/workspace/cache` (read-only) and crashed
+
+2. **Missing __main__.py for tcga**
+   - The tcga module couldn't be executed as `python -m mcp_tcga`
+   - Error: `No module named mcp_tcga.__main__`
 
 **Fixes Applied:**
 
 1. **Added missing environment variables** to `claude_desktop_config.json`:
-   - spatialtools: Added `SPATIAL_CACHE_DIR`
-   - openimagedata: Added `IMAGE_CACHE_DIR`
+   ```json
+   // spatialtools
+   "SPATIAL_CACHE_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/cache"
+
+   // openimagedata
+   "IMAGE_CACHE_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/cache/images"
+   ```
 
 2. **Created missing __main__.py** for tcga server:
    - File: `servers/mcp-tcga/src/mcp_tcga/__main__.py`
+   ```python
+   """Entry point for running mcp-tcga as a module."""
+   from .server import main
+   if __name__ == "__main__":
+       main()
+   ```
 
 3. **Created required data directories:**
    - `data/cache/images/`
    - `data/images/he/` and `data/images/if/`
    - `data/raw/`, `data/filtered/`, `data/aligned/`
 
-**Result:** ✅ **All 8 servers now working (5/8 → 8/8)**
+**Server Status:**
 
-See `FIX_SUMMARY.md` for complete details.
+| Server | Before | After | Issue Fixed |
+|--------|--------|-------|-------------|
+| fgbio | ✅ | ✅ | N/A |
+| spatialtools | ❌ | ✅ | Missing SPATIAL_CACHE_DIR |
+| openimagedata | ❌ | ✅ | Missing IMAGE_CACHE_DIR |
+| seqera | ✅ | ✅ | N/A |
+| huggingface | ✅ | ✅ | N/A |
+| deepcell | ✅ | ✅ | N/A |
+| mockepic | ✅ | ✅ | N/A |
+| tcga | ❌ | ✅ | Missing __main__.py |
+
+**Result:** ✅ **All 8 servers now working (5/8 → 8/8 = 100%)**
+
+**Verification:** All servers tested successfully in Claude Desktop. First test prompt (FASTQ validation) returned expected results.
 
 ---
 
@@ -36,8 +71,8 @@ See `FIX_SUMMARY.md` for complete details.
 **Removed:**
 - ❌ `claude_desktop_config_complete.json` - Incomplete config with broken `"command": "python"` paths
 
-**Archived:**
-- 🗄️ `claude_desktop_config.json.OLD` - Old Phase 1 config (only 3 servers)
+**Deleted:**
+- ❌ `claude_desktop_config.json.OLD` - Old Phase 1 config (only 3 servers) - Removed during cleanup
 
 **Renamed:**
 - `claude_desktop_config_fixed.json` → `claude_desktop_config.json` (standard name)
@@ -87,19 +122,6 @@ cp claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_deskt
 
 ---
 
-### Archived Config
-**File:** `claude_desktop_config.json.OLD`
-
-**Status:** 🗄️ Deprecated - For reference only
-
-**Issues:**
-- Only 3 servers (Phase 1 only)
-- Uses broken `"command": "python"`
-- Missing 5 servers from Phases 2-3
-
-**Kept for historical reference.**
-
----
 
 ## Changes Made
 
@@ -112,7 +134,6 @@ cp claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_deskt
 **After:**
 - `claude_desktop_config.json` (8 servers, working paths) ✅ USE THIS
 - `claude_desktop_config.template.json` (template for other users)
-- `claude_desktop_config.json.OLD` (archived)
 
 ### 2. Fixed All References
 Updated references in documentation files:
