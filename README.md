@@ -6,6 +6,30 @@ AI-Orchestrated Spatial Transcriptomics Bioinformatics Pipeline using Model Cont
 [![MCP](https://img.shields.io/badge/MCP-2025--06--18-green.svg)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
+## What's In It For You?
+
+**Are you tired of writing glue code to connect bioinformatics tools?** This POC demonstrates a fundamentally different approach to spatial transcriptomics analysis: instead of manually chaining together FASTQ validators, aligners, expression quantifiers, and statistical tools through brittle shell scripts, you **describe your analysis goals in natural language** and let Claude orchestrate the entire pipeline.
+
+**Why this matters for bioinformaticians:**
+- ✅ **No more bash scripts from hell** - Replace complex pipeline code with conversational analysis requests
+- ✅ **Instant access to 31 genomics tools** - From FASTQ QC to TCGA comparisons, all via natural language
+- ✅ **Reproducible by default** - Every analysis is logged, versioned, and repeatable
+- ✅ **Modular & extensible** - Add new tools as MCP servers without rewriting your pipeline
+- ✅ **Tested with real workflows** - [18 complete example prompts](docs/MCP_POC_Example_Prompts.md) from QC to publication-ready analysis
+
+**Try it yourself:**
+```
+Claude, I have 10x Visium spatial transcriptomics data. Please:
+1. Validate my FASTQ files (sample_R1.fastq.gz, sample_R2.fastq.gz)
+2. Extract UMIs and spatial barcodes
+3. Filter spots with <200 genes detected
+4. Perform differential expression between tumor and normal regions
+5. Run pathway enrichment on upregulated genes
+6. Compare key marker genes to TCGA breast cancer cohorts
+```
+
+This single prompt orchestrates **6 different tools across 4 MCP servers**, generates statistical results, biological interpretations, and TCGA comparisons—all without writing a single line of pipeline code.
+
 ## Overview
 
 This project demonstrates the power of **Model Context Protocol (MCP)** in orchestrating complex bioinformatics workflows for spatial transcriptomics. Using Claude Desktop as the AI orchestrator, the system coordinates **8 specialized MCP servers** with **31 tools** to process spatial genomics data through a 5-stage pipeline.
