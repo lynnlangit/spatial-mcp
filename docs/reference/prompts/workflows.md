@@ -173,6 +173,8 @@ STEP 2: Feature Selection
 STEP 3: Validation Planning
 - Select top 10 candidates for validation
 - Recommend validation cohort (TCGA ovarian cancer)
+  TIP: Use cBioPortal connector to query TCGA-OV cohort data directly.
+  See [Connect External MCP](../../for-researchers/CONNECT_EXTERNAL_MCP.md).
 - Suggest assay platforms (IHC for protein, qPCR for RNA)
 
 STEP 4: Clinical Utility Assessment
@@ -426,6 +428,8 @@ programmatically rather than manually. See [Connect External MCP](../../for-rese
 
 STEP 3: Cohort Validation
 - Query TCGA ovarian cancer cohort (mcp-tcga)
+  TIP: Use cBioPortal connector for live TCGA-OV mutation and expression data.
+  See [Connect External MCP](../../for-researchers/CONNECT_EXTERNAL_MCP.md).
 - Compare PatientOne pathway activation to cohort
 - Identify if patient is typical or outlier
 

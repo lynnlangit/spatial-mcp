@@ -254,6 +254,8 @@ Report:
 **Customize:**
 - Add specific databases to query
 - Adjust frequency thresholds
+- TCGA queries: Use cBioPortal connector for live cohort mutation frequencies.
+  See [Connect External MCP](../../for-researchers/CONNECT_EXTERNAL_MCP.md).
 
 ---
 

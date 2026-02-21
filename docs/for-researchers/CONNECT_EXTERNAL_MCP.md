@@ -2,13 +2,33 @@
 
 Add literature search, clinical trials, preprint access, and ML model discovery to your precision medicine workflow. These run alongside our custom servers — no changes to existing platform configuration.
 
+```mermaid
+graph LR
+    subgraph Anthropic Connectors — toggle on, no install
+        CT[ClinicalTrials.gov<br/>6 tools]
+        BIO[bioRxiv & medRxiv<br/>9 tools]
+        PM[PubMed<br/>5 capabilities]
+        SQ[Seqera<br/>7 tools]
+    end
+    subgraph Community Servers — install locally
+        CB[cBioPortal · TCGA<br/>12 tools]
+        HF[Hugging Face<br/>7 tools]
+    end
+    style CT fill:#e8f4e8,stroke:#4a9
+    style BIO fill:#e8f4e8,stroke:#4a9
+    style PM fill:#e8f4e8,stroke:#4a9
+    style SQ fill:#e8f4e8,stroke:#4a9
+    style CB fill:#e8eaf4,stroke:#49a
+    style HF fill:#e8eaf4,stroke:#49a
+```
+
 | | Anthropic Connectors (hosted) | Community MCP Servers (self-hosted) |
 |---|---|---|
 | **What** | Remote servers hosted by Anthropic | Open source servers you run locally |
 | **Setup** | Toggle on in Settings > Connectors | Add config JSON or use `claude mcp add` CLI |
 | **Install** | Nothing to install | Requires Node.js, Python, or similar |
 | **Auth** | Handled by Anthropic | You manage API keys and tokens |
-| **Examples below** | ClinicalTrials.gov, bioRxiv, PubMed | Hugging Face |
+| **Examples below** | ClinicalTrials.gov, bioRxiv, PubMed, Seqera | cBioPortal (TCGA), Hugging Face |
 
 ---
 
@@ -104,11 +124,121 @@ in high-grade serous ovarian cancer."
 ovarian cancer published since 2023."
 ```
 
+### Seqera
+
+Nextflow workflow orchestration via Seqera Platform. Launch nf-core pipelines, monitor runs, search modules, and troubleshoot failures via natural language. Free for all Seqera users.
+
+> **Cost:** The Seqera connector itself is free. Seqera Platform has a free Cloud Basic tier (250 runs, 3 users). Academic institutions can apply for free Cloud Pro. Compute (if using Seqera Cloud): $0.10/CPU-hour, $0.025/GiB-hour. See [seqera.io/pricing](https://seqera.io/pricing/).
+
+#### Available Tools (7)
+
+| Tool | What it does | Example use |
+|------|-------------|-------------|
+| `call_seqera_api` | Call Seqera Platform API endpoints | Get details on a specific workflow run |
+| `search_seqera_api` | Search across Seqera Platform resources | Find recent failed runs in your workspace |
+| `call_data_tool` | Manage and access datasets in Seqera | List datasets available for a pipeline |
+| `search_data_tool` | Search for data tools and resources | Find data tools for spatial transcriptomics |
+| `describe_nfcore_module` | Get details on a specific nf-core module | Describe the STAR alignment module |
+| `search_nfcore_module` | Search the nf-core module registry | Find modules for variant calling |
+| `nfcore_suggest_analysis` | Suggest nf-core pipelines for your analysis | Recommend a pipeline for RNA-seq of HGSOC samples |
+
+#### Example Prompts
+
+```
+"What nf-core pipelines are available for spatial transcriptomics analysis?"
+
+"Search Seqera for my recent workflow runs and tell me if any failed.
+If so, what went wrong?"
+
+"Suggest an analysis pipeline for bulk RNA-seq of platinum-resistant
+high-grade serous ovarian cancer samples, and describe the key modules."
+```
+
 ---
 
 ## Community MCP Servers (self-hosted)
 
 Open source servers you install and run locally. Configure via `claude_desktop_config.json` or `claude mcp add` CLI. The server process runs on your machine (or connects to a remote endpoint).
+
+### cBioPortal (TCGA & Cancer Genomics)
+
+Query cancer genomics data from [cBioPortal](https://www.cbioportal.org/) — the open-access platform hosting all 33 TCGA cancer types plus 200+ additional studies. Search mutations, gene expression, copy number, clinical data, and molecular profiles. No authentication required for the public portal.
+
+> **Why cBioPortal for TCGA?** Research hospitals access TCGA data two ways: ~50% query the public databases, ~50% use on-premise snapshots loaded into local cBioPortal instances. This server supports both — point it at the public portal or your hospital's instance via `CBIOPORTAL_BASE_URL`.
+
+> **Cost:** Free. The public cBioPortal API has no authentication, no rate limits, and no usage fees. Local instances require your own infrastructure.
+
+#### Setup
+
+**Claude Code CLI:**
+
+```bash
+git clone https://github.com/pickleton89/cbioportal-mcp.git
+cd cbioportal-mcp
+uv sync
+```
+
+Then add to Claude Code:
+
+```bash
+claude mcp add cbioportal-mcp -s local \
+  -- uv run cbioportal-mcp
+```
+
+**For a hospital's local cBioPortal instance**, set the base URL:
+
+```bash
+export CBIOPORTAL_BASE_URL=https://cbioportal.yourhospital.org/api
+```
+
+**Claude Desktop:** Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "cbioportal": {
+      "command": "uv",
+      "args": ["run", "cbioportal-mcp"],
+      "cwd": "/path/to/cbioportal-mcp"
+    }
+  }
+}
+```
+
+#### Available Tools (12)
+
+| Tool | What it does | Example use |
+|------|-------------|-------------|
+| `get_cancer_studies` | List available cancer studies with pagination | Browse all TCGA cohorts |
+| `search_studies` | Keyword-based study discovery | Find ovarian cancer studies |
+| `get_study_details` | Comprehensive study metadata | Get details on TCGA-OV (ovarian) |
+| `get_samples_in_study` | Sample data within a study | List all TCGA-OV tumor samples |
+| `get_genes` | Gene information by ID or symbol | Look up TP53, BRCA1, PIK3CA |
+| `search_genes` | Keyword search for genes | Find genes in the PI3K pathway |
+| `get_mutations_in_gene` | Mutation details within a study | Get TP53 mutations across TCGA-OV |
+| `get_clinical_data` | Patient clinical information | Retrieve survival, stage, treatment data |
+| `get_molecular_profiles` | Available molecular data types per study | List expression, mutation, CNV profiles |
+| `get_gene_panels_for_study` | Gene panel information | Check which genes were sequenced |
+| `get_multiple_studies` | Concurrent multi-study fetch | Compare TCGA-OV, TCGA-BRCA, TCGA-LUAD |
+| `get_multiple_genes` | Concurrent batched gene retrieval | Batch lookup of DNA repair pathway genes |
+
+#### Example Prompts
+
+```
+"Search cBioPortal for TCGA ovarian cancer studies and show me TP53 mutation
+frequency compared to other TCGA cohorts."
+
+"Get clinical data for TCGA-OV including survival outcomes and platinum
+sensitivity status."
+
+"What are the most frequently mutated genes in TCGA high-grade serous
+ovarian cancer samples? Compare to TCGA breast cancer."
+
+"Look up PIK3CA, PTEN, and AKT1 mutations in TCGA-OV and show the
+mutation types (missense, nonsense, frameshift)."
+```
+
+---
 
 ### Hugging Face
 
@@ -167,9 +297,15 @@ foundation models."
 - [ClinicalTrials.gov connector tutorial](https://claude.com/resources/tutorials/using-the-clinicaltrials-gov-connector-in-claude)
 - [bioRxiv connector tutorial](https://claude.com/resources/tutorials/using-the-biorxiv-and-medrxiv-connector-in-claude)
 - [PubMed connector tutorial](https://claude.com/resources/tutorials/using-the-pubmed-connector-in-claude)
+- [Seqera MCP blog post](https://seqera.io/blog/seqera-mcp/) (announcement and overview)
+- [Seqera MCP page](https://seqera.io/mcp/) (setup instructions)
+- [Seqera pricing](https://seqera.io/pricing/) (free tier and compute costs)
 - [All connectors overview](https://claude.com/connectors)
 
 **Community servers:**
+- [pickleton89/cbioportal-mcp](https://github.com/pickleton89/cbioportal-mcp) (cBioPortal MCP server, 12 tools)
+- [cBioPortal public portal](https://www.cbioportal.org/) (free, no auth required)
+- [cBioPortal API docs](https://www.cbioportal.org/api/swagger-ui/index.html) (Swagger/OpenAPI)
 - [huggingface/hf-mcp-server](https://github.com/huggingface/hf-mcp-server) (official HF MCP server)
 - [HF MCP settings](https://huggingface.co/settings/mcp) (configure tools and Spaces)
 - [HF MCP docs](https://huggingface.co/docs/hub/en/hf-mcp-server)
