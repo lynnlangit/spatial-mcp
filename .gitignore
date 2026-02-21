@@ -243,3 +243,5 @@ servers/mcp-perturbation/data/gears_datasets/
 
 docs/book
 .DS_Store
+._*
+.antigravity/
