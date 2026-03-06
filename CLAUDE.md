@@ -1,5 +1,9 @@
 # CLAUDE.md — Project Context for Claude Code
 
+## Git Workflow
+
+When committing and pushing changes, always complete the full git add/commit/push cycle before reporting task completion. If a usage limit is approaching, prioritize finishing the commit/push over starting new work.
+
 ## What This Project Is
 
 Precision Medicine MCP Platform — an AI-orchestrated system for precision oncology analysis. It provides specialized MCP (Model Context Protocol) servers that expose bioinformatics tools via natural language through Claude or Gemini.
