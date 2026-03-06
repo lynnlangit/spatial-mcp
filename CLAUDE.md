@@ -4,6 +4,10 @@
 
 When committing and pushing changes, always complete the full git add/commit/push cycle before reporting task completion. If a usage limit is approaching, prioritize finishing the commit/push over starting new work.
 
+## Session Management
+
+When rate limits or usage limits are hit mid-task, save progress notes in a scratch file (e.g., `.claude/progress.md`) listing completed steps and remaining work so the next session can resume efficiently.
+
 ## What This Project Is
 
 Precision Medicine MCP Platform — an AI-orchestrated system for precision oncology analysis. It provides specialized MCP (Model Context Protocol) servers that expose bioinformatics tools via natural language through Claude or Gemini.
