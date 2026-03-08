@@ -64,7 +64,7 @@ This document summarizes the risk mitigation work completed for the Precision Me
 
 **Key Metrics:**
 - Most servers production-ready ([Server Registry](../../reference/shared/server-registry.md))
-- 11/13 production-ready, 2/13 mock (mockepic by design, mocktcga synthetic)
+- 15/17 production-ready, 2/17 mock (mockepic by design, mocktcga synthetic)
 - Clear documentation prevents accidental deployment
 
 ---

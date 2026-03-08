@@ -38,7 +38,7 @@
 
 ## Step 1: Search Internal Servers
 
-Check the [Server Registry](../reference/shared/server-registry.md) — the canonical list of all 13 internal servers (74 tools total).
+Check the [Server Registry](../reference/shared/server-registry.md) — the canonical list of all 17 internal servers (97 tools total).
 
 ### Quick Find by Analysis Type
 

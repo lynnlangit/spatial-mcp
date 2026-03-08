@@ -21,6 +21,10 @@ Specialized MCP servers for precision medicine analysis. For current server and 
 | 🧪 **mcp-mocktcga** | 5 | ❌ Mocked (GDC-ready) | [README →](mcp-mocktcga/README.md) |
 | 📄 **mcp-patient-report** | 5 | ✅ 100% real | [README →](mcp-patient-report/README.md) |
 | 🧬 **mcp-genomic-results** | 4 | ✅ 100% real | [README →](mcp-genomic-results/README.md) |
+| 🧬 **mcp-geodownload** | 6 | ✅ 100% real | [README →](mcp-geodownload/README.md) |
+| 🎯 **mcp-opentargets** | 6 | ✅ 100% real | [README →](mcp-opentargets/README.md) |
+| 🧫 **mcp-cibersortx** | 5 | ✅ 100% real | [README →](mcp-cibersortx/README.md) |
+| 💉 **mcp-neoantigen** | 6 | ✅ 100% real | [README →](mcp-neoantigen/README.md) |
 
 **Production Ready:** See [Server Registry](../docs/reference/shared/server-registry.md) for current production readiness status.
 
@@ -40,6 +44,10 @@ Use these for real analysis:
 - 🔬 **mcp-cell-classify** - Cell phenotype classification and multi-marker phenotyping ([README](mcp-cell-classify/README.md))
 - 🖼️ **mcp-openimagedata** - Histology image processing: registration, feature extraction, MxIF compositing - 30 tests ✅ ([README](mcp-openimagedata/README.md))
 - 🧬 **mcp-genomic-results** - Somatic variant/CNV parsing with clinical annotations and HRD scoring ([README](mcp-genomic-results/README.md))
+- 🧬 **mcp-geodownload** - GEO/SRA dataset download, Entrez REST, expression matrices ([README](mcp-geodownload/README.md))
+- 🎯 **mcp-opentargets** - Open Targets drug-target associations, disease ontology, GraphQL API ([README](mcp-opentargets/README.md))
+- 🧫 **mcp-cibersortx** - CIBERSORTx immune deconvolution, LM22 signatures, job polling ([README](mcp-cibersortx/README.md))
+- 💉 **mcp-neoantigen** - Neoantigen prediction, MHC binding, IEDB API, neoantigen burden scoring ([README](mcp-neoantigen/README.md))
 
 ### 🎭 Development/Demo Servers
 Mock implementations for workflow demonstration:

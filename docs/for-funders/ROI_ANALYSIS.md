@@ -86,7 +86,7 @@ This platform enables **multi-modal synthesis** — integrating genomics, spatia
 ### Tier 2: Production ($75,000/year)
 
 **Annual Investment:**
-- Full 13-server deployment: $25,000
+- Full 17-server deployment: $25,000
 - Epic FHIR integration: $15,000
 - Hospital IT coordination: $20,000
 - Training (20 users): $15,000
@@ -236,7 +236,7 @@ This platform enables **multi-modal synthesis** — integrating genomics, spatia
 
 **Cons:**
 - Requires initial infrastructure setup (GCP org + Azure AD prerequisites may add 3-6 months)
-- 2 of 13 servers are mocked (see [Server Registry](../reference/shared/server-registry.md)); real data available via external connectors
+- 2 of 17 servers are mocked (see [Server Registry](../reference/shared/server-registry.md)); real data available via external connectors
 - Not yet FDA-approved or clinically validated on real patient data
 - Depends on commercial AI APIs (Claude/Gemini) — mitigated by dual-provider support
 - Cost savings are modeled projections, not yet measured in production

@@ -1,6 +1,6 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 13 (74 tools) | **Production Ready:** 11 (85%) | **External Servers:** 6 (46 tools)
+**Custom Servers:** 17 (97 tools) | **Production Ready:** 15 (88%) | **External Servers:** 6 (46 tools)
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -21,6 +21,10 @@
 | **mcp-openimagedata** | 5 | 100% Real | PIL image loading, scikit-image registration + feature extraction, MxIF compositing, H&E annotation | [README](../../../servers/mcp-openimagedata/README.md) |
 | **mcp-patient-report** | 5 | 100% Real | Patient-facing PDF reports, plain-language summaries, clinician review gate | [README](../../../servers/mcp-patient-report/README.md) |
 | **mcp-genomic-results** | 4 | 100% Real | Somatic variant/CNV parsing, clinical annotations, HRD scoring | [README](../../../servers/mcp-genomic-results/README.md) |
+| **mcp-geodownload** | 6 | 100% Real | GEO/SRA dataset download, Entrez REST, expression matrices | [README](../../../servers/mcp-geodownload/README.md) |
+| **mcp-opentargets** | 6 | 100% Real | Drug-target associations, disease ontology, GraphQL API | [README](../../../servers/mcp-opentargets/README.md) |
+| **mcp-cibersortx** | 5 | 100% Real | Immune deconvolution, LM22 signatures, job polling | [README](../../../servers/mcp-cibersortx/README.md) |
+| **mcp-neoantigen** | 6 | 100% Real | MHC binding prediction, IEDB API, neoantigen burden scoring | [README](../../../servers/mcp-neoantigen/README.md) |
 
 ---
 
@@ -45,14 +49,15 @@
 
 ### By Analysis Type
 - **Clinical Data**: mcp-epic (real EHR), mcp-mockepic (synthetic)
-- **Genomics**: mcp-fgbio (QC/variants), mcp-genomic-results (somatic/CNV/HRD), mcp-mocktcga (cohort comparison - mocked)
+- **Genomics**: mcp-fgbio (QC/variants), mcp-genomic-results (somatic/CNV/HRD), mcp-geodownload (GEO/SRA download), mcp-opentargets (drug-target associations), mcp-mocktcga (cohort comparison - mocked)
 - **Multi-omics**: mcp-multiomics (integration/meta-analysis)
 - **Spatial**: mcp-spatialtools (spatial transcriptomics)
 - **Imaging**: mcp-deepcell (cell segmentation + quantification), mcp-cell-classify (phenotype classification), mcp-openimagedata (histology + registration + features)
+- **Immunology**: mcp-cibersortx (immune deconvolution), mcp-neoantigen (neoantigen prediction & HLA binding)
 - **Treatment**: mcp-perturbation (GEARS prediction), mcp-quantum-celltype-fidelity (quantum fidelity)
 - **Reports**: mcp-patient-report (patient-facing summaries)
 ### By Production Readiness
-- **Ready for Research**: mcp-fgbio, mcp-multiomics, mcp-spatialtools, mcp-perturbation, mcp-quantum-celltype-fidelity, mcp-deepcell, mcp-cell-classify, mcp-epic, mcp-openimagedata, mcp-patient-report, mcp-genomic-results
+- **Ready for Research**: mcp-fgbio, mcp-multiomics, mcp-spatialtools, mcp-perturbation, mcp-quantum-celltype-fidelity, mcp-deepcell, mcp-cell-classify, mcp-epic, mcp-openimagedata, mcp-patient-report, mcp-genomic-results, mcp-geodownload, mcp-opentargets, mcp-cibersortx, mcp-neoantigen
 - **Not Ready**: mcp-mocktcga (synthetic data)
 - **Mock by Design**: mcp-mockepic (testing only)
 
@@ -75,5 +80,5 @@ Six external servers complement the custom servers above. These are either Anthr
 
 ---
 
-**Last Updated:** 2026-02-22
+**Last Updated:** 2026-03-08
 **Maintained By:** Precision Medicine MCP Team

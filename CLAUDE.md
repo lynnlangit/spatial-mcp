@@ -32,6 +32,10 @@ precision-medicine-mcp/
 │   ├── mcp-mocktcga/           # Mock TCGA cohort comparison (5 tools)
 │   ├── mcp-patient-report/    # PDF report generation (5 tools)
 │   ├── mcp-genomic-results/   # Somatic variant/CNV parsing (4 tools)
+│   ├── mcp-geodownload/       # GEO/SRA dataset download (6 tools)
+│   ├── mcp-opentargets/       # Open Targets drug-target associations (6 tools)
+│   ├── mcp-cibersortx/        # CIBERSORTx immune deconvolution (5 tools)
+│   ├── mcp-neoantigen/        # Neoantigen prediction & HLA binding (6 tools)
 │   └── mcp-server-boilerplate/# Template for new servers
 ├── data/                       # Patient data and reference files
 │   ├── patient-data/PAT001-OVC-2025/  # Synthetic PatientOne data

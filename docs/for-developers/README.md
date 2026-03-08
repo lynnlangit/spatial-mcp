@@ -91,7 +91,7 @@ graph TB
         REALEPIC[mcp-epic<br/>Real Epic FHIR<br/>✅ Production<br/>🏥 HIPAA-compliant]
     end
 
-    subgraph "GCP Cloud Run - 14 Deployed MCP Servers"
+    subgraph "GCP Cloud Run - 18 Deployed MCP Servers"
         subgraph "Clinical & Genomic"
             MOCKEPIC[mcp-mockepic<br/>Mock FHIR<br/>🎭 Demo Only]
             FGBIO[mcp-fgbio<br/>FASTQ/VCF<br/>✅ Production]

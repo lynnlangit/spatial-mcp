@@ -104,7 +104,7 @@ Per-patient costs represent a significant reduction vs. traditional methods (com
 
 ## Technical Capabilities
 
-**MCP Servers and Tools** ([Server Registry](../reference/shared/server-registry.md)): 13 custom servers (74 tools) — 11 production-ready, 2 mock. Plus 6 external servers (46 tools) for literature, trials, and genomics data ([details](../for-researchers/CONNECT_EXTERNAL_MCP.md)).
+**MCP Servers and Tools** ([Server Registry](../reference/shared/server-registry.md)): 17 custom servers (97 tools) — 15 production-ready, 2 mock. Plus 6 external servers (46 tools) for literature, trials, and genomics data ([details](../for-researchers/CONNECT_EXTERNAL_MCP.md)).
 
 **Data Integration:**
 - Clinical: Epic FHIR with de-identification
