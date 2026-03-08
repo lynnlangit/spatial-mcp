@@ -1,0 +1,40 @@
+[project]
+name = "mcp-cibersortx"
+version = "0.1.0"
+description = "MCP server for cell-type deconvolution via CIBERSORTx API and local NNLS fallback"
+authors = [{name = "Precision Medicine MCP Team"}]
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=0.2.0",
+    "pydantic>=2.0.0",
+    "aiohttp>=3.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lynnlangit/precision-medicine-mcp"
+Issues = "https://github.com/lynnlangit/precision-medicine-mcp/issues"
+Documentation = "https://github.com/lynnlangit/precision-medicine-mcp/tree/main/docs"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_cibersortx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]

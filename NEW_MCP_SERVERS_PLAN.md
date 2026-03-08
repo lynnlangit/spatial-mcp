@@ -1,9 +1,16 @@
 # Implementation Plan: Four New MCP Servers for Precision Medicine MCP Platform
 
-> **Status:** Planning document — no code changes
+> **Status:** ALL 4 SERVERS COMPLETE
 > **New tools:** 23 (bringing platform from 74 to 97 tools)
-> **Build order:** C → A → B → D
-> **Estimated total effort:** 18–29 developer-days
+> **Build order:** ~~C~~ → ~~A~~ → ~~B~~ → ~~D~~ (all done)
+>
+> ### Build Progress
+> | Server | Status | Tools | Tests |
+> |--------|--------|-------|-------|
+> | C: mcp-opentargets | COMPLETE | 6/6 | 24/24 passing |
+> | A: mcp-geodownload | COMPLETE | 6/6 | 22/22 passing |
+> | B: mcp-cibersortx | COMPLETE | 5/5 | 19/19 passing |
+> | D: mcp-neoantigen | COMPLETE | 6/6 | 30/30 passing |
 
 ---
 
@@ -206,7 +213,9 @@ Token is required for production mode; the server raises `ValueError` at startup
 
 ---
 
-## Server C: mcp-opentargets (Open Targets MCP)
+## Server C: mcp-opentargets (Open Targets MCP) — COMPLETE
+
+> Built: 10 files, 6 tools, 24 tests passing. Location: `servers/mcp-opentargets/`
 
 ### 1. Summary
 
@@ -531,29 +540,21 @@ def normalize_hla_allele(allele: str) -> str:
 
 **Build order: C -> A -> B -> D**
 
-1. **Server C: mcp-opentargets (build first)**
-   - Simplest to implement: public GraphQL API, no auth, no local tools, minimal dependencies
-   - Immediately useful: can score the existing HGSOC gene targets from `mcp-genomic-results` and `mcp-multiomics` Stouffer's output
-   - Provides target validation evidence that informs the other three servers' priorities
-   - Estimated: 2-4 days
+1. **~~Server C: mcp-opentargets~~ — COMPLETE**
+   - 6 tools, 24 tests, all passing
+   - `servers/mcp-opentargets/` — ready for integration
 
-2. **Server A: mcp-geodownload (build second)**
-   - Required before CIBERSORTx (Server B needs expression matrices to deconvolve)
-   - Straightforward REST API wrapping with well-documented NCBI Entrez endpoints
-   - Downloads the HGSOC reference cohorts (GSE32062, GSE26712) needed for comparative analysis
-   - Estimated: 3-5 days
+2. **~~Server A: mcp-geodownload~~ — COMPLETE**
+   - 6 tools, 22 tests, all passing
+   - `servers/mcp-geodownload/` — ready for integration
 
-3. **Server B: mcp-cibersortx (build third)**
-   - Depends on mcp-geodownload for bulk RNA-seq expression matrices
-   - Requires token authentication and async job polling (more complex than A or C)
-   - The scipy NNLS fallback can be tested independently while waiting for CIBERSORTx API access
-   - Estimated: 5-8 days
+3. **~~Server B: mcp-cibersortx~~ — COMPLETE**
+   - 5 tools, 19 tests, all passing
+   - `servers/mcp-cibersortx/` — ready for integration
 
-4. **Server D: mcp-neoantigen (build last)**
-   - Most complex server with multiple external APIs and local tool wrappers
-   - Can leverage data from mcp-genomic-results (VCF parsing) and mcp-opentargets (target validation)
-   - The integrative `score_antigen_presentation_pathway` tool benefits from having all other servers operational
-   - Estimated: 8-12 days
+4. **~~Server D: mcp-neoantigen~~ — COMPLETE**
+   - 6 tools, 30 tests, all passing
+   - `servers/mcp-neoantigen/` — ready for integration
 
 **Total estimated effort: 18-29 developer-days**
 
