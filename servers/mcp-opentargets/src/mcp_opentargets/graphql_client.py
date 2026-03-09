@@ -41,7 +41,7 @@ query TargetDiseaseAssociation($ensemblId: String!, $size: Int!) {
   target(ensemblId: $ensemblId) {
     id
     approvedSymbol
-    associatedDiseases(page: {size: $size}) {
+    associatedDiseases(page: {size: $size, index: 0}) {
       rows {
         disease {
           id
@@ -122,7 +122,7 @@ query TargetSafety($ensemblId: String!) {
       }
       datasource
     }
-    adverseEvents(page: {size: 20}) {
+    adverseEvents(page: {size: 20, index: 0}) {
       rows {
         name
         count
@@ -136,7 +136,7 @@ query TargetSafety($ensemblId: String!) {
 
 SEARCH_QUERY = """
 query Search($query: String!) {
-  search(queryString: $query, entityNames: ["target"], page: {size: 5}) {
+  search(queryString: $query, entityNames: ["target"], page: {size: 5, index: 0}) {
     hits {
       id
       ... on Target {

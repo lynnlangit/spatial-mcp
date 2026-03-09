@@ -66,7 +66,13 @@ async def download_report(request: Request) -> FileResponse | JSONResponse:
 
 def _get_report_generator() -> ReportGenerator:
     """Get configured report generator."""
-    templates_dir = Path(TEMPLATES_DIR) if TEMPLATES_DIR else None
+    if TEMPLATES_DIR:
+        candidate = Path(TEMPLATES_DIR)
+        # Only use the env var path if it actually exists; otherwise fall back
+        # to the package-bundled templates directory.
+        templates_dir = candidate if candidate.is_dir() else None
+    else:
+        templates_dir = None
     return ReportGenerator(templates_dir)
 
 

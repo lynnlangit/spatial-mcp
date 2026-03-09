@@ -29,6 +29,7 @@
       "env": {
         "SPATIAL_DATA_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data",
         "SPATIAL_CACHE_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/cache",
+        "SPATIAL_OUTPUT_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/output",
         "SPATIAL_DRY_RUN": "true"
       }
     },
@@ -118,7 +119,7 @@
       ],
       "env": {
         "PATIENT_REPORT_OUTPUT_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/reports",
-        "PATIENT_REPORT_TEMPLATES_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/templates/patient_report",
+        "PATIENT_REPORT_TEMPLATES_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-patient-report/src/mcp_patient_report/templates",
         "PATIENT_REPORT_DRY_RUN": "true"
       }
     },

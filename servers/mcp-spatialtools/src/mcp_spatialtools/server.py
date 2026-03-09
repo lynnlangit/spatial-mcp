@@ -68,7 +68,8 @@ To enable real data processing, set: SPATIAL_DRY_RUN=false
 # Configuration
 DATA_DIR = Path(os.getenv("SPATIAL_DATA_DIR", "/workspace/data"))
 CACHE_DIR = Path(os.getenv("SPATIAL_CACHE_DIR", "/workspace/cache"))
-OUTPUT_DIR = Path(os.getenv("SPATIAL_OUTPUT_DIR", "/workspace/output"))
+_default_output = os.path.join(os.getenv("SPATIAL_DATA_DIR", "/workspace/data"), "output")
+OUTPUT_DIR = Path(os.getenv("SPATIAL_OUTPUT_DIR", _default_output))
 STAR_PATH = os.getenv("STAR_PATH", "STAR")
 SAMTOOLS_PATH = os.getenv("SAMTOOLS_PATH", "samtools")
 BEDTOOLS_PATH = os.getenv("BEDTOOLS_PATH", "bedtools")
@@ -2316,6 +2317,30 @@ async def generate_spatial_heatmap(
         expr_data = pd.read_csv(expression_file, index_col=0)
         coord_data = pd.read_csv(coordinates_file, index_col=0)
 
+        # Detect coordinate columns (handle Visium and generic formats)
+        col_lower = {c: c.lower() for c in coord_data.columns}
+        pxl_cols = [c for c, cl in col_lower.items() if 'pxl' in cl or 'pixel' in cl]
+        xy_cols = [c for c, cl in col_lower.items()
+                   if cl in ('x', 'y', 'x_coord', 'y_coord', 'spot_x', 'spot_y')]
+        array_cols = [c for c, cl in col_lower.items()
+                      if cl in ('array_row', 'array_col', 'row', 'col')]
+        if len(pxl_cols) >= 2:
+            x_col, y_col = pxl_cols[1], pxl_cols[0]  # col=x, row=y for Visium
+        elif len(xy_cols) >= 2:
+            x_col, y_col = xy_cols[0], xy_cols[1]
+        elif len(array_cols) >= 2:
+            x_col, y_col = array_cols[1], array_cols[0]
+        else:
+            numeric_cols = [c for c in coord_data.columns
+                           if coord_data[c].dtype in ('int64', 'float64')]
+            if len(numeric_cols) >= 2:
+                x_col, y_col = numeric_cols[1], numeric_cols[0]
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Could not find coordinate columns. Available: {list(coord_data.columns)}"
+                }
+
         # Merge coordinates with expression
         merged = coord_data.join(expr_data, how="inner")
 
@@ -2348,8 +2373,8 @@ async def generate_spatial_heatmap(
         for idx, gene in enumerate(genes_to_plot):
             ax = axes[idx]
             scatter = ax.scatter(
-                merged['x'],
-                merged['y'],
+                merged[x_col],
+                merged[y_col],
                 c=merged[gene],
                 cmap=colormap,
                 s=50,
