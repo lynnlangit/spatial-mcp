@@ -14,6 +14,10 @@ This demo showcases the full capabilities of the platform using **PatientOne** -
 - 🔬 **Multi-omics** (RNA, Protein, Phosphoproteomics)
 - 📍 **Spatial transcriptomics** (10x Visium)
 - 🖼️ **Imaging** (H&E, MxIF)
+- 📥 **External data** (GEO/SRA datasets)
+- 🧫 **Immune deconvolution** (CIBERSORTx)
+- 💊 **Drug-target analysis** (Open Targets)
+- 🎯 **Neoantigen prediction** (HLA binding, antigen presentation)
 
 **Time to complete:** 25-35 minutes
 **Prerequisites:** Claude Desktop with MCP servers configured
@@ -37,6 +41,7 @@ This demo showcases the full capabilities of the platform using **PatientOne** -
 - **[Imaging Prompts →](../reference/testing/patient-one/test-prompts/DRY_RUN/test-4-imaging.md)**
 - **[Integration Prompts →](../reference/testing/patient-one/test-prompts/DRY_RUN/test-5-integration.md)**
 - **[E2E Test Prompt →](../reference/testing/patient-one/test-prompts/DRY_RUN/test-7-e2e-claude-desktop.md)**
+- **[Full Platform E2E (all 18 servers) →](../reference/testing/patient-one/test-prompts/DRY_RUN/test-10-e2e-full-platform.md)**
 
 ---
 
@@ -132,6 +137,23 @@ This workflow demonstrates:
 
 ---
 
+### Pathway 5: Full Platform HGSOC Immunotherapy Analysis (45-60 minutes)
+**Goal:** End-to-end analysis using all 18 servers — external data, immune profiling, drug targets, neoantigens
+
+**See:** [Full Platform E2E Test →](../reference/testing/patient-one/test-prompts/DRY_RUN/test-10-e2e-full-platform.md)
+
+This workflow demonstrates:
+- Everything in Pathway 4, plus:
+- GEO dataset search for comparable ovarian cancer cohorts
+- Open Targets drug-target association lookup (VEGFA, BRCA1, TP53)
+- CIBERSORTx immune cell deconvolution
+- Neoantigen prediction and HLA binding analysis
+- Antigen presentation pathway scoring
+
+**Servers used:** All 18 internal MCP servers
+
+---
+
 ## Data Modes
 
 The platform supports three data modes for testing:
@@ -223,4 +245,4 @@ After completing the demo:
 
 ---
 
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-03-09

@@ -56,6 +56,10 @@ Check the [Server Registry](../reference/shared/server-registry.md) — the cano
 | **Treatment response prediction** | mcp-perturbation | 8 | Production |
 | **Quantum cell type fidelity** | mcp-quantum-celltype-fidelity | 6 | Production |
 | **Patient-facing PDF reports** | mcp-patient-report | 5 | Production |
+| **GEO/SRA dataset download** | mcp-geodownload | 6 | Production |
+| **Drug-target associations** | mcp-opentargets | 6 | Production |
+| **Immune deconvolution** | mcp-cibersortx | 5 | Production |
+| **Neoantigen prediction & HLA** | mcp-neoantigen | 6 | Production |
 
 If you find a match, you're done — use that server directly. If a server partially covers your need, consider adding a tool to it (see Step 3).
 
@@ -140,6 +144,10 @@ Before building, answer these four questions (from the [New Modality Server Guid
 | Predict treatment response | mcp-perturbation | — | Different prediction model needed |
 | Find ML models/datasets | — | Hugging Face connector | Need custom model registry |
 | Generate patient reports | mcp-patient-report | — | Different report format needed |
+| Download GEO/SRA datasets | mcp-geodownload | — | Different public data source |
+| Query drug-target evidence | mcp-opentargets | — | Different target DB needed |
+| Deconvolve immune cell types | mcp-cibersortx | — | Different deconvolution method |
+| Predict neoantigens & HLA binding | mcp-neoantigen | — | Different binding prediction model |
 
 ---
 
@@ -152,4 +160,4 @@ Before building, answer these four questions (from the [New Modality Server Guid
 
 ---
 
-**Last Updated:** 2026-02-22
+**Last Updated:** 2026-03-09

@@ -89,6 +89,10 @@ Each server requires specific environment variables:
 | **deepcell** | `DEEPCELL_OUTPUT_DIR`<br>`DEEPCELL_DRY_RUN`<br>`DEEPCELL_USE_GPU` | Output directory<br>Mock execution mode<br>GPU acceleration |
 | **cell-classify** | `CELL_CLASSIFY_OUTPUT_DIR`<br>`CELL_CLASSIFY_DRY_RUN` | Output directory<br>Mock execution mode |
 | **genomic-results** | `GENOMIC_RESULTS_DRY_RUN` | Mock execution mode |
+| **geodownload** | `GEO_DRY_RUN` | Mock execution mode |
+| **opentargets** | `OPENTARGETS_DRY_RUN` | Mock execution mode |
+| **cibersortx** | `CIBERSORTX_DRY_RUN` | Mock execution mode |
+| **neoantigen** | `NEOANTIGEN_DRY_RUN` | Mock execution mode |
 | **epic** | `EPIC_FHIR_ENDPOINT`<br>`EPIC_CLIENT_ID`<br>`EPIC_CLIENT_SECRET`<br>`DEIDENTIFY_ENABLED` | FHIR endpoint URL<br>OAuth client ID<br>OAuth client secret<br>PHI de-identification |
 
 ### DRY_RUN Mode
@@ -124,7 +128,7 @@ Expected output: Should show the config JSON
 
 ### Verify All Server Paths Exist
 ```bash
-for server in fgbio spatialtools openimagedata mockepic tcga multiomics perturbation quantum-celltype-fidelity patient-report; do
+for server in fgbio spatialtools openimagedata mockepic tcga multiomics perturbation quantum-celltype-fidelity patient-report geodownload opentargets cibersortx neoantigen; do
   echo "Checking mcp-$server..."
   ls /Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-$server/
 done

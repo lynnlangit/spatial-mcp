@@ -21,6 +21,8 @@ Reusable prompts for precision medicine analyses. Copy, paste, and customize for
 | Multi-Omics | [multiomics.md](multiomics.md) | 17 | mcp-multiomics |
 | Spatial Transcriptomics | [spatial.md](spatial.md) | 18 | mcp-spatialtools |
 | Imaging | [imaging.md](imaging.md) | 8 | mcp-deepcell, mcp-cell-classify, mcp-openimagedata |
+| External Data & Drug Targets | — | — | mcp-geodownload, mcp-opentargets |
+| Immunology & Neoantigen | — | — | mcp-cibersortx, mcp-neoantigen |
 | End-to-End Workflows | [workflows.md](workflows.md) | 10 | All servers (see [Registry](../shared/server-registry.md)) |
 
 ---
@@ -59,11 +61,11 @@ For multi-step analyses, number each step and name the MCP server to use.
 ## Related Resources
 
 - **[PatientOne Guide](../testing/patient-one/README.md)** - Complete walkthrough
-- **[Test Prompts](../testing/patient-one/test-prompts/)** - 9 DRY_RUN + 4 SYNTHETIC_DATA test scenarios (canonical source for PatientOne Prompts 1-6)
+- **[Test Prompts](../testing/patient-one/test-prompts/)** - 10 DRY_RUN + 4 SYNTHETIC_DATA test scenarios (canonical source for PatientOne Prompts 1-6)
 - **[Immunotherapy Reference](../testing/patient-one/immunotherapy-reference.md)** - Cold tumor candidates
 - **[Server Documentation](../../../servers/README.md)** - Tool reference
 - **[Connect External MCP Servers](../../for-researchers/CONNECT_EXTERNAL_MCP.md)** - ClinicalTrials.gov, PubMed, bioRxiv, Hugging Face, cBioPortal, Seqera
 
 ---
 
-**Last Updated:** 2026-02-21
+**Last Updated:** 2026-03-09

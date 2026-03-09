@@ -211,6 +211,76 @@ Tell me:
 
 ---
 
+## ✅ Test 11: GEO Download — Search Datasets
+
+```
+Using the geodownload server, search GEO for datasets related to
+"ovarian cancer platinum resistant". Show the top 5 results with
+accession IDs, titles, and organism.
+```
+
+**Expected:**
+- Returns GEO dataset search results
+- Each result includes GSE accession, title, platform
+- Results relevant to ovarian cancer
+
+**Server used:** `mcp-geodownload`
+
+---
+
+## ✅ Test 12: Open Targets — Drug-Target Associations
+
+```
+Using the opentargets server, look up the target VEGFA and find
+its associations with ovarian carcinoma. What drugs target VEGFA
+and what is the overall association score?
+```
+
+**Expected:**
+- VEGFA target information (Ensembl ID, description)
+- Disease associations with ovarian carcinoma
+- Known drugs (e.g., bevacizumab)
+- Association scores
+
+**Server used:** `mcp-opentargets`
+
+---
+
+## ✅ Test 13: CIBERSORTx — Immune Deconvolution
+
+```
+Using the cibersortx server, run immune cell deconvolution on
+PatientOne (PAT001-OVC-2025) using the LM22 signature matrix.
+Show the estimated immune cell proportions.
+```
+
+**Expected:**
+- Immune cell type proportions (T cells, macrophages, NK cells, etc.)
+- DRY_RUN mode returns simulated deconvolution results
+- Proportions sum to ~1.0
+
+**Server used:** `mcp-cibersortx`
+
+---
+
+## ✅ Test 14: Neoantigen — MHC-I Binding Prediction
+
+```
+Using the neoantigen server, predict MHC-I binding for the peptide
+YLQLVFGIEV with HLA allele HLA-A*02:01. What is the predicted
+binding affinity and is this a strong binder?
+```
+
+**Expected:**
+- Binding affinity prediction (IC50 in nM)
+- Binding classification (strong/weak/non-binder)
+- HLA allele confirmation
+- Percentile rank
+
+**Server used:** `mcp-neoantigen`
+
+---
+
 ## 🎯 Quick Diagnostic Tests
 
 If something isn't working, try these:

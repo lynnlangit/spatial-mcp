@@ -201,6 +201,62 @@
         "QUANTUM_DATA_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/quantum",
         "QUANTUM_CACHE_DIR": "/ABSOLUTE/PATH/TO/spatial-mcp/data/cache/quantum"
       }
+    },
+    "geodownload": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-geodownload",
+        "python",
+        "-m",
+        "mcp_geodownload"
+      ],
+      "env": {
+        "GEO_DRY_RUN": "true"
+      }
+    },
+    "opentargets": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-opentargets",
+        "python",
+        "-m",
+        "mcp_opentargets"
+      ],
+      "env": {
+        "OPENTARGETS_DRY_RUN": "true"
+      }
+    },
+    "cibersortx": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-cibersortx",
+        "python",
+        "-m",
+        "mcp_cibersortx"
+      ],
+      "env": {
+        "CIBERSORTX_DRY_RUN": "true"
+      }
+    },
+    "neoantigen": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/ABSOLUTE/PATH/TO/spatial-mcp/servers/mcp-neoantigen",
+        "python",
+        "-m",
+        "mcp_neoantigen"
+      ],
+      "env": {
+        "NEOANTIGEN_DRY_RUN": "true"
+      }
     }
   }
 }
