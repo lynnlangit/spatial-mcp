@@ -20,10 +20,11 @@ graph LR
     subgraph MCP["🔧 MCP Servers"]
         direction TB
         S1[Clinical<br/>epic/mockepic]
-        S2[Genomic<br/>fgbio/tcga/genomic-results]
+        S2[Genomic<br/>fgbio/tcga/genomic-results<br/>geodownload/opentargets]
         S3[Spatial<br/>spatialtools]
         S4[Multiomics<br/>multiomics]
         S5[Imaging<br/>openimagedata<br/>deepcell/cell-classify]
+        S6[Immunology<br/>cibersortx/neoantigen]
         S7[Perturbation<br/>perturbation<br/>GEARS]
         S8[Quantum<br/>quantum-celltype-fidelity]
     end
@@ -47,6 +48,7 @@ graph LR
     S3 --> VIZ
     S4 --> INSIGHTS
     S5 --> TREAT
+    S6 --> INSIGHTS
     S7 --> VIZ
     S8 --> INSIGHTS
 
@@ -59,7 +61,7 @@ graph LR
 
 ## 📊 Architecture by Analysis Modality
 
-11 analysis modalities across multiple specialized servers and tools (see [Server Registry](../shared/server-registry.md)):
+13 analysis modalities across multiple specialized servers and tools (see [Server Registry](../shared/server-registry.md)):
 
 | Modality | Servers | Tools | Status | Documentation |
 |----------|---------|-------|--------|---------------|
@@ -72,6 +74,8 @@ graph LR
 | 🎯 **Perturbation Prediction** | mcp-perturbation | 8 | ✅ Production (GEARS) | [rna/perturbation.md](rna/perturbation.md) |
 | ⚛️ **Quantum Cell Type Fidelity** | mcp-quantum-celltype-fidelity | 6 | ✅ Production (Qiskit + Bayesian UQ) | [rna/quantum-fidelity.md](rna/quantum-fidelity.md) |
 | 📄 **Patient Reports** | mcp-patient-report | 5 | ✅ Production (100%) | [servers/mcp-patient-report/README.md](../../../servers/mcp-patient-report/README.md) |
+| 📥 **External Data** | mcp-geodownload, mcp-opentargets | 12 (6+6) | ✅ Production (100%) | [servers/mcp-geodownload/README.md](../../../servers/mcp-geodownload/README.md) |
+| 🧫 **Immunology** | mcp-cibersortx, mcp-neoantigen | 11 (5+6) | ✅ Production (100%) | [servers/mcp-cibersortx/README.md](../../../servers/mcp-cibersortx/README.md) |
 | ⚙️ **Workflow Orchestration** | External Seqera MCP | 7 | ✅ External | [platform/workflow.md](platform/workflow.md) |
 
 
@@ -302,6 +306,10 @@ sequenceDiagram
         participant Omics as multiomics / spatialtools
         participant Img as openimagedata / deepcell / cell-classify
     end
+    box LightGreen External Data & Immunology
+        participant Ext as geodownload / opentargets
+        participant Imm as cibersortx / neoantigen
+    end
     box Wheat Advanced Modeling
         participant Adv as perturbation / quantum
     end
@@ -322,6 +330,13 @@ sequenceDiagram
         Omics-->>AI: Integrated profiles
         AI->>Img: H&E/MxIF segmentation
         Img-->>AI: Cell phenotypes
+    end
+
+    par External Data & Immunology
+        AI->>Ext: GEO download / drug-target queries
+        Ext-->>AI: Datasets + associations
+        AI->>Imm: Immune deconvolution / neoantigen prediction
+        Imm-->>AI: Immune profiles + HLA binding
     end
 
     opt Perturbation & Quantum

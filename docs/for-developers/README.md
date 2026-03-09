@@ -91,7 +91,7 @@ graph TB
         REALEPIC[mcp-epic<br/>Real Epic FHIR<br/>✅ Production<br/>🏥 HIPAA-compliant]
     end
 
-    subgraph "GCP Cloud Run - 18 Deployed MCP Servers"
+    subgraph "GCP Cloud Run - 22 Deployed MCP Servers"
         subgraph "Clinical & Genomic"
             MOCKEPIC[mcp-mockepic<br/>Mock FHIR<br/>🎭 Demo Only]
             FGBIO[mcp-fgbio<br/>FASTQ/VCF<br/>✅ Production]
@@ -119,6 +119,13 @@ graph TB
             QUANTUM[mcp-quantum-celltype-fidelity<br/>Quantum PQCs<br/>✅ Production]
         end
 
+        subgraph "External Data & Immunology"
+            GEODL[mcp-geodownload<br/>GEO/SRA Download<br/>✅ Production]
+            OPENTARGETS[mcp-opentargets<br/>Drug-Target Assoc.<br/>✅ Production]
+            CIBERSORTX[mcp-cibersortx<br/>Immune Deconv.<br/>✅ Production]
+            NEOANTIGEN[mcp-neoantigen<br/>HLA/Neoantigen<br/>✅ Production]
+        end
+
     end
 
     subgraph "Analysis Workflow"
@@ -142,6 +149,10 @@ graph TB
     API ==> CELLCLASS
     API ==> GENOMICRES
     API ==> PATREPORT
+    API ==> GEODL
+    API ==> OPENTARGETS
+    API ==> CIBERSORTX
+    API ==> NEOANTIGEN
     FGBIO ==> PATIENT
     MULTI ==> PATIENT
     SPATIAL ==> PATIENT
@@ -155,6 +166,10 @@ graph TB
     CELLCLASS ==> PATIENT
     GENOMICRES ==> PATIENT
     PATREPORT ==> PATIENT
+    GEODL ==> PATIENT
+    OPENTARGETS ==> PATIENT
+    CIBERSORTX ==> PATIENT
+    NEOANTIGEN ==> PATIENT
     style STREAMLIT fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
     style JUPYTER fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
     style DESKTOP fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
@@ -171,6 +186,10 @@ graph TB
     style CELLCLASS fill:#d4edda,stroke:#28a745,stroke-width:2px
     style GENOMICRES fill:#d4edda,stroke:#28a745,stroke-width:2px
     style PATREPORT fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style GEODL fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style OPENTARGETS fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style CIBERSORTX fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style NEOANTIGEN fill:#d4edda,stroke:#28a745,stroke-width:2px
     style TCGA fill:#fff3cd,stroke:#ffc107,stroke-width:1px
     style MOCKEPIC fill:#e2e3e5,stroke:#6c757d,stroke-width:1px
 ```

@@ -41,8 +41,9 @@ graph LR
     subgraph Servers["MCP Servers & Tools"]
         direction TB
         IMAGING["Imaging & Cell Analysis<br/>deepcell · cell-classify · openimagedata<br/>━━━━━━━━━━━━━━━━━━━<br/>📁 H&E · MxIF"]
-        GENOMICS["Genomics & Omics<br/>fgbio · multiomics · spatialtools · perturbation · mocktcga · genomic-results<br/>━━━━━━━━━━━━━━━━━━━<br/>📁 VCF/FASTQ · RNA/Protein/Phospho · Visium · Somatic/CNV/HRD"]
+        GENOMICS["Genomics & Omics<br/>fgbio · multiomics · spatialtools · perturbation · mocktcga · genomic-results · geodownload · opentargets<br/>━━━━━━━━━━━━━━━━━━━<br/>📁 VCF/FASTQ · RNA/Protein/Phospho · Visium · Somatic/CNV/HRD · GEO/SRA · Drug-Targets"]
         CLINICAL["Clinical<br/>epic · mockepic · patient-report<br/>━━━━━━━━━━━━━━━━━━━<br/>📁 FHIR"]
+        IMMUNOLOGY["Immunology<br/>cibersortx · neoantigen<br/>━━━━━━━━━━━━━━━━━━━<br/>📁 Immune Deconvolution · HLA/Neoantigen"]
         WORKFLOW["Workflow & ML<br/>quantum-celltype-fidelity<br/>━━━━━━━━━━━━━━━━━━━<br/>📁 Cross-modality"]
     end
 
@@ -104,7 +105,7 @@ Per-patient costs represent a significant reduction vs. traditional methods (com
 
 ## Technical Capabilities
 
-**MCP Servers and Tools** ([Server Registry](../reference/shared/server-registry.md)): 17 custom servers (97 tools) — 15 production-ready, 2 mock. Plus 6 external servers (46 tools) for literature, trials, and genomics data ([details](../for-researchers/CONNECT_EXTERNAL_MCP.md)).
+**MCP Servers and Tools** ([Server Registry](../reference/shared/server-registry.md)): See server registry for current counts — production-ready plus 2 mock. Plus 6 external servers (46 tools) for literature, trials, and genomics data ([details](../for-researchers/CONNECT_EXTERNAL_MCP.md)).
 
 **Data Integration:**
 - Clinical: Epic FHIR with de-identification

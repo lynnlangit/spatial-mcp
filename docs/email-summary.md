@@ -14,7 +14,9 @@ graph LR
     O --> S5[Imaging<br>deepcell · openimagedata]
     O --> S6[Prediction<br>perturbation · quantum]
     O --> S7[Reporting<br>patient-report · cell-classify]
-    S1 & S2 & S3 & S4 & S5 & S6 & S7 --> GCP[GCP Cloud Run]
+    O --> S8[External Data<br>geodownload · opentargets]
+    O --> S9[Immunology<br>cibersortx · neoantigen]
+    S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 --> GCP[GCP Cloud Run]
 ```
 
 ## System Overview

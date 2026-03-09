@@ -111,6 +111,8 @@ graph LR
         S7[Quantum<br/>Qiskit + spatial transcriptomics]
         S8[Patient Reports<br/>PDF Generation]
         S9[Genomic Results<br/>Somatic/CNV/HRD]
+        S10[External Data<br/>GEO/OpenTargets]
+        S11[Immunology<br/>CIBERSORTx/Neoantigen]
     end
 
     subgraph Output["📊 Orchestrated Outputs"]
@@ -132,6 +134,8 @@ graph LR
     S7 --> Output
     S8 --> Output
     S9 --> Output
+    S10 --> Output
+    S11 --> Output
 
     style Users fill:#e1f5ff
     style AI fill:#fff3cd
