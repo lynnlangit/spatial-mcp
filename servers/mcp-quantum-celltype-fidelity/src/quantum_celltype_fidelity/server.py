@@ -31,6 +31,23 @@ except ImportError:
     ANNDATA_AVAILABLE = False
     ad = None
 
+def _to_python(obj):
+    """Recursively convert numpy scalars/arrays to native Python types for JSON serialization."""
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: _to_python(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_python(i) for i in obj]
+    return obj
+
+
 # Initialize FastMCP server
 mcp = FastMCP("quantum-celltype-fidelity")
 
@@ -165,7 +182,7 @@ def learn_spatial_cell_embeddings(
             _EMBEDDINGS_CACHE[embedding_id] = embedding
             _TRAINERS_CACHE[embedding_id] = trainer  # Cache trainer for UQ
 
-        return {
+        return _to_python({
             "success": True,
             "embedding_id": embedding_id,
             "n_cell_types": len(cell_types),
@@ -174,7 +191,7 @@ def learn_spatial_cell_embeddings(
             "training_summary": training_summary,
             "embedding_summary": embedding.get_summary(),
             "saved_to": str(output_path) if output_dir else "memory_cache"
-        }
+        })
 
     except Exception as e:
         import traceback
@@ -334,7 +351,7 @@ def compute_cell_type_fidelity(
             results["pairwise_fidelities"] = pairwise_fidelities
             results["with_uncertainty"] = with_uncertainty
 
-        return results
+        return _to_python(results)
 
     except Exception as e:
         import traceback
@@ -465,14 +482,14 @@ def identify_immune_evasion_states(
 
                 evading_cells.append(cell_dict)
 
-        return {
+        return _to_python({
             "success": True,
             "n_cells_analyzed": len(evasion_results),
             "n_evading_cells": len(evading_cells),
             "evading_cells": evading_cells,
             "evasion_threshold": evasion_threshold,
             "immune_cell_types": immune_cell_types
-        }
+        })
 
     except Exception as e:
         import traceback
@@ -595,13 +612,13 @@ def predict_perturbation_effect(
                 "effect_direction": "increase" if avg_change > 0 else "decrease"
             })
 
-        return {
+        return _to_python({
             "success": True,
             "perturbation_type": perturbation_type,
             "perturbation_strength": perturbation_strength,
             "n_cell_types_affected": len(perturbation_effects),
             "effects": perturbation_effects
-        }
+        })
 
     except Exception as e:
         import traceback
@@ -709,7 +726,7 @@ def analyze_tls_quantum_signature(
                 "per_cell_type": summary_stats.get("per_cell_type", {})
             }
 
-        return {
+        return _to_python({
             "success": True,
             "n_tls_candidates": len(tls_candidates),
             "tls_candidates": tls_candidates,
@@ -718,7 +735,7 @@ def analyze_tls_quantum_signature(
                 "min_cluster_size": min_cluster_size,
                 "max_distance": max_distance
             }
-        }
+        })
 
     except Exception as e:
         import traceback
