@@ -193,7 +193,7 @@ servers/mcp-patient-report/
 └── README.md
 ```
 
-Templates are shared at repo root: `templates/patient_report/`
+Templates are bundled with the package at `src/mcp_patient_report/templates/`
 
 ## Example Workflow
 

@@ -62,12 +62,13 @@ Create a `.env` file in the server directory:
 
 ```bash
 # Required directories
-SPATIAL_DATA_DIR=/workspace/data/spatial
-SPATIAL_CACHE_DIR=/workspace/cache/spatial
+SPATIAL_DATA_DIR=/path/to/spatial-mcp/data
+SPATIAL_CACHE_DIR=/path/to/spatial-mcp/data/cache
+SPATIAL_OUTPUT_DIR=/path/to/spatial-mcp/data/output
 
 # Optional: STAR aligner path
 STAR_PATH=/usr/local/bin/STAR
-STAR_GENOME_INDEX=/workspace/reference/hg38_star_index
+STAR_GENOME_INDEX=/path/to/reference/hg38_star_index
 
 # Optional: Performance tuning
 SPATIAL_TIMEOUT_SECONDS=600
@@ -720,7 +721,11 @@ spot_002,1250,3400
 spot_003,1300,3400
 ```
 - `spot_id`: Must match column names in expression matrix
-- `x`, `y`: Pixel or micron coordinates
+- Coordinate columns are auto-detected (priority order):
+  1. Visium pixel columns: `pxl_row_in_fullres`, `pxl_col_in_fullres`
+  2. Named x/y columns: `x`, `y`, `x_coord`, `y_coord`, `spot_x`, `spot_y`
+  3. Array columns: `array_row`, `array_col`
+  4. Fallback: first two numeric columns
 
 ### Region Annotations (CSV)
 ```
@@ -884,8 +889,9 @@ mcp-spatialtools/
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `SPATIAL_DATA_DIR` | `/workspace/data/spatial` | Directory for spatial datasets |
-| `SPATIAL_CACHE_DIR` | `/workspace/cache/spatial` | Directory for cached files |
+| `SPATIAL_DATA_DIR` | `/workspace/data` | Directory for spatial datasets |
+| `SPATIAL_CACHE_DIR` | `/workspace/cache` | Directory for cached files |
+| `SPATIAL_OUTPUT_DIR` | `$SPATIAL_DATA_DIR/output` | Directory for visualization output |
 | `STAR_PATH` | `STAR` | Path to STAR executable |
 | `STAR_GENOME_INDEX` | `/reference/hg38_star_index` | STAR genome index directory |
 | `SPATIAL_DRY_RUN` | `false` | Enable mock mode (no real tool calls) |

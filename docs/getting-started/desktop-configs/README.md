@@ -78,7 +78,7 @@ Each server requires specific environment variables:
 | Server | Required Variables | Purpose |
 |--------|-------------------|---------|
 | **fgbio** | `FGBIO_REFERENCE_DATA_DIR`<br>`FGBIO_CACHE_DIR`<br>`FGBIO_DRY_RUN` | Reference genome paths<br>Cache location<br>Mock execution mode |
-| **spatialtools** | `SPATIAL_DATA_DIR`<br>`SPATIAL_DRY_RUN` | Data directory<br>Mock execution mode |
+| **spatialtools** | `SPATIAL_DATA_DIR`<br>`SPATIAL_CACHE_DIR`<br>`SPATIAL_OUTPUT_DIR`<br>`SPATIAL_DRY_RUN` | Data directory<br>Cache location<br>Visualization output<br>Mock execution mode |
 | **openimagedata** | `IMAGE_DATA_DIR`<br>`IMAGE_DRY_RUN` | Image storage<br>Mock execution mode |
 | **mockepic** | `EPIC_DRY_RUN` | Mock execution mode |
 | **mocktcga** | `MOCKTCGA_DRY_RUN` | Mock execution mode |
