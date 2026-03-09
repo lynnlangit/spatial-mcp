@@ -2,7 +2,7 @@
 
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Literal, List
+from typing import Optional, Literal, List, Union, Dict, Any
 import json
 import logging
 import scanpy as sc
@@ -23,6 +23,15 @@ mcp = FastMCP("perturbation")
 # Global state for models and datasets
 _models = {}  # name -> GearsWrapper
 _datasets = {}  # dataset_id -> AnnData
+
+
+def _parse_params(raw, model_class):
+    """Coerce string JSON or plain dict into the target Pydantic model."""
+    if isinstance(raw, model_class):
+        return raw
+    if isinstance(raw, str):
+        raw = json.loads(raw)
+    return model_class(**raw)
 
 
 # ==================== Input Models ====================
@@ -117,7 +126,7 @@ class VisualizeInput(BaseModel):
 # ==================== Tool Implementations ====================
 
 @mcp.tool()
-async def perturbation_load_dataset(params: LoadDatasetInput) -> str:
+async def perturbation_load_dataset(params: Union[Dict[str, Any], LoadDatasetInput]) -> str:
     """Load scRNA-seq dataset from GEO or local file.
 
     Downloads and preprocesses single-cell data, applying normalization
@@ -126,6 +135,7 @@ async def perturbation_load_dataset(params: LoadDatasetInput) -> str:
     Example:
         {"dataset_id": "GSE184880", "normalize": true, "n_hvg": 7000}
     """
+    params = _parse_params(params, LoadDatasetInput)
     try:
         adata = await load_geo_dataset(
             params.dataset_id,
@@ -156,7 +166,7 @@ async def perturbation_load_dataset(params: LoadDatasetInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_setup_model(params: SetupModelInput) -> str:
+async def perturbation_setup_model(params: Union[Dict[str, Any], SetupModelInput]) -> str:
     """Initialize GEARS model architecture.
 
     Sets up the graph neural network for learning perturbation responses
@@ -165,6 +175,7 @@ async def perturbation_setup_model(params: SetupModelInput) -> str:
     Example:
         {"dataset_id": "GSE184880", "hidden_size": 64, "model_name": "my_model"}
     """
+    params = _parse_params(params, SetupModelInput)
     try:
         # Get dataset
         if params.dataset_id not in _datasets:
@@ -206,7 +217,7 @@ async def perturbation_setup_model(params: SetupModelInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_train_model(params: TrainModelInput) -> str:
+async def perturbation_train_model(params: Union[Dict[str, Any], TrainModelInput]) -> str:
     """Train GEARS GNN on perturbation data.
 
     Trains the graph neural network model to learn perturbation
@@ -215,6 +226,7 @@ async def perturbation_train_model(params: TrainModelInput) -> str:
     Example:
         {"model_name": "my_model", "epochs": 20, "batch_size": 32}
     """
+    params = _parse_params(params, TrainModelInput)
     try:
         if params.model_name not in _models:
             return json.dumps({
@@ -248,7 +260,7 @@ async def perturbation_train_model(params: TrainModelInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_compute_delta(params: ComputeDeltaInput) -> str:
+async def perturbation_compute_delta(params: Union[Dict[str, Any], ComputeDeltaInput]) -> str:
     """Calculate perturbation effect for given treatment.
 
     Computes the predicted gene expression changes caused by the
@@ -257,6 +269,7 @@ async def perturbation_compute_delta(params: ComputeDeltaInput) -> str:
     Example:
         {"model_name": "my_model", "source_cell_type": "T_cells", "treatment_key": "CD4"}
     """
+    params = _parse_params(params, ComputeDeltaInput)
     try:
         if params.model_name not in _models:
             return json.dumps({
@@ -282,7 +295,7 @@ async def perturbation_compute_delta(params: ComputeDeltaInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_predict_response(params: PredictResponseInput) -> str:
+async def perturbation_predict_response(params: Union[Dict[str, Any], PredictResponseInput]) -> str:
     """Predict treatment response using GEARS GNN.
 
     Predicts how cells will respond to genetic perturbations using
@@ -291,6 +304,7 @@ async def perturbation_predict_response(params: PredictResponseInput) -> str:
     Example:
         {"model_name": "my_model", "patient_data_path": "./data/patient_001.h5ad", "cell_type_to_predict": "T_cells", "treatment_key": "CD4,CD8A"}
     """
+    params = _parse_params(params, PredictResponseInput)
     try:
         if params.model_name not in _models:
             return json.dumps({
@@ -341,7 +355,7 @@ async def perturbation_predict_response(params: PredictResponseInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_differential_expression(params: DEInput) -> str:
+async def perturbation_differential_expression(params: Union[Dict[str, Any], DEInput]) -> str:
     """Compare baseline vs. predicted expression.
 
     Identifies genes with significant expression changes between
@@ -350,6 +364,7 @@ async def perturbation_differential_expression(params: DEInput) -> str:
     Example:
         {"baseline_path": "./data/baseline.h5ad", "predicted_path": "./data/predicted.h5ad", "n_top_genes": 50}
     """
+    params = _parse_params(params, DEInput)
     try:
         # Load data
         baseline_adata = sc.read_h5ad(params.baseline_path)
@@ -375,7 +390,7 @@ async def perturbation_differential_expression(params: DEInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_get_latent(params: GetLatentInput) -> str:
+async def perturbation_get_latent(params: Union[Dict[str, Any], GetLatentInput]) -> str:
     """Extract graph embeddings for visualization.
 
     Note: GEARS uses graph neural networks rather than VAE latent space.
@@ -384,6 +399,7 @@ async def perturbation_get_latent(params: GetLatentInput) -> str:
     Example:
         {"model_name": "my_model", "data_path": "./data/cells.h5ad"}
     """
+    params = _parse_params(params, GetLatentInput)
     try:
         if params.model_name not in _models:
             return json.dumps({
@@ -422,7 +438,7 @@ async def perturbation_get_latent(params: GetLatentInput) -> str:
 
 
 @mcp.tool()
-async def perturbation_visualize(params: VisualizeInput) -> str:
+async def perturbation_visualize(params: Union[Dict[str, Any], VisualizeInput]) -> str:
     """Generate PCA/UMAP plots of baseline vs. predicted.
 
     Creates visualization comparing cell states before and after
@@ -431,6 +447,7 @@ async def perturbation_visualize(params: VisualizeInput) -> str:
     Example:
         {"baseline_path": "./data/baseline.h5ad", "predicted_path": "./data/predicted.h5ad", "plot_type": "pca"}
     """
+    params = _parse_params(params, VisualizeInput)
     try:
         # Load data
         baseline_adata = sc.read_h5ad(params.baseline_path)

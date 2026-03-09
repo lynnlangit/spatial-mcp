@@ -320,7 +320,8 @@ class QuCoWETrainer:
                     # Random negative cell type
                     neg_type = np.random.choice(other_types)
                     # Random example from that type
-                    neg_features = np.random.choice(training_data[neg_type])
+                    neg_idx = np.random.choice(len(training_data[neg_type]))
+                    neg_features = training_data[neg_type][neg_idx]
                     negatives.append((neg_type, neg_features))
 
                 all_examples.append((
