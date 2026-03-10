@@ -147,13 +147,12 @@ class GearsWrapper:
         if self.pert_data is None:
             raise ValueError("Call setup() or setup_from_dataset() before initializing model")
 
-        self.model = GEARS(
-            self.pert_data,
-            device=self.device,
+        self.model = GEARS(self.pert_data, device=self.device)
+        self.model.model_initialize(
             hidden_size=hidden_size,
             num_layers=num_layers,
             uncertainty=uncertainty,
-            uncertainty_reg=uncertainty_reg
+            uncertainty_reg=uncertainty_reg,
         )
 
         config = {
