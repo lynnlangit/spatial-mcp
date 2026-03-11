@@ -18,10 +18,12 @@ DISEASE_IDS = {
 }
 
 # ---------------------------------------------------------------------------
-# HGSOC gene symbol -> Ensembl ID mappings
+# Gene symbol -> Ensembl ID mappings
+# Covers HGSOC genomic drivers + immunotherapy targets
 # ---------------------------------------------------------------------------
 
 HGSOC_GENE_SYMBOL_TO_ENSEMBL = {
+    # --- HGSOC genomic drivers ---
     "TP53": "ENSG00000141510",
     "PIK3CA": "ENSG00000121879",
     "PTEN": "ENSG00000171862",
@@ -42,6 +44,44 @@ HGSOC_GENE_SYMBOL_TO_ENSEMBL = {
     "RAD51C": "ENSG00000108384",
     "RAD51D": "ENSG00000185379",
     "CD274": "ENSG00000120217",  # PD-L1
+    # --- Checkpoint — T cell ---
+    "PDCD1": "ENSG00000188389",   # PD-1
+    "CTLA4": "ENSG00000163599",
+    "TIGIT": "ENSG00000181847",
+    "LAG3": "ENSG00000089692",
+    "HAVCR2": "ENSG00000135077",  # TIM-3
+    # --- Phagocytosis checkpoint ---
+    "CD47": "ENSG00000196776",
+    "SIRPA": "ENSG00000198053",
+    "CD36": "ENSG00000135218",
+    # --- TAM reprogramming ---
+    "CSF1R": "ENSG00000182578",
+    "IL10": "ENSG00000136634",
+    "CD163": "ENSG00000177575",
+    "PPARG": "ENSG00000132170",
+    # --- Immune exclusion / stroma ---
+    "TGFB1": "ENSG00000105329",
+    "PTK2": "ENSG00000169398",   # FAK
+    "COL6A3": "ENSG00000163359",
+    # --- Treg recruitment ---
+    "CCL22": "ENSG00000102962",
+    "CCR4": "ENSG00000183813",
+    "FOXP3": "ENSG00000049768",
+    "IL2RA": "ENSG00000134460",
+    # --- NK cell dysfunction ---
+    "KLRC1": "ENSG00000204592",  # NKG2A
+    "MICA": "ENSG00000204520",
+    "MICB": "ENSG00000204516",
+    "NCR1": "ENSG00000189430",
+    # --- Epigenetic priming ---
+    "DNMT1": "ENSG00000130816",
+    "DNMT3A": "ENSG00000119772",
+    "HDAC1": "ENSG00000116478",
+    "HDAC2": "ENSG00000068305",
+    # --- Antigen presentation ---
+    "B2M": "ENSG00000166710",
+    "TAP1": "ENSG00000168394",
+    "TAP2": "ENSG00000204267",
 }
 
 # ---------------------------------------------------------------------------

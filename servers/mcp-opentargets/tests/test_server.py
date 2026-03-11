@@ -47,14 +47,29 @@ def test_gene_symbol_to_ensembl():
     assert HGSOC_GENE_SYMBOL_TO_ENSEMBL["PIK3CA"] == "ENSG00000121879"
     assert HGSOC_GENE_SYMBOL_TO_ENSEMBL["BRCA1"] == "ENSG00000012048"
     assert HGSOC_GENE_SYMBOL_TO_ENSEMBL["VEGFA"] == "ENSG00000112715"
-    # Check all 20 expected genes are present
-    expected_genes = [
+    # Check all 20 HGSOC driver genes are present
+    hgsoc_genes = [
         "TP53", "PIK3CA", "PTEN", "BRCA1", "BRCA2", "MYC", "CCNE1",
         "AKT2", "RB1", "CDKN2A", "BRAF", "KRAS", "ARID1A", "VEGFA",
         "CDK12", "NF1", "EMSY", "RAD51C", "RAD51D", "CD274",
     ]
-    for gene in expected_genes:
+    for gene in hgsoc_genes:
         assert gene in HGSOC_GENE_SYMBOL_TO_ENSEMBL, f"Missing gene: {gene}"
+
+    # Check all 30 immunotherapy target genes are present
+    immunotherapy_genes = [
+        "PDCD1", "CTLA4", "TIGIT", "LAG3", "HAVCR2",
+        "CD47", "SIRPA", "CD36",
+        "CSF1R", "IL10", "CD163", "PPARG",
+        "TGFB1", "PTK2", "COL6A3",
+        "CCL22", "CCR4", "FOXP3", "IL2RA",
+        "KLRC1", "MICA", "MICB", "NCR1",
+        "DNMT1", "DNMT3A", "HDAC1", "HDAC2",
+        "B2M", "TAP1", "TAP2",
+    ]
+    for gene in immunotherapy_genes:
+        assert gene in HGSOC_GENE_SYMBOL_TO_ENSEMBL, f"Missing gene: {gene}"
+    assert len(HGSOC_GENE_SYMBOL_TO_ENSEMBL) >= 50
 
 
 def test_mock_data_completeness():
@@ -334,3 +349,22 @@ async def test_resolve_gene_symbol_case_insensitive():
     eid_upper = await resolve_gene_symbol("VEGFA", "https://fake.url/graphql")
     eid_lower = await resolve_gene_symbol("vegfa", "https://fake.url/graphql")
     assert eid_upper == eid_lower == "ENSG00000112715"
+
+
+@pytest.mark.asyncio
+async def test_resolve_immunotherapy_gene_symbols():
+    """Test that immunotherapy target genes resolve correctly."""
+    from mcp_opentargets.graphql_client import resolve_gene_symbol
+
+    test_cases = {
+        "PDCD1": "ENSG00000188389",
+        "CTLA4": "ENSG00000163599",
+        "CD47": "ENSG00000196776",
+        "TIGIT": "ENSG00000181847",
+        "KLRC1": "ENSG00000204592",
+        "DNMT3A": "ENSG00000119772",
+        "B2M": "ENSG00000166710",
+    }
+    for symbol, expected_id in test_cases.items():
+        eid = await resolve_gene_symbol(symbol, "https://fake.url/graphql")
+        assert eid == expected_id, f"{symbol} resolved to {eid}, expected {expected_id}"
