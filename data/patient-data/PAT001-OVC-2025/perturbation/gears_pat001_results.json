@@ -1,0 +1,330 @@
+{
+  "dataset": "Synthetic HGSOC Perturb-seq (810 cells, 200 genes)",
+  "model": "GEARS GNN, hidden_size=64, 5 epochs (POC)",
+  "torch": "2.10.0+cpu",
+  "note": "Real GEARS GNN outputs. Synthetic training data modeled on HGSOC biology (NNMT/CAF, CCNE1/cell-cycle). For research purposes only.",
+  "predictions": {
+    "NNMT": {
+      "target_genes": [
+        "NNMT"
+      ],
+      "top_upregulated": [
+        {
+          "gene": "BCL2L1",
+          "delta": 0.3565
+        },
+        {
+          "gene": "CDKN2A",
+          "delta": 0.313
+        },
+        {
+          "gene": "PRF1",
+          "delta": 0.2726
+        },
+        {
+          "gene": "GENE0029",
+          "delta": 0.2391
+        },
+        {
+          "gene": "GENE0027",
+          "delta": 0.2204
+        },
+        {
+          "gene": "AKT1",
+          "delta": 0.2184
+        },
+        {
+          "gene": "FANCD2",
+          "delta": 0.2079
+        },
+        {
+          "gene": "DNMT1",
+          "delta": 0.2073
+        },
+        {
+          "gene": "MCM6",
+          "delta": 0.2031
+        },
+        {
+          "gene": "FOXP3",
+          "delta": 0.202
+        },
+        {
+          "gene": "LAG3",
+          "delta": 0.1925
+        },
+        {
+          "gene": "IL10",
+          "delta": 0.1907
+        }
+      ],
+      "top_downregulated": [
+        {
+          "gene": "CCNE1",
+          "delta": -0.531
+        },
+        {
+          "gene": "CDK2",
+          "delta": -0.3991
+        },
+        {
+          "gene": "CDK4",
+          "delta": -0.3057
+        },
+        {
+          "gene": "GENE0077",
+          "delta": -0.3013
+        },
+        {
+          "gene": "MYC",
+          "delta": -0.2488
+        },
+        {
+          "gene": "STAT3",
+          "delta": -0.2447
+        },
+        {
+          "gene": "BAX",
+          "delta": -0.2227
+        },
+        {
+          "gene": "COL3A1",
+          "delta": -0.2096
+        },
+        {
+          "gene": "GENE0071",
+          "delta": -0.2005
+        },
+        {
+          "gene": "TOP2A",
+          "delta": -0.1936
+        },
+        {
+          "gene": "ANGPT1",
+          "delta": -0.1933
+        },
+        {
+          "gene": "KDM6A",
+          "delta": -0.1895
+        }
+      ],
+      "n_genes_changed_0.5": 1,
+      "mean_abs_delta": 0.0945
+    },
+    "CCNE1": {
+      "target_genes": [
+        "CCNE1"
+      ],
+      "top_upregulated": [
+        {
+          "gene": "BCL2L1",
+          "delta": 0.3481
+        },
+        {
+          "gene": "CDKN2A",
+          "delta": 0.3113
+        },
+        {
+          "gene": "PRF1",
+          "delta": 0.2962
+        },
+        {
+          "gene": "GENE0029",
+          "delta": 0.2559
+        },
+        {
+          "gene": "GENE0027",
+          "delta": 0.2349
+        },
+        {
+          "gene": "LAG3",
+          "delta": 0.2344
+        },
+        {
+          "gene": "AKT1",
+          "delta": 0.2128
+        },
+        {
+          "gene": "RB1",
+          "delta": 0.2026
+        },
+        {
+          "gene": "MCM6",
+          "delta": 0.1991
+        },
+        {
+          "gene": "DNMT1",
+          "delta": 0.1974
+        },
+        {
+          "gene": "CXCR3",
+          "delta": 0.196
+        },
+        {
+          "gene": "FANCD2",
+          "delta": 0.1868
+        }
+      ],
+      "top_downregulated": [
+        {
+          "gene": "CCNE1",
+          "delta": -0.516
+        },
+        {
+          "gene": "CDK2",
+          "delta": -0.4177
+        },
+        {
+          "gene": "GENE0077",
+          "delta": -0.3236
+        },
+        {
+          "gene": "CDK4",
+          "delta": -0.3141
+        },
+        {
+          "gene": "MYC",
+          "delta": -0.2517
+        },
+        {
+          "gene": "STAT3",
+          "delta": -0.2473
+        },
+        {
+          "gene": "GENE0071",
+          "delta": -0.2462
+        },
+        {
+          "gene": "BAX",
+          "delta": -0.2368
+        },
+        {
+          "gene": "TOP2A",
+          "delta": -0.2321
+        },
+        {
+          "gene": "GENE0050",
+          "delta": -0.2092
+        },
+        {
+          "gene": "COL3A1",
+          "delta": -0.2073
+        },
+        {
+          "gene": "MKI67",
+          "delta": -0.2017
+        }
+      ],
+      "n_genes_changed_0.5": 1,
+      "mean_abs_delta": 0.0922
+    },
+    "NNMT+CCNE1": {
+      "target_genes": [
+        "NNMT",
+        "CCNE1"
+      ],
+      "top_upregulated": [
+        {
+          "gene": "CDKN2A",
+          "delta": 0.3454
+        },
+        {
+          "gene": "BCL2L1",
+          "delta": 0.3323
+        },
+        {
+          "gene": "AKT1",
+          "delta": 0.2402
+        },
+        {
+          "gene": "DNMT1",
+          "delta": 0.2388
+        },
+        {
+          "gene": "PRF1",
+          "delta": 0.2378
+        },
+        {
+          "gene": "GENE0029",
+          "delta": 0.22
+        },
+        {
+          "gene": "GENE0027",
+          "delta": 0.2189
+        },
+        {
+          "gene": "GENE0048",
+          "delta": 0.2072
+        },
+        {
+          "gene": "FOXP3",
+          "delta": 0.2042
+        },
+        {
+          "gene": "GENE0065",
+          "delta": 0.1903
+        },
+        {
+          "gene": "RB1",
+          "delta": 0.1869
+        },
+        {
+          "gene": "GENE0080",
+          "delta": 0.1855
+        }
+      ],
+      "top_downregulated": [
+        {
+          "gene": "CCNE1",
+          "delta": -0.53
+        },
+        {
+          "gene": "CDK2",
+          "delta": -0.42
+        },
+        {
+          "gene": "GENE0077",
+          "delta": -0.3049
+        },
+        {
+          "gene": "CDK4",
+          "delta": -0.2906
+        },
+        {
+          "gene": "BAX",
+          "delta": -0.2565
+        },
+        {
+          "gene": "GENE0071",
+          "delta": -0.2505
+        },
+        {
+          "gene": "MYC",
+          "delta": -0.2357
+        },
+        {
+          "gene": "COL3A1",
+          "delta": -0.2268
+        },
+        {
+          "gene": "STAT3",
+          "delta": -0.2186
+        },
+        {
+          "gene": "MKI67",
+          "delta": -0.2053
+        },
+        {
+          "gene": "GENE0078",
+          "delta": -0.198
+        },
+        {
+          "gene": "GENE0050",
+          "delta": -0.1948
+        }
+      ],
+      "n_genes_changed_0.5": 1,
+      "mean_abs_delta": 0.0934
+    }
+  }
+}
