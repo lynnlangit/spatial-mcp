@@ -874,13 +874,22 @@ mcp-spatialtools/
 │   └── mcp_spatialtools/
 │       ├── __init__.py
 │       ├── __main__.py
-│       └── server.py          # Main server implementation
+│       ├── server.py              # MCP server entry point and tool wrappers
+│       └── tools/                 # Implementation modules (refactored from server.py)
+│           ├── __init__.py
+│           ├── alignment.py       # STAR alignment
+│           ├── analysis.py        # DE, batch correction, autocorrelation
+│           ├── clinical_bridge.py # Patient-spatial data mapping
+│           ├── deconvolution.py   # Cell type deconvolution
+│           ├── enrichment.py      # Pathway enrichment (GO, KEGG, Hallmark)
+│           ├── preprocessing.py   # QC filtering, region splitting, tile merging
+│           └── visualization.py   # Heatmaps, charts, spatial plots
 ├── tests/
-│   ├── conftest.py            # Pytest fixtures
-│   ├── test_server.py         # Tool tests
-│   ├── test_deconvolution.py  # Cell type tests
-│   └── test_integration.py    # End-to-end workflow tests
-├── pyproject.toml             # Project configuration
+│   ├── conftest.py                # Pytest fixtures
+│   ├── test_server.py             # Tool tests
+│   ├── test_deconvolution.py      # Cell type tests
+│   └── test_integration.py        # End-to-end workflow tests
+├── pyproject.toml                 # Project configuration
 ├── README.md
 └── SERVER_IMPLEMENTATION_STATUS.md
 ```
