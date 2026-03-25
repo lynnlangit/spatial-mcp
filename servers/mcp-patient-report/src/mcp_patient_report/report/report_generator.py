@@ -38,7 +38,7 @@ class ReportGenerator:
 
         self.env = Environment(
             loader=FileSystemLoader(str(self.templates_dir)),
-            autoescape=select_autoescape(['html', 'xml']),
+            autoescape=select_autoescape(['html', 'xml', 'html.j2']),
             trim_blocks=True,
             lstrip_blocks=True,
         )

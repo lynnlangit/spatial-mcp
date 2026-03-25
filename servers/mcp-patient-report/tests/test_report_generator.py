@@ -103,8 +103,8 @@ class TestReportGenerator:
 
         html = report_generator.render_full_report(data)
 
-        # Script should be escaped, not executed
-        assert "<script>" not in html
+        # XSS payload should be escaped, not rendered as raw HTML
+        assert "<script>alert('xss')</script>" not in html
         assert "&lt;script&gt;" in html
 
 

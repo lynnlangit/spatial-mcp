@@ -91,7 +91,7 @@
     {
       "name": "Olaparib (Lynparza)",
       "type": "Targeted Therapy (PARP Inhibitor)",
-      "evidence_level": "FDA_APPROVED",
+      "evidence_level": "FDA Approved",
       "expected_response_rate": "60-70% response rate in BRCA-mutant ovarian cancer",
       "plain_language_description": "Olaparib is a pill you take twice daily that blocks an enzyme called PARP, which cancer cells with BRCA mutations need to repair their DNA. Without this repair ability, the cancer cells die. This is called 'synthetic lethality' - the drug exploits the weakness created by your BRCA1 mutation.",
       "common_side_effects": ["Nausea", "Fatigue", "Anemia (low red blood cells)", "Low platelet count"],
@@ -100,7 +100,7 @@
     {
       "name": "Bevacizumab (Avastin)",
       "type": "Targeted Therapy (Anti-angiogenic)",
-      "evidence_level": "NCCN_1",
+      "evidence_level": "NCCN Category 1",
       "expected_response_rate": "3-4 month improvement in progression-free survival",
       "plain_language_description": "Bevacizumab is an IV infusion that blocks the blood vessel growth that tumors need to survive and grow. By cutting off the tumor's blood supply, it can slow cancer growth and is often combined with other treatments.",
       "common_side_effects": ["High blood pressure", "Protein in urine", "Bleeding risk", "Delayed wound healing"],
@@ -109,7 +109,7 @@
     {
       "name": "Mirvetuximab Soravtansine (Elahere)",
       "type": "Antibody-Drug Conjugate",
-      "evidence_level": "FDA_APPROVED",
+      "evidence_level": "FDA Approved",
       "expected_response_rate": "32% overall response rate in platinum-resistant disease",
       "plain_language_description": "This is a newer type of treatment that delivers chemotherapy directly to cancer cells. It uses an antibody to find cancer cells that have a protein called folate receptor alpha on their surface, then releases chemotherapy inside those cells. It's like a 'guided missile' approach to treatment.",
       "common_side_effects": ["Vision changes (blurred vision)", "Fatigue", "Nausea", "Nerve tingling"],
