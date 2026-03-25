@@ -41,7 +41,7 @@ mcp = FastMCP("openimagedata")
 
 def _is_dry_run() -> bool:
     """Check if DRY_RUN mode is enabled."""
-    return os.getenv("IMAGE_DRY_RUN", "false").lower() == "true"
+    return os.getenv("IMAGE_DRY_RUN", "true").lower() == "true"
 
 DRY_RUN = _is_dry_run()
 
@@ -56,7 +56,6 @@ IMAGE_DIR = Path(os.getenv("IMAGE_DATA_DIR", "/workspace/images"))
 CACHE_DIR = Path(os.getenv("IMAGE_CACHE_DIR", "/workspace/cache/images"))
 OUTPUT_DIR = Path(os.getenv("IMAGE_OUTPUT_DIR", "/workspace/output"))
 MAX_IMAGE_SIZE_MB = int(os.getenv("MAX_IMAGE_SIZE_MB", "500"))
-DRY_RUN = os.getenv("IMAGE_DRY_RUN", "false").lower() == "true"
 
 
 def _ensure_directories() -> None:

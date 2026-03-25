@@ -44,7 +44,6 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="CELL_CLASSIFY_DRY_RUN")
 
 
-DRY_RUN = os.getenv("CELL_CLASSIFY_DRY_RUN", "true").lower() == "true"
 OUTPUT_DIR = Path(os.getenv("CELL_CLASSIFY_OUTPUT_DIR", "/workspace/output"))
 
 def _ensure_output_dir() -> None:

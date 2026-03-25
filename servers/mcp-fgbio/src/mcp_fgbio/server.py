@@ -65,7 +65,7 @@ def _get_cache_dir() -> Path:
 
 def _is_dry_run() -> bool:
     """Check if DRY_RUN mode is enabled."""
-    return os.getenv("FGBIO_DRY_RUN", "false").lower() == "true"
+    return os.getenv("FGBIO_DRY_RUN", "true").lower() == "true"
 
 def _get_timeout_seconds() -> int:
     """Get timeout seconds from environment."""

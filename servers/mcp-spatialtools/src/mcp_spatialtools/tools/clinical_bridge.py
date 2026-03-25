@@ -32,9 +32,12 @@ BIOMARKER_GENE_MAP = {
 }
 
 # Patient ID -> Spatial Dataset mapping
+# Add aliases for known patients; unknown IDs fall through via .get(id, id)
 PATIENT_SPATIAL_MAP = {
     "patient-001": "PAT001-OVC-2025",
-    "PAT001": "PAT001-OVC-2025"
+    "PAT001": "PAT001-OVC-2025",
+    "patient-002": "PAT002-BC-2026",
+    "PAT002": "PAT002-BC-2026",
 }
 
 

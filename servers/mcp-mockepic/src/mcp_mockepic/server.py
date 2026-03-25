@@ -23,7 +23,7 @@ mcp = FastMCP("mockepic")
 
 def _is_dry_run() -> bool:
     """Check if DRY_RUN mode is enabled."""
-    return os.getenv("EPIC_DRY_RUN", "false").lower() == "true"
+    return os.getenv("EPIC_DRY_RUN", "true").lower() == "true"
 
 DRY_RUN = _is_dry_run()
 
@@ -32,8 +32,6 @@ def add_dry_run_warning(result):
     """Add DRY_RUN warning — delegates to shared implementation."""
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="MOCKEPIC_DRY_RUN")
 
-
-DRY_RUN = os.getenv("EPIC_DRY_RUN", "true").lower() == "true"
 
 @mcp.tool()
 async def query_patient_records(

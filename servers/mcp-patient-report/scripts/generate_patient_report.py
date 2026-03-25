@@ -154,7 +154,7 @@ class PatientReportGenerator:
         # Find patient data directory (handle different naming conventions)
         possible_dirs = [
             self.data_dir / self.patient_id.upper() / "spatial",
-            self.data_dir / f"PAT001-OVC-2025" / "spatial",  # Specific to our test patient
+            self.data_dir / self.patient_id / "spatial",
         ]
 
         for data_dir in possible_dirs:

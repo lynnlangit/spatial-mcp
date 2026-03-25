@@ -51,7 +51,7 @@ STAR_PATH = os.getenv("STAR_PATH", "STAR")
 SAMTOOLS_PATH = os.getenv("SAMTOOLS_PATH", "samtools")
 BEDTOOLS_PATH = os.getenv("BEDTOOLS_PATH", "bedtools")
 THREADS = int(os.getenv("SPATIAL_THREADS", "8"))
-DRY_RUN = os.getenv("SPATIAL_DRY_RUN", "false").lower() == "true"
+DRY_RUN = os.getenv("SPATIAL_DRY_RUN", "true").lower() == "true"
 
 # Quality control thresholds
 MIN_READS_PER_BARCODE = int(os.getenv("MIN_READS_PER_BARCODE", "1000"))
@@ -2074,9 +2074,12 @@ BIOMARKER_GENE_MAP = {
 }
 
 # Patient ID → Spatial Dataset mapping
+# Add aliases for known patients; unknown IDs fall through via .get(id, id)
 PATIENT_SPATIAL_MAP = {
     "patient-001": "PAT001-OVC-2025",
-    "PAT001": "PAT001-OVC-2025"
+    "PAT001": "PAT001-OVC-2025",
+    "patient-002": "PAT002-BC-2026",
+    "PAT002": "PAT002-BC-2026",
 }
 
 

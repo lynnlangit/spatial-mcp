@@ -35,7 +35,7 @@ mcp = FastMCP("deepcell")
 
 def _is_dry_run() -> bool:
     """Check if DRY_RUN mode is enabled."""
-    return os.getenv("DEEPCELL_DRY_RUN", "false").lower() == "true"
+    return os.getenv("DEEPCELL_DRY_RUN", "true").lower() == "true"
 
 DRY_RUN = _is_dry_run()
 
@@ -45,7 +45,6 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="DEEPCELL_DRY_RUN")
 
 
-DRY_RUN = os.getenv("DEEPCELL_DRY_RUN", "true").lower() == "true"
 OUTPUT_DIR = Path(os.getenv("DEEPCELL_OUTPUT_DIR", "/workspace/output"))
 MODEL_CACHE_DIR = Path(os.getenv("DEEPCELL_MODEL_CACHE_DIR", Path.home() / ".deepcell" / "models"))
 USE_GPU = os.getenv("DEEPCELL_USE_GPU", "true").lower() == "true"

@@ -345,7 +345,7 @@ async def _calculate_hrd_impl(
 async def _generate_report_impl(
     vcf_path: str,
     cns_path: str,
-    patient_id: str = "PAT001",
+    patient_id: str = "UNKNOWN",
 ) -> Dict[str, Any]:
     """Implementation for generate_genomic_report."""
     if DRY_RUN:
@@ -537,7 +537,7 @@ async def calculate_hr_deficiency_score(
 async def generate_genomic_report(
     vcf_path: str,
     cns_path: str,
-    patient_id: str = "PAT001",
+    patient_id: str = "UNKNOWN",
 ) -> Dict[str, Any]:
     """Generate a comprehensive genomic report combining VCF, CNV, and HRD analysis.
 
