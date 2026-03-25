@@ -29,6 +29,13 @@ except ImportError:
     if str(_shared_utils_path) not in sys.path:
         sys.path.insert(0, str(_shared_utils_path))
     from cost_tracking import CostTracker, CostEstimator
+
+# Add shared/ to import path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
 from .tools.integration import integrate_omics_data_impl
 from .tools.stouffer import calculate_stouffer_meta_impl
 from .tools.preprocessing import (
@@ -52,34 +59,9 @@ mcp = FastMCP("multiomics")
 
 
 # DRY_RUN warning wrapper
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not config.dry_run:
-        return result
-
-    warning = """
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                    ⚠️  SYNTHETIC DATA WARNING ⚠️                          ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-This result was generated in DRY_RUN mode and does NOT represent real analysis.
-
-🔴 CRITICAL: Do NOT use this data for research decisions or publications.
-🔴 All values are SYNTHETIC/MOCKED and have no scientific validity.
-
-To enable real data processing, set: MULTIOMICS_DRY_RUN=false
-
-═══════════════════════════════════════════════════════════════════════════
-
-"""
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR RESEARCH USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=config.dry_run, env_var="MULTIOMICS_DRY_RUN")
 
 
 # Research Use Only disclaimer
@@ -1221,27 +1203,8 @@ Sample_03,Drug_B,Resistant,2
 
 # Entry point for the server
 def main():
-    """Run the MCP server."""
-    logger.info("Starting mcp-multiomics server...")
-
-    if config.dry_run:
-        logger.warning("=" * 80)
-        logger.warning("⚠️  DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("⚠️  Results are MOCKED and do NOT represent real analysis")
-        logger.warning("⚠️  Set MULTIOMICS_DRY_RUN=false for production use")
-        logger.warning("=" * 80)
-    else:
-        logger.info("✅ Real data processing mode enabled (MULTIOMICS_DRY_RUN=false)")
-
-    # Get transport and port from environment
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    # Run the server with appropriate transport
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    """Run the MCP multiomics server."""
+    _run_server(mcp, server_name="mcp-multiomics", dry_run=config.dry_run, env_var="MULTIOMICS_DRY_RUN")
 
 
 if __name__ == "__main__":

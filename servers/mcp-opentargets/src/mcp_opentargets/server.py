@@ -2,6 +2,8 @@
 
 import logging
 import os
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
@@ -32,6 +34,13 @@ logger = logging.getLogger(__name__)
 
 mcp = FastMCP("opentargets")
 
+# Add shared/ to import path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -43,26 +52,9 @@ OPENTARGETS_API_URL = os.getenv(
 )
 
 
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = (
-        "=== SYNTHETIC DATA WARNING ===\n"
-        "This result was generated in DRY_RUN mode and does NOT represent real analysis.\n"
-        "Do NOT use this data for clinical decisions.\n"
-        "Set OPENTARGETS_DRY_RUN=false for production use.\n"
-        "==============================\n\n"
-    )
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR CLINICAL USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="OPENTARGETS_DRY_RUN")
 
 
 # ---------------------------------------------------------------------------
@@ -504,8 +496,8 @@ async def _batch_score_targets_impl(
                     druggable_targets.append(sym_upper)
                 elif scores.get(sym_upper, 0) > 0.4:
                     novel_targets.append(sym_upper)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Failed to check drugability for %s: %s", sym, exc)
 
     disease_name = disease_id
     result_data = {
@@ -659,23 +651,7 @@ async def batch_score_targets(
 
 def main() -> None:
     """Run the MCP opentargets server."""
-    logger.info("Starting mcp-opentargets server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 70)
-        logger.warning("DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("Set OPENTARGETS_DRY_RUN=false for production use")
-        logger.warning("=" * 70)
-    else:
-        logger.info("Production mode enabled (OPENTARGETS_DRY_RUN=false)")
-
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    _run_server(mcp, server_name="mcp-opentargets", dry_run=DRY_RUN, env_var="OPENTARGETS_DRY_RUN")
 
 
 if __name__ == "__main__":

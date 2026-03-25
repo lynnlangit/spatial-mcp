@@ -24,6 +24,15 @@ from .mock_data import (
     MOCK_SIGNATURE_UPLOAD,
 )
 
+# Add shared/ to import path
+import sys
+from pathlib import Path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
+
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("cibersortx")
@@ -43,26 +52,9 @@ POLL_INTERVAL = int(os.getenv("CIBERSORTX_POLL_INTERVAL", "30"))
 MAX_WAIT = int(os.getenv("CIBERSORTX_MAX_WAIT", "1800"))
 
 
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = (
-        "=== SYNTHETIC DATA WARNING ===\n"
-        "This result was generated in DRY_RUN mode and does NOT represent real analysis.\n"
-        "Do NOT use this data for clinical decisions.\n"
-        "Set CIBERSORTX_DRY_RUN=false for production use.\n"
-        "==============================\n\n"
-    )
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR CLINICAL USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="CIBERSORTX_DRY_RUN")
 
 
 def _validate_job_id(job_id: str) -> str:
@@ -468,28 +460,14 @@ async def run_mock_deconvolution(
 
 def main() -> None:
     """Run the MCP cibersortx server."""
-    logger.info("Starting mcp-cibersortx server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 70)
-        logger.warning("DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("Set CIBERSORTX_DRY_RUN=false for production use")
-        logger.warning("=" * 70)
-    else:
-        logger.info("Production mode enabled (CIBERSORTX_DRY_RUN=false)")
-        if not CIBERSORTX_TOKEN:
-            raise ValueError(
-                "CIBERSORTX_TOKEN is required when DRY_RUN is disabled. "
-                "Register at https://cibersortx.stanford.edu/ to obtain a token."
-            )
-
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    if not DRY_RUN and not CIBERSORTX_TOKEN:
+        raise ValueError(
+            "CIBERSORTX_TOKEN is required when DRY_RUN is disabled. "
+            "Register at https://cibersortx.stanford.edu/ to obtain a token."
+        )
+    _run_server(
+        mcp, server_name="mcp-cibersortx", dry_run=DRY_RUN, env_var="CIBERSORTX_DRY_RUN"
+    )
 
 
 if __name__ == "__main__":

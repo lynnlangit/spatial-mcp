@@ -38,38 +38,20 @@ except ImportError:
         sys.path.insert(0, str(_shared_utils_path))
     from api_retry import retry_with_backoff, optional_api_call
 
+# Add shared/ to import path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
+
 # Initialize the MCP server
 mcp = FastMCP("fgbio")
 
 # DRY_RUN warning wrapper
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = """
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                    ⚠️  SYNTHETIC DATA WARNING ⚠️                          ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-This result was generated in DRY_RUN mode and does NOT represent real analysis.
-
-🔴 CRITICAL: Do NOT use this data for research decisions or publications.
-🔴 All values are SYNTHETIC/MOCKED and have no scientific validity.
-
-To enable real data processing, set: FGBIO_DRY_RUN=false
-
-═══════════════════════════════════════════════════════════════════════════
-
-"""
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR RESEARCH USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="FGBIO_DRY_RUN")
 
 
 # Configuration helper functions (read from environment at runtime for testability)
@@ -892,33 +874,8 @@ def get_gencode_annotations() -> str:
 
 def main() -> None:
     """Run the MCP FGbio server."""
-    import sys
-
-    # Ensure directories exist
     _ensure_directories()
-
-    # Startup warnings for DRY_RUN mode
-    logger.info("Starting mcp-fgbio server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 80)
-        logger.warning("⚠️  DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("⚠️  Results are MOCKED and do NOT represent real analysis")
-        logger.warning("⚠️  Set FGBIO_DRY_RUN=false for production use")
-        logger.warning("=" * 80)
-    else:
-        logger.info("✅ Real data processing mode enabled (FGBIO_DRY_RUN=false)")
-
-    # Run the server
-    # Get transport and port from environment
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    # Run the server with appropriate transport
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    _run_server(mcp, server_name="mcp-fgbio", dry_run=DRY_RUN, env_var="FGBIO_DRY_RUN")
 
 
 if __name__ == "__main__":

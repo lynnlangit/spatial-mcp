@@ -63,10 +63,6 @@ addopts = "--cov=src/quantum_celltype_fidelity --cov-report=html --cov-report=te
 line-length = 100
 target-version = ['py311']
 
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true

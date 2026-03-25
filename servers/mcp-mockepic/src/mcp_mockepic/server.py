@@ -3,9 +3,18 @@
 import json
 import logging
 import os
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastmcp import FastMCP
+
+# Add shared/ to import path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -19,34 +28,9 @@ def _is_dry_run() -> bool:
 DRY_RUN = _is_dry_run()
 
 # DRY_RUN warning wrapper
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = """
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                    ⚠️  SYNTHETIC DATA WARNING ⚠️                          ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-This result was generated in DRY_RUN mode and does NOT represent real analysis.
-
-🔴 CRITICAL: Do NOT use this data for research decisions or publications.
-🔴 All values are SYNTHETIC/MOCKED and have no scientific validity.
-
-To enable real data processing, set: EPIC_DRY_RUN=false
-
-═══════════════════════════════════════════════════════════════════════════
-
-"""
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR RESEARCH USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="MOCKEPIC_DRY_RUN")
 
 
 DRY_RUN = os.getenv("EPIC_DRY_RUN", "true").lower() == "true"
@@ -183,26 +167,7 @@ def get_mock_patient_info() -> str:
 
 def main() -> None:
     """Run the MCP mcp-mockepic server."""
-    logger.info("Starting mcp-mockepic server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 80)
-        logger.warning("⚠️  DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("⚠️  Results are MOCKED and do NOT represent real analysis")
-        logger.warning("⚠️  Set EPIC_DRY_RUN=false for production use")
-        logger.warning("=" * 80)
-    else:
-        logger.info("✅ Real data processing mode enabled (EPIC_DRY_RUN=false)")
-
-    # Get transport and port from environment
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    # Run the server with appropriate transport
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    _run_server(mcp, server_name="mcp-mockepic", dry_run=DRY_RUN, env_var="MOCKEPIC_DRY_RUN")
 
 if __name__ == "__main__":
     main()

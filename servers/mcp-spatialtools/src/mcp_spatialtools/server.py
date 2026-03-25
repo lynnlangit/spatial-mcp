@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -28,41 +29,17 @@ logger = logging.getLogger(__name__)
 # Initialize the MCP server
 mcp = FastMCP("spatialtools")
 
-def _is_dry_run() -> bool:
-    """Check if DRY_RUN mode is enabled."""
-    return os.getenv("SPATIAL_DRY_RUN", "false").lower() == "true"
+# Add shared/ to import path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
 
-DRY_RUN = _is_dry_run()
 
-# DRY_RUN warning wrapper
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = """
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                    ⚠️  SYNTHETIC DATA WARNING ⚠️                          ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-This result was generated in DRY_RUN mode and does NOT represent real analysis.
-
-🔴 CRITICAL: Do NOT use this data for research decisions or publications.
-🔴 All values are SYNTHETIC/MOCKED and have no scientific validity.
-
-To enable real data processing, set: SPATIAL_DRY_RUN=false
-
-═══════════════════════════════════════════════════════════════════════════
-
-"""
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR RESEARCH USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="SPATIAL_DRY_RUN")
 
 
 # Configuration
@@ -2907,27 +2884,7 @@ def get_aligned_spatial_data() -> str:
 def main() -> None:
     """Run the MCP Spatial Tools server."""
     _ensure_directories()
-
-    logger.info("Starting mcp-spatialtools server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 80)
-        logger.warning("⚠️  DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("⚠️  Results are MOCKED and do NOT represent real analysis")
-        logger.warning("⚠️  Set SPATIAL_DRY_RUN=false for production use")
-        logger.warning("=" * 80)
-    else:
-        logger.info("✅ Real data processing mode enabled (SPATIAL_DRY_RUN=false)")
-
-    # Get transport and port from environment
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    # Run the server with appropriate transport
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    _run_server(mcp, server_name="mcp-spatialtools", dry_run=DRY_RUN, env_var="SPATIAL_DRY_RUN")
 
 
 if __name__ == "__main__":

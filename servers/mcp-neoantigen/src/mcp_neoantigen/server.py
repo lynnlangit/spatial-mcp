@@ -21,6 +21,15 @@ from .mock_data import (
     TMB_CONVERSION_FACTORS,
 )
 
+# Add shared/ to import path
+import sys
+from pathlib import Path
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
+
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("neoantigen")
@@ -42,26 +51,9 @@ STRONG_BINDER_THRESHOLD = float(os.getenv("NEOANTIGEN_STRONG_BINDER_NM", "50.0")
 WEAK_BINDER_THRESHOLD = float(os.getenv("NEOANTIGEN_WEAK_BINDER_NM", "500.0"))
 
 
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = (
-        "=== SYNTHETIC DATA WARNING ===\n"
-        "This result was generated in DRY_RUN mode and does NOT represent real analysis.\n"
-        "Do NOT use this data for clinical decisions.\n"
-        "Set NEOANTIGEN_DRY_RUN=false for production use.\n"
-        "==============================\n\n"
-    )
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR CLINICAL USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="NEOANTIGEN_DRY_RUN")
 
 
 def _classify_binder(ic50_nm: float) -> tuple[bool, str]:
@@ -686,23 +678,9 @@ async def score_antigen_presentation_pathway(
 
 def main() -> None:
     """Run the MCP neoantigen server."""
-    logger.info("Starting mcp-neoantigen server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 70)
-        logger.warning("DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("Set NEOANTIGEN_DRY_RUN=false for production use")
-        logger.warning("=" * 70)
-    else:
-        logger.info("Production mode enabled (NEOANTIGEN_DRY_RUN=false)")
-
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    _run_server(
+        mcp, server_name="mcp-neoantigen", dry_run=DRY_RUN, env_var="NEOANTIGEN_DRY_RUN"
+    )
 
 
 if __name__ == "__main__":

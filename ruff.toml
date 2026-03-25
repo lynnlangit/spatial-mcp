@@ -1,0 +1,13 @@
+# Shared ruff configuration for all MCP servers
+# See: https://docs.astral.sh/ruff/configuration/
+
+line-length = 100
+target-version = "py311"
+
+[lint]
+# Start with a minimal, non-disruptive rule set
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+]

@@ -24,6 +24,14 @@ from .mock_data import (
     MOCK_SRA_DOWNLOAD,
 )
 
+# Add shared/ to import path
+import sys
+_repo_root = Path(__file__).resolve().parents[4]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+from common.transport import run_server as _run_server
+
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("geodownload")
@@ -38,26 +46,9 @@ NCBI_API_KEY = os.getenv("NCBI_API_KEY")
 NCBI_EMAIL = os.getenv("NCBI_EMAIL")
 
 
-def add_dry_run_warning(result: Any) -> Any:
-    """Add warning banner to results when in DRY_RUN mode."""
-    if not DRY_RUN:
-        return result
-
-    warning = (
-        "=== SYNTHETIC DATA WARNING ===\n"
-        "This result was generated in DRY_RUN mode and does NOT represent real data.\n"
-        "Do NOT use this data for clinical decisions.\n"
-        "Set GEO_DRY_RUN=false for production use.\n"
-        "==============================\n\n"
-    )
-
-    if isinstance(result, dict):
-        result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR CLINICAL USE"
-        result["_message"] = warning.strip()
-    elif isinstance(result, str):
-        result = warning + result
-
-    return result
+def add_dry_run_warning(result):
+    """Add DRY_RUN warning — delegates to shared implementation."""
+    return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="GEO_DRY_RUN")
 
 
 def _validate_gse_id(gse_id: str) -> str:
@@ -532,23 +523,7 @@ async def get_geo_soft_file(
 
 def main() -> None:
     """Run the MCP geodownload server."""
-    logger.info("Starting mcp-geodownload server...")
-
-    if DRY_RUN:
-        logger.warning("=" * 70)
-        logger.warning("DRY_RUN MODE ENABLED - RETURNING SYNTHETIC DATA")
-        logger.warning("Set GEO_DRY_RUN=false for production use")
-        logger.warning("=" * 70)
-    else:
-        logger.info("Production mode enabled (GEO_DRY_RUN=false)")
-
-    transport = os.getenv("MCP_TRANSPORT", "stdio")
-    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8000")))
-
-    if transport in ("sse", "streamable-http"):
-        mcp.run(transport=transport, port=port, host="0.0.0.0")
-    else:
-        mcp.run(transport=transport)
+    _run_server(mcp, server_name="mcp-geodownload", dry_run=DRY_RUN, env_var="GEO_DRY_RUN")
 
 
 if __name__ == "__main__":

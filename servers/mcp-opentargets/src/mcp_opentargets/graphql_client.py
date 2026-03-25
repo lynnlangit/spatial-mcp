@@ -251,7 +251,7 @@ async def resolve_gene_symbol(
             )
             return ensembl_id
 
-    except Exception:
-        logger.exception("Failed to resolve gene symbol '%s' via API", symbol)
+    except (OSError, ValueError, KeyError) as exc:
+        logger.warning("Failed to resolve gene symbol '%s' via API: %s", symbol, exc)
 
     return None
