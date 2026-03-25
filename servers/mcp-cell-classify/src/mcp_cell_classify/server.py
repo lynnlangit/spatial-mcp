@@ -34,7 +34,7 @@ mcp = FastMCP("cell-classify")
 
 def _is_dry_run() -> bool:
     """Check if DRY_RUN mode is enabled."""
-    return os.getenv("CELL_CLASSIFY_DRY_RUN", "false").lower() == "true"
+    return os.getenv("CELL_CLASSIFY_DRY_RUN", "true").lower() == "true"
 
 DRY_RUN = _is_dry_run()
 
