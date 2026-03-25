@@ -13,6 +13,7 @@ from .patient_report import (
     FamilyImplications,
     SupportResource,
     ReportMetadata,
+    EvidenceLevel,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "FamilyImplications",
     "SupportResource",
     "ReportMetadata",
+    "EvidenceLevel",
 ]

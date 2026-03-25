@@ -4,12 +4,6 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch, MagicMock
 
-# Mock qiskit before importing our modules
-import sys
-sys.modules['qiskit'] = MagicMock()
-sys.modules['qiskit.circuit'] = MagicMock()
-sys.modules['qiskit.quantum_info'] = MagicMock()
-
 from quantum_celltype_fidelity.embeddings import QuCoWECellTypeEmbedding
 
 

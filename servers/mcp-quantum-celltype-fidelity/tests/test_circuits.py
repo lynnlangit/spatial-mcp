@@ -124,7 +124,7 @@ def test_circuit_serialization():
 def test_different_entanglement_patterns():
     """Test different entanglement patterns."""
     for entanglement in ["ring", "linear", "full"]:
-        circuit = QuCoWECircuit(n_qubits=4, n_layers=2, entanglement=entanglement)
+        circuit = QuCoWECircuit(n_qubits=4, n_layers=2, feature_dim=64, entanglement=entanglement)
         features = np.random.randn(64)
         statevector = circuit.get_statevector(features, backend="cpu")
 

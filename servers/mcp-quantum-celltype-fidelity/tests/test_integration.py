@@ -2,24 +2,7 @@
 
 import pytest
 import numpy as np
-import sys
 from pathlib import Path
-
-# Test that all modules can be imported (with mocking)
-from unittest.mock import MagicMock
-
-# Mock quantum dependencies
-sys.modules['qiskit'] = MagicMock()
-sys.modules['qiskit.circuit'] = MagicMock()
-sys.modules['qiskit.quantum_info'] = MagicMock()
-sys.modules['qiskit.quantum_info.operators'] = MagicMock()
-sys.modules['scipy'] = MagicMock()
-sys.modules['scipy.spatial'] = MagicMock()
-sys.modules['scipy.spatial.distance'] = MagicMock()
-sys.modules['anndata'] = MagicMock()
-sys.modules['sklearn'] = MagicMock()
-sys.modules['sklearn.decomposition'] = MagicMock()
-sys.modules['fastmcp'] = MagicMock()
 
 
 def test_package_structure():
@@ -231,17 +214,11 @@ def test_mcp_server_structure():
 
 def test_pyproject_dependencies():
     """Test that pyproject.toml has correct dependencies."""
-    import tomli
+    import tomllib
     server_root = Path(__file__).parent.parent
 
-    # For Python < 3.11, need tomli
-    try:
-        import tomli
-    except ImportError:
-        import toml as tomli
-
     with open(server_root / "pyproject.toml", "rb") as f:
-        config = tomli.load(f)
+        config = tomllib.load(f)
 
     # Check key dependencies
     dependencies = config["project"]["dependencies"]

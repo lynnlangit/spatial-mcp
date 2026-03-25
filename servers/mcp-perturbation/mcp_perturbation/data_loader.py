@@ -39,7 +39,8 @@ class DatasetLoader:
         Returns:
             Preprocessed AnnData object
         """
-        cache_path = self.cache_dir / f"{geo_id}_processed.h5ad"
+        cache_key = f"{geo_id}_norm{normalize}_hvg{n_hvg}_mg{min_genes}_mc{min_cells}"
+        cache_path = self.cache_dir / f"{cache_key}.h5ad"
 
         # Check cache first
         if cache_path.exists():
@@ -60,6 +61,7 @@ class DatasetLoader:
         adata = self._preprocess(adata, normalize, n_hvg, min_genes, min_cells)
 
         # Cache the processed data
+        ad.settings.allow_write_nullable_strings = True
         adata.write_h5ad(cache_path)
         logger.info(f"Cached processed dataset to {cache_path}")
 
@@ -160,9 +162,8 @@ class DatasetLoader:
 
         Pipeline:
         1. Filter cells and genes
-        2. Normalize (if enabled)
-        3. Select highly variable genes
-        4. Log-transform (if enabled)
+        2. Select highly variable genes (seurat_v3 requires raw counts)
+        3. Normalize and log-transform (if enabled)
         """
         adata = adata.copy()
 
@@ -171,19 +172,16 @@ class DatasetLoader:
         sc.pp.filter_genes(adata, min_cells=min_cells)
         logger.info(f"After filtering: {adata.n_obs} cells, {adata.n_vars} genes")
 
-        if normalize:
-            # Normalize to median total counts
-            sc.pp.normalize_total(adata, target_sum=1e4)
-
-            # Log transform
-            sc.pp.log1p(adata)
-            logger.info("Applied normalization and log1p")
-
+        # HVG selection before normalization — seurat_v3 requires raw counts
         if n_hvg > 0 and n_hvg < adata.n_vars:
-            # Select highly variable genes
-            sc.pp.highly_variable_genes(adata, n_top_genes=n_hvg, flavor="seurat_v3")
+            sc.pp.highly_variable_genes(adata, n_top_genes=n_hvg, flavor="cell_ranger")
             adata = adata[:, adata.var.highly_variable].copy()
             logger.info(f"Selected {n_hvg} highly variable genes")
+
+        if normalize:
+            sc.pp.normalize_total(adata, target_sum=1e4)
+            sc.pp.log1p(adata)
+            logger.info("Applied normalization and log1p")
 
         return adata
 

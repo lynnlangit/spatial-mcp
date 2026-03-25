@@ -1,13 +1,5 @@
 """Tests for fidelity scoring and immune evasion detection."""
 
-import sys
-from unittest.mock import MagicMock
-
-# Mock quantum dependencies before importing
-sys.modules['qiskit'] = MagicMock()
-sys.modules['qiskit.circuit'] = MagicMock()
-sys.modules['qiskit.quantum_info'] = MagicMock()
-
 import pytest
 import numpy as np
 

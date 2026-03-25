@@ -206,13 +206,14 @@ class TestCalibrateUncertainty:
     """Test uncertainty calibration."""
 
     def test_perfect_calibration(self):
-        """Test calibration with perfectly calibrated predictions."""
+        """Test calibration with well-calibrated predictions."""
         np.random.seed(42)
 
-        # Generate perfectly calibrated predictions
+        # Generate well-calibrated predictions: noise matches stated uncertainty
         true_values = np.random.normal(0, 1, 100)
-        predictions = true_values  # Perfect predictions
-        uncertainties = np.ones(100)  # Constant uncertainty
+        noise = np.random.normal(0, 1, 100)  # Noise with std=1
+        predictions = true_values + noise  # Predictions with realistic error
+        uncertainties = np.ones(100)  # Stated uncertainty matches actual noise
 
         calibration = calibrate_uncertainty(
             predictions.tolist(),

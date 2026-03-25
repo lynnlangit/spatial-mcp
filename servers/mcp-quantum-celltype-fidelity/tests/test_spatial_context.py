@@ -2,14 +2,7 @@
 
 import pytest
 import numpy as np
-from unittest.mock import Mock, MagicMock
-import sys
-
-# Mock scipy and anndata
-sys.modules['scipy'] = MagicMock()
-sys.modules['scipy.spatial'] = MagicMock()
-sys.modules['scipy.spatial.distance'] = MagicMock()
-sys.modules['anndata'] = MagicMock()
+from unittest.mock import Mock
 
 from quantum_celltype_fidelity.spatial_context import (
     SpatialNeighborhood,
