@@ -33,6 +33,77 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="MOCKEPIC_DRY_RUN")
 
 
+# Patient-specific mock profiles keyed by normalised ID prefixes
+_PATIENT_PROFILES = {
+    "PAT001": {
+        "demographics": {"age": 58, "sex": "F", "ethnicity": "Caucasian", "name": "Sarah Anderson"},
+        "diagnoses": [
+            {"icd10": "C56.9", "description": "Stage IV High-Grade Serous Ovarian Cancer", "date": "2024-06-15"},
+            {"icd10": "Z15.01", "description": "Genetic susceptibility - BRCA1 mutation", "date": "2024-06-20"},
+        ],
+        "labs": {
+            "CA-125": {"value": 389, "unit": "U/mL", "ref_range": "0-35"},
+            "hemoglobin": {"value": 11.2, "unit": "g/dL", "ref_range": "12-16"},
+            "wbc": {"value": 6.8, "unit": "K/uL", "ref_range": "4-11"},
+        },
+        "medications": [
+            {"name": "Carboplatin", "dose": "AUC 5", "frequency": "q3w"},
+            {"name": "Paclitaxel", "dose": "175 mg/m2", "frequency": "q3w"},
+            {"name": "Bevacizumab", "dose": "15 mg/kg", "frequency": "q3w"},
+        ],
+    },
+    "PAT002": {
+        "demographics": {"age": 42, "sex": "F", "ethnicity": "Caucasian", "name": "Michelle Thompson"},
+        "diagnoses": [
+            {"icd10": "C50.9", "description": "Stage IIA ER+/PR+/HER2- Invasive Ductal Carcinoma", "date": "2024-12-20"},
+            {"icd10": "Z15.01", "description": "Genetic susceptibility - BRCA2 mutation", "date": "2024-12-22"},
+        ],
+        "labs": {
+            "CEA": {"value": 2.1, "unit": "ng/mL", "ref_range": "0-5"},
+            "CA 15-3": {"value": 18, "unit": "U/mL", "ref_range": "0-30"},
+            "hemoglobin": {"value": 12.5, "unit": "g/dL", "ref_range": "12-16"},
+            "wbc": {"value": 7.2, "unit": "K/uL", "ref_range": "4-11"},
+        },
+        "medications": [
+            {"name": "Tamoxifen", "dose": "20 mg", "frequency": "daily"},
+        ],
+    },
+}
+
+# Fallback for unrecognised patient IDs
+_DEFAULT_PROFILE = {
+    "demographics": {"age": 55, "sex": "Unknown", "ethnicity": "Unknown"},
+    "diagnoses": [{"icd10": "Z03.89", "description": "Encounter for observation, unspecified", "date": "2025-01-01"}],
+    "labs": {
+        "hemoglobin": {"value": 13.0, "unit": "g/dL", "ref_range": "12-16"},
+        "wbc": {"value": 6.5, "unit": "K/uL", "ref_range": "4-11"},
+    },
+    "medications": [],
+}
+
+
+def _get_mock_patient_profile(
+    normalised_id: str, include_labs: bool, include_meds: bool
+) -> Dict[str, Any]:
+    """Return the mock profile for *normalised_id*, stripping labs/meds if asked."""
+    # Match on prefix so "PAT001OVC2025" still hits "PAT001"
+    profile = None
+    for prefix, prof in _PATIENT_PROFILES.items():
+        if normalised_id.startswith(prefix):
+            profile = prof
+            break
+    if profile is None:
+        profile = _DEFAULT_PROFILE
+
+    result: Dict[str, Any] = {
+        "demographics": {**profile["demographics"], "mrn": f"MRN{normalised_id}"},
+        "diagnoses": profile["diagnoses"],
+        "labs": profile["labs"] if include_labs else {},
+        "medications": profile["medications"] if include_meds else [],
+    }
+    return result
+
+
 @mcp.tool()
 async def query_patient_records(
     patient_id: str,
@@ -50,28 +121,11 @@ async def query_patient_records(
         Dictionary with patient demographics, diagnoses, labs, medications
     """
     if DRY_RUN:
-        return {
-            "patient_id": patient_id,
-            "demographics": {
-                "age": 64,
-                "sex": "F",
-                "ethnicity": "Caucasian",
-                "mrn": f"MRN{patient_id}"
-            },
-            "diagnoses": [
-                {"icd10": "C50.9", "description": "Breast cancer, unspecified", "date": "2024-01-15"},
-                {"icd10": "E11.9", "description": "Type 2 diabetes", "date": "2020-03-22"}
-            ],
-            "labs": {
-                "hemoglobin": {"value": 12.5, "unit": "g/dL", "ref_range": "12-16"},
-                "wbc": {"value": 7.2, "unit": "K/uL", "ref_range": "4-11"}
-            } if include_labs else {},
-            "medications": [
-                {"name": "Tamoxifen", "dose": "20mg", "frequency": "daily"},
-                {"name": "Metformin", "dose": "500mg", "frequency": "BID"}
-            ] if include_meds else [],
-            "mode": "dry_run"
-        }
+        pid = patient_id.upper().replace("-", "")
+        record = _get_mock_patient_profile(pid, include_labs, include_meds)
+        record["patient_id"] = patient_id
+        record["mode"] = "dry_run"
+        return record
     return {"patient_id": patient_id}
 
 @mcp.tool()
@@ -125,12 +179,20 @@ async def search_diagnoses(
         mock_diagnoses = {
             "C50": [
                 {"code": "C50.9", "description": "Malignant neoplasm of breast, unspecified"},
-                {"code": "C50.1", "description": "Malignant neoplasm of central portion of breast"}
+                {"code": "C50.1", "description": "Malignant neoplasm of central portion of breast"},
+            ],
+            "C56": [
+                {"code": "C56.9", "description": "Malignant neoplasm of ovary, unspecified"},
+                {"code": "C56.1", "description": "Malignant neoplasm of right ovary"},
             ],
             "E11": [
                 {"code": "E11.9", "description": "Type 2 diabetes mellitus without complications"},
-                {"code": "E11.65", "description": "Type 2 diabetes with hyperglycemia"}
-            ]
+                {"code": "E11.65", "description": "Type 2 diabetes with hyperglycemia"},
+            ],
+            "Z15": [
+                {"code": "Z15.01", "description": "Genetic susceptibility to malignant neoplasm of breast"},
+                {"code": "Z15.02", "description": "Genetic susceptibility to malignant neoplasm of ovary"},
+            ],
         }
 
         if icd10_code:

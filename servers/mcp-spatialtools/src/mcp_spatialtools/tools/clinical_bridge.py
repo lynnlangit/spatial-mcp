@@ -9,11 +9,20 @@ logger = logging.getLogger(__name__)
 
 # Clinical condition -> Gene of Interest mapping
 CONDITION_GENE_MAP = {
+    # Ovarian cancer
     "ovarian cancer": ["Ki67", "TP53", "BRCA1", "BRCA2", "EPCAM", "CA125", "PAX8"],
     "HGSOC": ["TP53", "Ki67", "FOXM1", "MYC", "CCNE1"],  # High-grade serous
     "platinum-resistant": ["ABCB1", "ERCC1", "GSTP1", "BRCA1"],
+    "serous carcinoma": ["TP53", "PAX8", "WT1", "CA125"],
+    # Breast cancer
+    "breast cancer": ["ESR1", "PGR", "ERBB2", "Ki67", "GATA3", "FOXA1", "EPCAM"],
+    "invasive ductal": ["ESR1", "PGR", "ERBB2", "Ki67", "CCND1", "PIK3CA"],
+    "er+": ["ESR1", "PGR", "GATA3", "FOXA1", "CCND1"],
+    "her2-": ["ERBB2", "ESR1", "PGR"],
+    "luminal": ["ESR1", "PGR", "GATA3", "FOXA1", "KRT18", "KRT19"],
+    # General
     "stage IV": ["Ki67", "MYC", "VIM", "CDH1"],  # Advanced cancer markers
-    "serous carcinoma": ["TP53", "PAX8", "WT1", "CA125"]
+    "stage II": ["Ki67", "EPCAM", "CDH1"],  # Early-stage markers
 }
 
 # Treatment -> Biomarker mapping
@@ -21,14 +30,24 @@ TREATMENT_BIOMARKER_MAP = {
     "bevacizumab": ["VEGFA", "CD31", "HIF1A", "KDR"],  # Anti-angiogenic
     "carboplatin": ["ERCC1", "XPA", "BRCA1", "BRCA2"],  # DNA repair
     "paclitaxel": ["TUBB3", "MAP2", "MAPT"],  # Microtubule targeting
-    "avastin": ["VEGFA", "CD31", "HIF1A"]  # Brand name for bevacizumab
+    "avastin": ["VEGFA", "CD31", "HIF1A"],  # Brand name for bevacizumab
+    "tamoxifen": ["ESR1", "PGR", "CYP2D6"],  # ER antagonist
+    "letrozole": ["ESR1", "CYP19A1"],  # Aromatase inhibitor
+    "palbociclib": ["CDK4", "CDK6", "CCND1", "RB1"],  # CDK4/6 inhibitor
+    "trastuzumab": ["ERBB2", "EGFR"],  # Anti-HER2
+    "doxorubicin": ["TOP2A", "TP53"],  # Anthracycline
 }
 
 # Observation/Biomarker -> Gene mapping
 BIOMARKER_GENE_MAP = {
     "CA-125": ["CA125", "MUC16"],  # CA-125 is encoded by MUC16
     "BRCA": ["BRCA1", "BRCA2"],
-    "high CA-125": ["CA125", "MUC16", "Ki67", "TP53"]  # Elevated tumor marker
+    "high CA-125": ["CA125", "MUC16", "Ki67", "TP53"],  # Elevated tumor marker
+    "CEA": ["CEACAM5"],  # Carcinoembryonic antigen
+    "CA 15-3": ["MUC1"],  # Breast cancer marker
+    "ER": ["ESR1"],  # Estrogen receptor
+    "PR": ["PGR"],  # Progesterone receptor
+    "HER2": ["ERBB2"],  # Human epidermal growth factor receptor 2
 }
 
 # Patient ID -> Spatial Dataset mapping
