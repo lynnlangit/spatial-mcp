@@ -156,6 +156,31 @@ async def generate_patient_report(
                 "suggestion": "Check that all required fields are present and correctly typed"
             }
 
+        # Completeness guard — catch structurally valid but empty reports
+        completeness_errors = []
+        if not report_data.patient_info.patient_id.strip():
+            completeness_errors.append("patient_info.patient_id is empty")
+        if not report_data.diagnosis_summary.cancer_type.strip():
+            completeness_errors.append("diagnosis_summary.cancer_type is empty")
+        if len(report_data.genomic_findings) == 0:
+            completeness_errors.append(
+                "genomic_findings is empty — at least one finding is required"
+            )
+        if len(report_data.treatment_options) == 0:
+            completeness_errors.append(
+                "treatment_options is empty — at least one option is required"
+            )
+        if completeness_errors:
+            return {
+                "status": "error",
+                "error": "Report data incomplete",
+                "completeness_errors": completeness_errors,
+                "suggestion": (
+                    "Ensure patient_id, cancer_type, genomic_findings, "
+                    "and treatment_options are all populated before generating a report."
+                ),
+            }
+
         # DRY_RUN mode - return synthetic response
         if DRY_RUN:
             file_name = f"{report_data.patient_info.patient_id}_{report_type}_report_DRAFT.pdf"

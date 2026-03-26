@@ -2084,6 +2084,154 @@ PATIENT_SPATIAL_MAP = {
 
 
 @mcp.tool()
+async def resolve_patient_data_paths(
+    patient_id: str,
+) -> Dict[str, Any]:
+    """Resolve file paths for a patient's spatial transcriptomics data.
+
+    Given a patient identifier, returns the expected file paths for spatial
+    expression data, coordinates, and region annotations. Checks which files
+    actually exist on disk.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT001-OVC-2025", "PAT002-BC-2026",
+                    or aliases like "patient-001", "PAT001")
+
+    Returns:
+        Dictionary with:
+        - patient_id: Resolved patient dataset ID
+        - data_directory: Path to the spatial data directory
+        - files: Dict mapping file type to path (or None if missing)
+        - available: List of file types that exist on disk
+        - ready: Whether any spatial data files are available
+    """
+    spatial_dataset = PATIENT_SPATIAL_MAP.get(patient_id, patient_id)
+    patient_data_dir = DATA_DIR / "patient-data" / spatial_dataset / "spatial"
+
+    files = {
+        "expression": patient_data_dir / "visium_gene_expression.csv",
+        "coordinates": patient_data_dir / "visium_spatial_coordinates.csv",
+        "annotations": patient_data_dir / "visium_region_annotations.csv",
+        "h5ad": patient_data_dir / f"{spatial_dataset}_minimal_spatial.h5ad",
+    }
+
+    resolved = {}
+    available = []
+    for ftype, fpath in files.items():
+        if fpath.exists():
+            resolved[ftype] = str(fpath)
+            available.append(ftype)
+        else:
+            resolved[ftype] = None
+
+    return {
+        "status": "success",
+        "patient_id": spatial_dataset,
+        "data_directory": str(patient_data_dir),
+        "directory_exists": patient_data_dir.exists(),
+        "files": resolved,
+        "available": available,
+        "ready": len(available) > 0,
+    }
+
+
+@mcp.tool()
+async def set_patient_context(
+    patient_id: str,
+    cancer_type: Optional[str] = None,
+    conditions: Optional[List[str]] = None,
+    medications: Optional[List[str]] = None,
+    biomarkers: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Set clinical context for a patient to guide spatial analysis.
+
+    Maps clinical information (conditions, medications, biomarkers) to genes
+    of interest and suggested spatial analyses. Use this before running spatial
+    tools to get context-aware recommendations.
+
+    Args:
+        patient_id: Patient identifier
+        cancer_type: Cancer type (e.g., "breast cancer", "ovarian cancer")
+        conditions: List of clinical conditions (e.g., ["ER+ breast cancer", "BRCA2"])
+        medications: List of current medications (e.g., ["tamoxifen"])
+        biomarkers: Dict of biomarker results (e.g., {"CA 15-3": 18, "CEA": 2.1})
+
+    Returns:
+        Dictionary with:
+        - genes_of_interest: Genes relevant to the patient's clinical profile
+        - suggested_analyses: Recommended spatial analyses
+        - condition_gene_mappings: Which conditions mapped to which genes
+    """
+    # Claude Desktop may pass List/Dict params as JSON strings
+    if isinstance(conditions, str):
+        conditions = json.loads(conditions)
+    if isinstance(medications, str):
+        medications = json.loads(medications)
+    if isinstance(biomarkers, str):
+        biomarkers = json.loads(biomarkers)
+
+    genes_of_interest = set()
+    condition_mappings = {}
+
+    # Add cancer type as a condition if provided
+    all_conditions = list(conditions or [])
+    if cancer_type and cancer_type not in all_conditions:
+        all_conditions.append(cancer_type)
+
+    for condition in all_conditions:
+        condition_lower = condition.lower()
+        for key, genes in CONDITION_GENE_MAP.items():
+            if key in condition_lower:
+                genes_of_interest.update(genes)
+                condition_mappings[condition] = genes
+
+    medication_mappings = {}
+    for medication in (medications or []):
+        medication_lower = medication.lower()
+        for key, genes in TREATMENT_BIOMARKER_MAP.items():
+            if key in medication_lower:
+                genes_of_interest.update(genes)
+                medication_mappings[medication] = genes
+
+    if biomarkers:
+        for biomarker_name, value in biomarkers.items():
+            biomarker_lower = biomarker_name.lower()
+            if isinstance(value, (int, float)) and value > 100:
+                key = f"high {biomarker_lower}"
+                if key in BIOMARKER_GENE_MAP:
+                    genes_of_interest.update(BIOMARKER_GENE_MAP[key])
+            for key, genes in BIOMARKER_GENE_MAP.items():
+                if key in biomarker_lower:
+                    genes_of_interest.update(genes)
+
+    if not genes_of_interest:
+        genes_of_interest = {"Ki67", "CD8A", "VIM", "EPCAM"}
+
+    suggested_analyses = []
+    if any("cancer" in c.lower() for c in all_conditions):
+        suggested_analyses.extend([
+            "Spatial autocorrelation for proliferation markers (Ki67)",
+            "Immune infiltration pattern analysis (CD8A, CD4)",
+            "Tumor-stroma interaction assessment (VIM, EPCAM)",
+        ])
+    if medications:
+        if any("tamoxifen" in m.lower() for m in medications):
+            suggested_analyses.append(
+                "ER pathway spatial expression (ESR1, PGR, GATA3)"
+            )
+
+    return {
+        "status": "success",
+        "patient_id": patient_id,
+        "genes_of_interest": sorted(list(genes_of_interest)),
+        "num_genes": len(genes_of_interest),
+        "suggested_analyses": suggested_analyses,
+        "condition_gene_mappings": condition_mappings,
+        "medication_gene_mappings": medication_mappings,
+    }
+
+
+@mcp.tool()
 async def get_spatial_data_for_patient(
     patient_id: str,
     tissue_type: str = "tumor",
@@ -2124,6 +2272,14 @@ async def get_spatial_data_for_patient(
         >>> print(result["genes_of_interest"])
         ['Ki67', 'TP53', 'VEGFA', 'CA125', 'BRCA1']
     """
+    # Claude Desktop may pass List/Dict params as JSON strings
+    if isinstance(conditions, str):
+        conditions = json.loads(conditions)
+    if isinstance(medications, str):
+        medications = json.loads(medications)
+    if isinstance(biomarkers, str):
+        biomarkers = json.loads(biomarkers)
+
     # Map patient ID to spatial dataset
     spatial_dataset = PATIENT_SPATIAL_MAP.get(patient_id, patient_id)
 

@@ -185,6 +185,10 @@ async def fetch_expression_data(
     Returns:
         Dictionary with expression matrix and sample metadata
     """
+    # Claude Desktop may pass List params as JSON strings
+    if isinstance(genes, str):
+        genes = json.loads(genes)
+
     if DRY_RUN:
         # Generate mock expression data
         num_samples = 100 if tissue_type == "primary_tumor" else 20
@@ -239,6 +243,12 @@ async def compare_to_cohort(
     Returns:
         Dictionary with statistical comparison results
     """
+    # Claude Desktop may pass Dict/List params as JSON strings
+    if isinstance(sample_expression, str):
+        sample_expression = json.loads(sample_expression)
+    if isinstance(genes, str):
+        genes = json.loads(genes)
+
     if DRY_RUN:
         comparison_results = []
 
@@ -352,6 +362,10 @@ async def get_mutation_data(
     Returns:
         Dictionary with mutation frequencies and types
     """
+    # Claude Desktop may pass List params as JSON strings
+    if isinstance(genes, str):
+        genes = json.loads(genes)
+
     if DRY_RUN:
         mutation_data = []
 

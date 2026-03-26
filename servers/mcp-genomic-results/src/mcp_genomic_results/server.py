@@ -48,6 +48,9 @@ def _parse_vcf_file(vcf_path: str, min_af: float = 0.0) -> List[Dict[str, Any]]:
     Pure Python - no cyvcf2/pysam dependency.  Handles the INFO field schema
     used in the PAT001 somatic_variants.vcf (DP, AF, GENE, EFFECT, COSMIC).
     """
+    if DRY_RUN:
+        return []  # Caller uses _impl DRY_RUN path; guard here prevents file-open
+
     variants: List[Dict[str, Any]] = []
     path = Path(vcf_path)
     if not path.exists():
@@ -116,6 +119,14 @@ def _parse_cns_file(
 
     Returns amplifications, deletions, and diploid-normal segments.
     """
+    if DRY_RUN:
+        return {  # Guard prevents file-open in DRY_RUN mode
+            "amplifications": [],
+            "deletions": [],
+            "neutral": [],
+            "total_segments": 0,
+        }
+
     path = Path(cns_path)
     if not path.exists():
         raise FileNotFoundError(f"CNS file not found: {cns_path}")
