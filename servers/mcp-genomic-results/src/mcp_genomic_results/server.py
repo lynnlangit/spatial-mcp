@@ -316,10 +316,22 @@ async def _calculate_hrd_impl(
 
     brca_mutated = any(v == "mutated" for v in brca_status.values())
 
-    if hrd_positive or brca_mutated:
+    if hrd_positive and brca_mutated:
+        recommendation = (
+            f"HRD-positive (score {hrd_score} >= 42) with BRCA mutation. "
+            "Strongly consider PARP inhibitor therapy (olaparib, niraparib)."
+        )
+        parp_eligible = True
+    elif hrd_positive:
         recommendation = (
             f"HRD-positive (score {hrd_score} >= 42). "
             "Consider PARP inhibitor therapy (olaparib, niraparib)."
+        )
+        parp_eligible = True
+    elif brca_mutated:
+        recommendation = (
+            f"HRD-negative (score {hrd_score} < 42), but BRCA mutation detected. "
+            "PARP inhibitor eligible based on BRCA status (OlympiAD/OlympiA evidence)."
         )
         parp_eligible = True
     else:

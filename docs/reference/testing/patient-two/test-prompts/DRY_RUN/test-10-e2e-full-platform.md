@@ -41,7 +41,7 @@ Research question: What is the optimal adjuvant and surveillance strategy, and w
 
 2a. **Spatial transcriptomics (spatialtools):** Load spatial coordinates and gene expression from patient-data/PAT002-BC-2026/spatial/. Run differential expression between tumor vs stroma regions. Compute spatial autocorrelation (Moran's I) for ESR1 and MKI67 — ESR1 clustering indicates homogeneous ER expression (good for endocrine therapy).
 
-2b. **Multi-omics integration (multiomics):** Run integrate_omics_data with RNA, protein, and phospho CSVs from patient-data/PAT002-BC-2026/multiomics/. Then calculate_stouffer_meta for key breast cancer genes: ESR1, PGR, GATA3, FOXA1, PIK3CA, AKT1, CCND1, CDK4, MKI67, PTEN, ABCB1.
+2b. **Multi-omics integration (multiomics):** Run integrate_omics_data with exact paths: rna_path="/data/patient-data/PAT002-BC-2026/multiomics/tumor_rna_seq.csv", protein_path="/data/patient-data/PAT002-BC-2026/multiomics/tumor_proteomics.csv", phospho_path="/data/patient-data/PAT002-BC-2026/multiomics/tumor_phosphoproteomics.csv", metadata_path="/data/patient-data/PAT002-BC-2026/multiomics/sample_metadata.csv". Then calculate_stouffer_meta for key breast cancer genes: ESR1, PGR, GATA3, FOXA1, PIK3CA, AKT1, CCND1, CDK4, MKI67, PTEN, ABCB1.
 
 2c. **Immune deconvolution (cibersortx):** Run run_mock_deconvolution on expression data with LM22 signature matrix. Report the top 5 immune cell types by fraction — for ER+ Luminal A, we expect moderate CD8+ T cells (~15-20%), low Tregs (~3%), moderate macrophages, and higher B cell fraction than HGSOC.
 

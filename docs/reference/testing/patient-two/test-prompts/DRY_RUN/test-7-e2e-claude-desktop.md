@@ -1,6 +1,6 @@
 # PatientTwo End-to-End Test — Claude Desktop
 
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-03-26
 
 **Purpose:** Single-prompt E2E test for Claude Desktop with all custom MCP servers in DRY_RUN mode.
 Adapted for PAT002-BC-2026 (Stage IIA ER+/PR+/HER2- Invasive Ductal Carcinoma, BRCA2 germline).
@@ -42,8 +42,12 @@ Run spatial analysis:
 
 ## Stage 5 — Multi-Omics Integration (multiomics)
 Integrate omics layers:
-- integrate_omics_data with RNA, protein, and phospho CSVs from patient-data/PAT002-BC-2026/multiomics/
-- calculate_stouffer_meta for breast cancer genes (ESR1, PGR, PIK3CA, CCND1, MKI67)
+- Call integrate_omics_data with these exact paths:
+  - rna_path: "/data/patient-data/PAT002-BC-2026/multiomics/tumor_rna_seq.csv"
+  - protein_path: "/data/patient-data/PAT002-BC-2026/multiomics/tumor_proteomics.csv"
+  - phospho_path: "/data/patient-data/PAT002-BC-2026/multiomics/tumor_phosphoproteomics.csv"
+  - metadata_path: "/data/patient-data/PAT002-BC-2026/multiomics/sample_metadata.csv"
+- Call calculate_stouffer_meta with p_values_dict and effect_sizes_dict for breast cancer genes (ESR1, PGR, PIK3CA, CCND1, MKI67). Use 3 modalities: rna, protein, phospho. Pass nominal p-values (e.g., {"rna": [0.001, 0.01, 0.003, 0.02, 0.15], "protein": [0.002, 0.02, 0.005, 0.03, 0.12], "phospho": [0.01, 0.03, 0.008, 0.04, 0.18]}) and matching effect_sizes_dict with log2 fold changes.
 
 ## Stage 6 — Patient Report (patient-report)
 First call get_report_template_schema to get the exact JSON schema, then construct valid JSON and call generate_patient_report:

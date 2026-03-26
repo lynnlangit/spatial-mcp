@@ -47,8 +47,12 @@ Run spatial analysis:
 
 ## Stage 5 — Multi-Omics Integration (multiomics)
 Integrate omics layers:
-- integrate_omics_data with RNA, protein, and phospho CSVs from patient-data/PAT002-BC-2026/multiomics/
-- calculate_stouffer_meta for breast cancer genes (ESR1, PGR, PIK3CA, CCND1, MKI67)
+- Call integrate_omics_data with these exact paths:
+  - rna_path: "/data/patient-data/PAT002-BC-2026/multiomics/tumor_rna_seq.csv"
+  - protein_path: "/data/patient-data/PAT002-BC-2026/multiomics/tumor_proteomics.csv"
+  - phospho_path: "/data/patient-data/PAT002-BC-2026/multiomics/tumor_phosphoproteomics.csv"
+  - metadata_path: "/data/patient-data/PAT002-BC-2026/multiomics/sample_metadata.csv"
+- Call calculate_stouffer_meta with p_values_dict and effect_sizes_dict for breast cancer genes (ESR1, PGR, PIK3CA, CCND1, MKI67). Use 3 modalities: rna, protein, phospho.
 
 ## Stage 6 — Literature Search (PubMed connector)
 Search PubMed for evidence supporting treatment decisions:
