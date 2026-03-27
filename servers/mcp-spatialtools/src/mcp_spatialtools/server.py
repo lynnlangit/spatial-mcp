@@ -2215,9 +2215,9 @@ async def resolve_patient_data_paths(
 async def set_patient_context(
     patient_id: str,
     cancer_type: Optional[str] = None,
-    conditions: Optional[List[str]] = None,
-    medications: Optional[List[str]] = None,
-    biomarkers: Optional[Dict[str, Any]] = None,
+    conditions: Optional[Any] = None,
+    medications: Optional[Any] = None,
+    biomarkers: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Set clinical context for a patient to guide spatial analysis.
 
@@ -2312,9 +2312,9 @@ async def get_spatial_data_for_patient(
     patient_id: str,
     tissue_type: str = "tumor",
     include_clinical_context: bool = True,
-    conditions: Optional[List[str]] = None,
-    medications: Optional[List[str]] = None,
-    biomarkers: Optional[Dict[str, Any]] = None
+    conditions: Optional[Any] = None,
+    medications: Optional[Any] = None,
+    biomarkers: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Get spatial transcriptomics data for a patient with clinical context.
 

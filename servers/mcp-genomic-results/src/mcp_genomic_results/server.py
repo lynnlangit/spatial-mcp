@@ -47,10 +47,9 @@ def _parse_vcf_file(vcf_path: str, min_af: float = 0.0) -> List[Dict[str, Any]]:
 
     Pure Python - no cyvcf2/pysam dependency.  Handles the INFO field schema
     used in the PAT001 somatic_variants.vcf (DP, AF, GENE, EFFECT, COSMIC).
-
-    NOTE: Only called in real mode — DRY_RUN is checked in the @mcp.tool()
-    handler before this function is ever reached.
     """
+    if DRY_RUN:
+        return []
     variants: List[Dict[str, Any]] = []
     path = Path(vcf_path)
     if not path.exists():
@@ -118,10 +117,9 @@ def _parse_cns_file(
     """Parse a CNVkit .cns file into classified segments.
 
     Returns amplifications, deletions, and diploid-normal segments.
-
-    NOTE: Only called in real mode — DRY_RUN is checked in the @mcp.tool()
-    handler before this function is ever reached.
     """
+    if DRY_RUN:
+        return {"amplifications": [], "deletions": [], "neutral": [], "total_segments": 0}
     path = Path(cns_path)
     if not path.exists():
         raise FileNotFoundError(f"CNS file not found: {cns_path}")
@@ -185,7 +183,18 @@ async def _parse_somatic_variants_impl(
     vcf_path: str,
     min_allele_frequency: float = 0.05,
 ) -> Dict[str, Any]:
-    """Implementation for parse_somatic_variants (real mode only)."""
+    """Implementation for parse_somatic_variants."""
+    if DRY_RUN:
+        return add_dry_run_warning({
+            "vcf_path": vcf_path, "total_variants": 12,
+            "somatic_mutations": [
+                {"gene": "TP53", "variant": "R175H", "af": 0.73, "classification": "Pathogenic"},
+                {"gene": "PIK3CA", "variant": "E545K", "af": 0.42, "classification": "Pathogenic"},
+                {"gene": "PTEN", "variant": "LOH", "af": 0.85, "classification": "Pathogenic"},
+            ],
+            "copy_number_events": {"amplifications": ["MYC", "CCNE1", "AKT2"], "deletions": ["RB1", "CDKN2A"]},
+            "wild_type": ["BRCA1", "BRAF", "KRAS", "ARID1A"], "actionable_count": 3,
+        })
     variants = _parse_vcf_file(vcf_path, min_af=min_allele_frequency)
 
     somatic_mutations = []
@@ -225,7 +234,23 @@ async def _parse_cnv_calls_impl(
     amp_log2_threshold: float = 0.6,
     del_log2_threshold: float = -0.6,
 ) -> Dict[str, Any]:
-    """Implementation for parse_cnv_calls (real mode only)."""
+    """Implementation for parse_cnv_calls."""
+    if DRY_RUN:
+        return add_dry_run_warning({
+            "cns_path": cns_path,
+            "thresholds": {"amplification": amp_log2_threshold, "deletion": del_log2_threshold},
+            "amplifications": [
+                {"gene": "MYC", "log2": 1.32, "cn": 5, "significance": "Aggressive disease"},
+                {"gene": "CCNE1", "log2": 1.58, "cn": 6, "significance": "Platinum resistance"},
+                {"gene": "AKT2", "log2": 1.15, "cn": 4, "significance": "PI3K/AKT activation"},
+            ],
+            "deletions": [
+                {"gene": "RB1", "log2": -1.85, "cn": 0, "significance": "Cell cycle deregulation"},
+                {"gene": "CDKN2A", "log2": -2.12, "cn": 0, "significance": "p16 loss"},
+                {"gene": "PTEN", "log2": -1.45, "cn": 1, "significance": "PI3K/AKT activation"},
+            ],
+            "neutral_count": 9, "total_segments": 15,
+        })
     result = _parse_cns_file(cns_path, amp_threshold=amp_log2_threshold, del_threshold=del_log2_threshold)
 
     return add_dry_run_warning({
@@ -242,7 +267,16 @@ async def _calculate_hrd_impl(
     vcf_path: str,
     cns_path: str,
 ) -> Dict[str, Any]:
-    """Implementation for calculate_hr_deficiency_score (real mode only)."""
+    """Implementation for calculate_hr_deficiency_score."""
+    if DRY_RUN:
+        return add_dry_run_warning({
+            "vcf_path": vcf_path, "cns_path": cns_path,
+            "brca_status": {"BRCA1": "wild_type", "BRCA2": "wild_type"},
+            "genomic_scars": {"LOH": 18, "TAI": 14, "LST": 12},
+            "hrd_score": 44, "hrd_positive": True, "parp_eligible": True,
+            "confidence": "Low - simplified POC scoring, not clinical-grade",
+            "recommendation": "HRD-positive (score 44 >= 42). Consider PARP inhibitor therapy (olaparib, niraparib).",
+        })
     # Parse VCF for BRCA status
     variants = _parse_vcf_file(vcf_path, min_af=0.0)
     brca_status: Dict[str, str] = {}
@@ -317,7 +351,25 @@ async def _generate_report_impl(
     cns_path: str,
     patient_id: str = "UNKNOWN",
 ) -> Dict[str, Any]:
-    """Implementation for generate_genomic_report (real mode only)."""
+    """Implementation for generate_genomic_report."""
+    if DRY_RUN:
+        return add_dry_run_warning({
+            "patient_id": patient_id, "report_type": "Comprehensive Genomic Report",
+            "summary": {"total_mutations": 3, "actionable_mutations": 3, "cn_amplifications": 3,
+                        "cn_deletions": 3, "hrd_score": 44, "hrd_status": "Positive"},
+            "actionable_findings": [
+                {"gene": "TP53", "finding": "R175H missense", "therapy": "APR-246 (investigational)"},
+                {"gene": "PIK3CA", "finding": "E545K activating", "therapy": "Alpelisib (off-label)"},
+                {"gene": "PTEN", "finding": "LOH", "therapy": "AKT inhibitors"},
+                {"gene": "CCNE1", "finding": "Amplification (cn=6)", "therapy": "CDK2/Wee1 inhibitors"},
+                {"gene": "HRD", "finding": "Score 44 (positive)", "therapy": "PARP inhibitors"},
+            ],
+            "therapy_recommendations": [
+                "PARP inhibitor (olaparib/niraparib) - HRD-positive",
+                "PI3K/AKT pathway inhibition - PIK3CA + PTEN + AKT2 convergence",
+                "Clinical trial enrollment - APR-246 for TP53-mutant HGSOC",
+            ],
+        })
     vcf_result = await _parse_somatic_variants_impl(vcf_path=vcf_path)
     cnv_result = await _parse_cnv_calls_impl(cns_path=cns_path)
     hrd_result = await _calculate_hrd_impl(vcf_path=vcf_path, cns_path=cns_path)
