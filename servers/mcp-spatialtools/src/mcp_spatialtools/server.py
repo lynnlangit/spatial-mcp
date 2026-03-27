@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, field_validator
+
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend for server use
 import matplotlib.pyplot as plt
@@ -2049,6 +2051,40 @@ async def deconvolve_cell_types(
 # TOOL 10: get_spatial_data_for_patient (Clinical-Spatial Bridge)
 # ============================================================================
 
+
+class SpatialPatientQuery(BaseModel):
+    """Pydantic model for get_spatial_data_for_patient / set_patient_context inputs.
+
+    Claude Desktop may pass List/Dict parameters as JSON strings instead of
+    native Python objects.  The field_validators transparently parse strings
+    via json.loads so downstream code always receives the expected types.
+    """
+    conditions: Optional[List[str]] = None
+    medications: Optional[List[str]] = None
+    biomarkers: Optional[Dict[str, Any]] = None
+
+    @field_validator("conditions", mode="before")
+    @classmethod
+    def _parse_conditions(cls, v):
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
+
+    @field_validator("medications", mode="before")
+    @classmethod
+    def _parse_medications(cls, v):
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
+
+    @field_validator("biomarkers", mode="before")
+    @classmethod
+    def _parse_biomarkers(cls, v):
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
+
+
 # Clinical condition → Gene of Interest mapping
 CONDITION_GENE_MAP = {
     "ovarian cancer": ["Ki67", "TP53", "BRCA1", "BRCA2", "EPCAM", "CA125", "PAX8"],
@@ -2087,11 +2123,11 @@ PATIENT_SPATIAL_MAP = {
 async def resolve_patient_data_paths(
     patient_id: str,
 ) -> Dict[str, Any]:
-    """Resolve file paths for a patient's spatial transcriptomics data.
+    """Resolve file paths for a patient's spatial, genomic, and multi-omics data.
 
-    Given a patient identifier, returns the expected file paths for spatial
-    expression data, coordinates, and region annotations. Checks which files
-    actually exist on disk.
+    Given a patient identifier, returns the expected file paths across three
+    data categories: spatial transcriptomics, genomic variants, and multi-omics
+    integration.  Checks which files actually exist on disk.
 
     Args:
         patient_id: Patient identifier (e.g., "PAT001-OVC-2025", "PAT002-BC-2026",
@@ -2100,38 +2136,78 @@ async def resolve_patient_data_paths(
     Returns:
         Dictionary with:
         - patient_id: Resolved patient dataset ID
-        - data_directory: Path to the spatial data directory
-        - files: Dict mapping file type to path (or None if missing)
-        - available: List of file types that exist on disk
-        - ready: Whether any spatial data files are available
+        - spatial: files dict, available list, ready flag
+        - genomics: files dict, available list, ready flag
+        - multiomics: files dict, available list, ready flag
     """
     spatial_dataset = PATIENT_SPATIAL_MAP.get(patient_id, patient_id)
-    patient_data_dir = DATA_DIR / "patient-data" / spatial_dataset / "spatial"
+    base_dir = DATA_DIR / "patient-data" / spatial_dataset
 
-    files = {
-        "expression": patient_data_dir / "visium_gene_expression.csv",
-        "coordinates": patient_data_dir / "visium_spatial_coordinates.csv",
-        "annotations": patient_data_dir / "visium_region_annotations.csv",
-        "h5ad": patient_data_dir / f"{spatial_dataset}_minimal_spatial.h5ad",
+    # --- Spatial ---
+    spatial_dir = base_dir / "spatial"
+    spatial_files = {
+        "expression": spatial_dir / "visium_gene_expression.csv",
+        "coordinates": spatial_dir / "visium_spatial_coordinates.csv",
+        "annotations": spatial_dir / "visium_region_annotations.csv",
+        "h5ad": spatial_dir / f"{spatial_dataset}_minimal_spatial.h5ad",
     }
 
-    resolved = {}
-    available = []
-    for ftype, fpath in files.items():
-        if fpath.exists():
-            resolved[ftype] = str(fpath)
-            available.append(ftype)
-        else:
-            resolved[ftype] = None
+    # --- Genomics ---
+    genomics_dir = base_dir / "genomics"
+    genomics_files = {
+        "somatic_variants": genomics_dir / "somatic_variants.vcf",
+        "copy_number": genomics_dir / "copy_number_results.cns",
+    }
+
+    # --- Multi-omics ---
+    multiomics_dir = base_dir / "multiomics"
+    multiomics_files = {
+        "rna": multiomics_dir / "tumor_rna_seq.csv",
+        "protein": multiomics_dir / "tumor_proteomics.csv",
+        "phospho": multiomics_dir / "tumor_phosphoproteomics.csv",
+        "metadata": multiomics_dir / "sample_metadata.csv",
+    }
+
+    def _resolve(file_map):
+        resolved = {}
+        available = []
+        for ftype, fpath in file_map.items():
+            if fpath.exists():
+                resolved[ftype] = str(fpath)
+                available.append(ftype)
+            else:
+                resolved[ftype] = None
+        return resolved, available
+
+    sp_resolved, sp_avail = _resolve(spatial_files)
+    gn_resolved, gn_avail = _resolve(genomics_files)
+    mo_resolved, mo_avail = _resolve(multiomics_files)
 
     return {
         "status": "success",
         "patient_id": spatial_dataset,
-        "data_directory": str(patient_data_dir),
-        "directory_exists": patient_data_dir.exists(),
-        "files": resolved,
-        "available": available,
-        "ready": len(available) > 0,
+        "base_directory": str(base_dir),
+        "spatial": {
+            "directory": str(spatial_dir),
+            "directory_exists": spatial_dir.exists(),
+            "files": sp_resolved,
+            "available": sp_avail,
+            "ready": len(sp_avail) > 0,
+        },
+        "genomics": {
+            "directory": str(genomics_dir),
+            "directory_exists": genomics_dir.exists(),
+            "files": gn_resolved,
+            "available": gn_avail,
+            "ready": len(gn_avail) > 0,
+        },
+        "multiomics": {
+            "directory": str(multiomics_dir),
+            "directory_exists": multiomics_dir.exists(),
+            "files": mo_resolved,
+            "available": mo_avail,
+            "ready": len(mo_avail) > 0,
+        },
     }
 
 
@@ -2162,13 +2238,13 @@ async def set_patient_context(
         - suggested_analyses: Recommended spatial analyses
         - condition_gene_mappings: Which conditions mapped to which genes
     """
-    # Claude Desktop may pass List/Dict params as JSON strings
-    if isinstance(conditions, str):
-        conditions = json.loads(conditions)
-    if isinstance(medications, str):
-        medications = json.loads(medications)
-    if isinstance(biomarkers, str):
-        biomarkers = json.loads(biomarkers)
+    # Validate and coerce inputs through Pydantic model (handles JSON strings)
+    query = SpatialPatientQuery(
+        conditions=conditions, medications=medications, biomarkers=biomarkers
+    )
+    conditions = query.conditions
+    medications = query.medications
+    biomarkers = query.biomarkers
 
     genes_of_interest = set()
     condition_mappings = {}
@@ -2272,13 +2348,13 @@ async def get_spatial_data_for_patient(
         >>> print(result["genes_of_interest"])
         ['Ki67', 'TP53', 'VEGFA', 'CA125', 'BRCA1']
     """
-    # Claude Desktop may pass List/Dict params as JSON strings
-    if isinstance(conditions, str):
-        conditions = json.loads(conditions)
-    if isinstance(medications, str):
-        medications = json.loads(medications)
-    if isinstance(biomarkers, str):
-        biomarkers = json.loads(biomarkers)
+    # Validate and coerce inputs through Pydantic model (handles JSON strings)
+    query = SpatialPatientQuery(
+        conditions=conditions, medications=medications, biomarkers=biomarkers
+    )
+    conditions = query.conditions
+    medications = query.medications
+    biomarkers = query.biomarkers
 
     # Map patient ID to spatial dataset
     spatial_dataset = PATIENT_SPATIAL_MAP.get(patient_id, patient_id)
