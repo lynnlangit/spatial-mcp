@@ -17,7 +17,7 @@
 |---|---|---|
 | 0 | Ground-truth baseline (lock + pytest sanity on one server) | ✅ |
 | 1 | Reference impls (no changes: boilerplate, patient-report) | ✅ (verified already current) |
-| 2 | Group B bulk migration (13 servers, `>=0.2.0` → `>=2.13.0`) | 🟡 7/13 |
+| 2 | Group B bulk migration (13 servers, `>=0.2.0` → `>=2.13.0`) | 🟡 11/13 |
 | 3 | Group A migration (multiomics, quantum-celltype-fidelity) | ☐ |
 | 4 | `mcp-epic` bump (`>=2.0.0` → `>=2.13.0`) | ☐ |
 | 5 | Deployment-manifest swap (config only) | ☐ |
@@ -40,10 +40,10 @@ Order: simplest first, flagged servers last.
 | 5  | mcp-cibersortx       | >=0.2.0 | ✅ | ✅ | ✅ 19/19  | ✅ 1c1ea5a | Phase 2a done |
 | 6  | mcp-mockepic         | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ 12aed42 | 3 tools, CI kept |
 | 7  | mcp-mocktcga         | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ 7ef8d9c | 5 tools, fastmcp 3.0.2 |
-| 8  | mcp-cell-classify    | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | 3 tools |
-| 9  | mcp-fgbio            | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | resources + rpy2 via ABI |
-| 10 | mcp-openimagedata    | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | 5 tools + resources |
-| 11 | mcp-spatialtools     | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | 16 tools (biggest) |
+| 8  | mcp-cell-classify    | >=0.2.0 | ✅ | ✅ | ✅ 20/20  | ✅ 1d155b3 | |
+| 9  | mcp-fgbio            | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ 449871e | 4 tools, no rpy2 |
+| 10 | mcp-openimagedata    | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ af59d12 | 5 tools |
+| 11 | mcp-spatialtools     | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ 19b2a7d | 16 tools — Phase 2c done |
 | 12 | mcp-deepcell         | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | **Python 3.10 pin** separate issue |
 | 13 | mcp-perturbation     | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | non-src layout; GEARS hidden_size is separate |
 
