@@ -18,8 +18,8 @@
 | 0 | Ground-truth baseline (lock + pytest sanity on one server) | ✅ |
 | 1 | Reference impls (no changes: boilerplate, patient-report) | ✅ (verified already current) |
 | 2 | Group B bulk migration (13 servers, `>=0.2.0` → `>=2.13.0`) | ✅ 13/13 |
-| 3 | Group A migration (multiomics, quantum-celltype-fidelity) | 🟡 in progress |
-| 4 | `mcp-epic` bump (`>=2.0.0` → `>=2.13.0`) | ☐ |
+| 3 | Group A migration (multiomics, quantum-celltype-fidelity) | ✅ 2/2 |
+| 4 | `mcp-epic` bump (`>=2.0.0` → `>=2.13.0`) | ✅ |
 | 5 | Deployment-manifest swap (config only) | ☐ |
 | 6 | PAT001 end-to-end smoke test (local) | ☐ |
 | 7 | Housekeeping (layout / build-backend normalization) | ☐ |
@@ -53,14 +53,14 @@ Order: simplest first, flagged servers last.
 
 | # | Server | Current | Edit | `uv lock` | pytest | commit |
 |---|---|---|---|---|---|---|
-| 14 | mcp-multiomics               | >=0.1.0 | ☐ | ☐ | ☐ | ☐ |
-| 15 | mcp-quantum-celltype-fidelity | >=0.1.0 | ☐ | ☐ | ☐ | ☐ |
+| 14 | mcp-multiomics               | >=0.1.0 | ✅ | ✅ | ✅ import | ✅ 2b60f86 | 10 tools, rpy2 ABI fallback (R not local) |
+| 15 | mcp-quantum-celltype-fidelity | >=0.1.0 | ✅ | ✅ | ✅ 77/77 | ✅ 1f81dfa | |
 
 ## Phase 4 — mcp-epic
 
 | # | Server | Current | Edit | `uv lock` | pytest | commit |
 |---|---|---|---|---|---|---|
-| 16 | mcp-epic | >=2.0.0 | ☐ | ☐ | ☐ | ☐ |
+| 16 | mcp-epic | >=2.0.0 | ✅ | ✅ | ✅ import | ✅ dfd3c35 | 4 FHIR tools |
 
 ---
 
