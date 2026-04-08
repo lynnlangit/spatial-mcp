@@ -5,7 +5,7 @@ description = "MCP server for single-cell perturbation prediction using GEARS"
 requires-python = ">=3.10"
 dependencies = [
     "mcp>=1.0.0",
-    "fastmcp>=0.2.0",
+    "fastmcp>=2.13.0",
     "cell-gears>=0.1.0",
     "torch-geometric>=2.3.0",
     "scanpy>=1.10.0",
