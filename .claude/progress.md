@@ -23,7 +23,10 @@
 | 5 | Deployment-manifest swap (config only) | ✅ 41244a0 |
 | 6 | PAT001 end-to-end smoke test (local) | ✅ signature audit 17/17 |
 | 7 | Housekeeping (layout / build-backend normalization) | ✅ 3/3 (layout move deferred) |
-| 8 | Local validation + intermediate GCP re-deploy | ☐ |
+| 8a | Local validation matrix (automated steps) | ✅ 8a.1-8a.4 + 8a.5 pre-check |
+| 8a.5 | PAT001 manual walkthrough in Claude Desktop | ☐ operator-driven — HARD STOP |
+| 8b | Build containers locally | ☐ blocked on operator green-light |
+| 8c-h | GCP re-deploy (dev → prod → rollback drill) | ☐ blocked on 8b |
 
 ---
 
@@ -140,6 +143,38 @@ server doc) to reflect:
 - HOSPITAL1 deployment-profile distinction in the Mock Servers section
 - Current build-backend split (10 hatchling / 8 setuptools)
 - Last Updated date bump to 2026-04-08
+
+---
+
+## Phase 8a — Local validation matrix
+
+Automated steps complete (8a.1-8a.4) + Claude Desktop pre-check (8a.5).
+HARD STOP at operator-driven PAT001 walkthrough in Claude Desktop per user:
+"manually test Patient001 with my synthetic dataset end-to-end in Claude Desktop
+and confirm no regression bugs were introduced by our recent FastMCP updates
+BEFORE we build and deploy update to my GCP infra".
+
+| Step | Description | Result |
+|---|---|---|
+| 8a.1 | per-server pytest + fresh `uv lock` | ✅ 8 real servers / 223 passed, 7 pre-existing skips; mcp-server-boilerplate = template (N/A) |
+| 8a.2 | fastmcp >= 2.13.0 assertion | ✅ 17/17 declared + resolved (span 2.14.1 to 3.1.0) |
+| 8a.3 | PAT001 dry-run smoke for mcp-genomic-results | ✅ 4/4 tools |
+| 8a.4 | PAT002 dry-run smoke for mcp-genomic-results | ✅ 4/4 tools |
+| 8a.5 pre | Claude Desktop 14-server import + tool enumeration | ✅ 14/14, 87 tools |
+| 8a.5 | operator PAT001 walkthrough in Claude Desktop | ☐ **operator gate** |
+
+Detailed results: `/tmp/phase8a/PHASE_8A_COMPLETE.txt`
+
+Observation (not a migration regression): mcp-genomic-results DRY_RUN
+payloads still return PAT001 ovarian markers (TP53, PIK3CA, PTEN) regardless
+of patient_id. Commit 6360897 intended to swap to PAT002 breast markers but
+the hardcoded data didn't get updated. Separate fixture-quality issue,
+predates migration. Not a HOSPITAL1 blocker.
+
+mcp-fgbio bakes in `/workspace/data/reference` as a default path at startup.
+Host launch failed but Claude Desktop config overrides this via
+`FGBIO_REFERENCE_DATA_DIR=.../data/reference`, so Claude Desktop cold-start
+is fine. Pre-existing container-path assumption, not a migration regression.
 
 ---
 
