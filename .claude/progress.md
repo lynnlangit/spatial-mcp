@@ -17,8 +17,8 @@
 |---|---|---|
 | 0 | Ground-truth baseline (lock + pytest sanity on one server) | ✅ |
 | 1 | Reference impls (no changes: boilerplate, patient-report) | ✅ (verified already current) |
-| 2 | Group B bulk migration (13 servers, `>=0.2.0` → `>=2.13.0`) | 🟡 11/13 |
-| 3 | Group A migration (multiomics, quantum-celltype-fidelity) | ☐ |
+| 2 | Group B bulk migration (13 servers, `>=0.2.0` → `>=2.13.0`) | ✅ 13/13 |
+| 3 | Group A migration (multiomics, quantum-celltype-fidelity) | 🟡 in progress |
 | 4 | `mcp-epic` bump (`>=2.0.0` → `>=2.13.0`) | ☐ |
 | 5 | Deployment-manifest swap (config only) | ☐ |
 | 6 | PAT001 end-to-end smoke test (local) | ☐ |
@@ -44,8 +44,8 @@ Order: simplest first, flagged servers last.
 | 9  | mcp-fgbio            | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ 449871e | 4 tools, no rpy2 |
 | 10 | mcp-openimagedata    | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ af59d12 | 5 tools |
 | 11 | mcp-spatialtools     | >=0.2.0 | ✅ | ✅ | ✅ import | ✅ 19b2a7d | 16 tools — Phase 2c done |
-| 12 | mcp-deepcell         | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | **Python 3.10 pin** separate issue |
-| 13 | mcp-perturbation     | >=0.2.0 | ☐ | ☐ | ☐ | ☐ | non-src layout; GEARS hidden_size is separate |
+| 12 | mcp-deepcell         | >=0.2.0 | ✅ | ✅ | ⚠ lock only | ✅ b2a3c24 | macOS ARM64 cannot install tf==2.8.4 (pre-existing); Linux CR target OK |
+| 13 | mcp-perturbation     | >=0.2.0 | ✅ | ✅ | ✅ 11p/7s | ✅ 2f5e53a | GEARS skips pre-existing — Phase 2 done |
 
 ---
 
