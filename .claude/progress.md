@@ -20,8 +20,8 @@
 | 2 | Group B bulk migration (13 servers, `>=0.2.0` → `>=2.13.0`) | ✅ 13/13 |
 | 3 | Group A migration (multiomics, quantum-celltype-fidelity) | ✅ 2/2 |
 | 4 | `mcp-epic` bump (`>=2.0.0` → `>=2.13.0`) | ✅ |
-| 5 | Deployment-manifest swap (config only) | ☐ |
-| 6 | PAT001 end-to-end smoke test (local) | ☐ |
+| 5 | Deployment-manifest swap (config only) | ✅ 41244a0 |
+| 6 | PAT001 end-to-end smoke test (local) | ✅ signature audit 17/17 |
 | 7 | Housekeeping (layout / build-backend normalization) | ☐ |
 | 8 | Local validation + intermediate GCP re-deploy | ☐ |
 
@@ -61,6 +61,44 @@ Order: simplest first, flagged servers last.
 | # | Server | Current | Edit | `uv lock` | pytest | commit |
 |---|---|---|---|---|---|---|
 | 16 | mcp-epic | >=2.0.0 | ✅ | ✅ | ✅ import | ✅ dfd3c35 | 4 FHIR tools |
+
+---
+
+## Phase 5 — Deployment-manifest swap
+
+Config-only change to `infrastructure/deployment/deploy_to_gcp.sh`.
+Added `mcp-epic` (port 3008, reused since it never co-exists with mockepic)
+to the SERVERS array and introduced an `apply_deployment_profile()` function
+that filters the array at deploy time:
+- `DEPLOYMENT_MODE=production` → drops `mcp-mockepic`, `mcp-mocktcga`
+- `DEPLOYMENT_MODE=development` → drops `mcp-epic`
+- `--server <name>` bypasses the filter so operators can admin-deploy
+  a single server across profiles.
+
+Bash dry-run verified: dev=11 servers, prod=10 servers. Commit `41244a0`.
+
+## Phase 6 — PAT001 smoke (local)
+
+Rather than a full multi-server e2e (deferred to Phase 8 on GCP Cloud Run),
+the local smoke is a cross-server signature audit:
+`scripts/phase6_signature_audit.sh` walks every server in `servers/mcp-*`,
+imports it in its own uv venv, enumerates registered tools via the compat
+pattern (`list_tools()` → `get_tools()` → `_tool_manager._tools`), and
+compares the count to `docs/reference/shared/server-registry.md`.
+
+Result (2026-04-08):
+
+| Metric | Value |
+|---|---|
+| total | 17 |
+| passed | 16 |
+| failed | 0 |
+| skipped | 1 (mcp-deepcell — ARM64 platform limitation) |
+| warnings | 0 (no tool-count drift) |
+
+fastmcp versions resolved: 2.14.1, 2.14.3, 2.14.4, 2.14.5, 3.0.2, 3.1.0.
+All satisfy `>=2.13.0`. No server relies on removed `_tool_manager._tools`
+private API.
 
 ---
 
