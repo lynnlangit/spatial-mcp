@@ -22,7 +22,7 @@
 | 4 | `mcp-epic` bump (`>=2.0.0` → `>=2.13.0`) | ✅ |
 | 5 | Deployment-manifest swap (config only) | ✅ 41244a0 |
 | 6 | PAT001 end-to-end smoke test (local) | ✅ signature audit 17/17 |
-| 7 | Housekeeping (layout / build-backend normalization) | ☐ |
+| 7 | Housekeeping (layout / build-backend normalization) | ✅ 3/3 (layout move deferred) |
 | 8 | Local validation + intermediate GCP re-deploy | ☐ |
 
 ---
@@ -99,6 +99,47 @@ Result (2026-04-08):
 fastmcp versions resolved: 2.14.1, 2.14.3, 2.14.4, 2.14.5, 3.0.2, 3.1.0.
 All satisfy `>=2.13.0`. No server relies on removed `_tool_manager._tools`
 private API.
+
+## Phase 7 — Housekeeping
+
+Build-backend normalization scoped to the three servers the plan names.
+A platform-wide audit at the start of the phase showed the repo was
+actually split 7 hatchling / 11 setuptools (plan assumed hatchling was
+dominant — stale), so Phase 7 did **not** sweep all setuptools servers
+to hatchling; only the three named in the plan were touched.
+
+| # | Server | Change | commit |
+|---|---|---|---|
+| 17 | mcp-multiomics | setuptools → hatchling | `98ff0f8` |
+| 18 | mcp-quantum-celltype-fidelity | setuptools → hatchling | `abe2598` |
+| 19 | mcp-perturbation | setuptools → hatchling + drop redundant `mcp>=1.0.0` + clean stale egg-info/build/UNKNOWN.egg-info | `df1244c` |
+
+Post-Phase-7 signature audit: 16/17 OK, 1 skip (deepcell), 0 fail,
+0 warnings — no regression from the backend swaps.
+
+**Deferred (out of scope for Phase 7):**
+- `mcp-perturbation` flat → `src/` layout move. Plan describes this as
+  speculative ("pipeline _may_ reject"). No confirmed breakage. Blast
+  radius: loose top-level `test_gears_patientone.py`, multiple markdown
+  docs referencing the current path. Deferred to a separate PR if/when
+  a HOSPITAL1 build pipeline actually rejects the layout.
+- GEARS `hidden_size` compatibility shim. Plan flagged this as a
+  pre-existing upstream issue. All affected tests are skipped in the
+  baseline. Out of scope for the FastMCP migration.
+- `mcp-deepcell` Python 3.11 upgrade. Plan explicitly defers until
+  DeepCell-TF ships 3.11 support.
+- Setuptools → hatchling sweep for the other 8 setuptools servers
+  (epic, fgbio, mockepic, cell-classify, openimagedata, mocktcga,
+  spatialtools, deepcell). Not in the plan, and the backend split is
+  stable. Both backends are PEP 517-compliant.
+
+Also updated `docs/reference/shared/server-registry.md` (the canonical
+server doc) to reflect:
+- Correct tool totals (97 → 99; spatialtools 14 → 16)
+- FastMCP ≥ 2.13 framework version
+- HOSPITAL1 deployment-profile distinction in the Mock Servers section
+- Current build-backend split (10 hatchling / 8 setuptools)
+- Last Updated date bump to 2026-04-08
 
 ---
 

@@ -1,6 +1,6 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 17 (97 tools) | **Production Ready:** 15 (88%) | **External Servers:** 6 (46 tools)
+**Custom Servers:** 17 (99 tools) | **Production Ready:** 15 (88%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -12,7 +12,7 @@
 |--------|-------|--------|------------------|---------------|
 | **mcp-fgbio** | 4 | 95% Real | FASTQ/VCF QC, genome refs, variant calling | [README](../../../servers/mcp-fgbio/README.md) |
 | **mcp-multiomics** | 10 | 95% Real | HAllA integration, Stouffer meta-analysis, upstream regulators, heatmap, PCA | [README](../../../servers/mcp-multiomics/README.md) |
-| **mcp-spatialtools** | 14 | 95% Real | Spatial DE, STAR alignment, ComBat, pathway enrichment | [README](../../../servers/mcp-spatialtools/README.md) |
+| **mcp-spatialtools** | 16 | 95% Real | Spatial DE, STAR alignment, ComBat, pathway enrichment, patient-context resolution | [README](../../../servers/mcp-spatialtools/README.md) |
 | **mcp-perturbation** | 8 | 100% Real | GEARS GNN treatment response, perturbation prediction | [README](../../../servers/mcp-perturbation/README.md) |
 | **mcp-quantum-celltype-fidelity** | 6 | 100% Real | Quantum PQCs, fidelity analysis, Bayesian UQ, immune evasion | [README](../../../servers/mcp-quantum-celltype-fidelity/README.md) |
 | **mcp-deepcell** | 3 | 100% Real | DeepCell-TF segmentation, nuclear/membrane models, per-cell marker quantification | [README](../../../servers/mcp-deepcell/README.md) |
@@ -29,6 +29,15 @@
 ---
 
 ## Mock Servers (For Workflow Testing) ❌
+
+> **HOSPITAL1 deployment note:** These servers stay in the repository for CI,
+> student Streamlit demos, and development-mode Cloud Run deployments. They
+> are **automatically disabled in HOSPITAL1 production-mode deployments** by
+> the profile filter in `infrastructure/deployment/deploy_to_gcp.sh`
+> (`DEPLOYMENT_MODE=production` drops `mcp-mockepic` and `mcp-mocktcga`;
+> `DEPLOYMENT_MODE=development` drops `mcp-epic`). Production mode ships
+> `mcp-epic` (real Epic FHIR R4) and the external **cBioPortal** community
+> MCP in their place.
 
 | Server | Tools | Purpose | Documentation |
 |--------|-------|---------|---------------|
@@ -80,5 +89,24 @@ Six external servers complement the custom servers above. These are either Anthr
 
 ---
 
-**Last Updated:** 2026-03-08
+## Framework Version
+
+All 17 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
+as of 2026-04-08 (HOSPITAL1 migration — see `docs/HOSPITAL1_DEPLOYMENT_PLAN.md`).
+Resolved versions in `uv.lock` span 2.14.1 through 3.1.0; every server has
+been verified by `scripts/phase6_signature_audit.sh` to import cleanly,
+enumerate the expected tool count, and use only public FastMCP APIs
+(no reliance on the removed `_tool_manager._tools` private attribute).
+
+| Build backend | Count | Servers |
+|---|---|---|
+| `hatchling.build` | 10 | server-boilerplate, patient-report, genomic-results, cibersortx, geodownload, neoantigen, opentargets, multiomics, quantum-celltype-fidelity, perturbation |
+| `setuptools.build_meta` | 8 | epic, fgbio, mockepic, cell-classify, openimagedata, mocktcga, spatialtools, deepcell |
+
+Both backends are PEP 517-compliant and work with `uv build` and
+`pip install -e .`. The platform does not require a single backend.
+
+---
+
+**Last Updated:** 2026-04-08
 **Maintained By:** Precision Medicine MCP Team
