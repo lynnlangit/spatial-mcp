@@ -1462,7 +1462,7 @@ dev = [
 requires-dist = [
     { name = "aiofiles", specifier = ">=24.0.0" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=24.0.0" },
-    { name = "fastmcp", specifier = ">=0.2.0" },
+    { name = "fastmcp", specifier = ">=2.13.0" },
     { name = "fsspec", specifier = ">=2023.1.0" },
     { name = "gcsfs", specifier = ">=2023.1.0" },
     { name = "httpx", specifier = ">=0.27.0" },
