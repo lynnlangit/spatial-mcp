@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# GCP Cloud Run Deployment Script for All 14 MCP Servers
+# GCP Cloud Run Deployment Script for MCP Servers
 #
 # Prerequisites:
 #   - gcloud CLI installed and authenticated
@@ -14,7 +14,12 @@
 #
 # Modes:
 #   Development: Public access, no VPC, no secrets, for testing
+#                Deploys mcp-mockepic + mcp-mocktcga (synthetic data);
+#                excludes mcp-epic (requires hospital FHIR secrets).
 #   Production:  Authenticated, VPC, service accounts, secrets, HIPAA-compliant
+#                (HOSPITAL1 profile): deploys mcp-epic (real FHIR R4);
+#                excludes mcp-mockepic and mcp-mocktcga (external cBioPortal
+#                MCP replaces mcp-mocktcga — deployed out-of-band).
 
 set -e  # Exit on error
 
@@ -74,6 +79,12 @@ done
 
 # Server configurations with resource requirements
 # Format: "name:port:memory:cpu:env-vars:dry-run-flag"
+#
+# Profile notes:
+#   - mcp-mockepic / mcp-mocktcga are development-only (synthetic data)
+#   - mcp-epic is production-only (real Epic FHIR R4 sandbox / hospital)
+#   The SERVERS array lists all candidates; apply_deployment_profile() below
+#   filters them based on DEPLOYMENT_MODE before the deploy loop runs.
 SERVERS=(
     "mcp-fgbio:3000:2Gi:2:FGBIO_LOG_LEVEL=INFO:FGBIO_DRY_RUN=false"
     "mcp-multiomics:3001:4Gi:2:MULTIOMICS_LOG_LEVEL=INFO:MULTIOMICS_DRY_RUN=false"
@@ -82,11 +93,52 @@ SERVERS=(
     "mcp-openimagedata:3004:2Gi:2:IMAGE_LOG_LEVEL=INFO:IMAGE_DRY_RUN=false"
     "mcp-deepcell:3007:2Gi:1:DEEPCELL_LOG_LEVEL=INFO:DEEPCELL_DRY_RUN=true"
     "mcp-mockepic:3008:2Gi:1:EPIC_LOG_LEVEL=INFO:DEIDENTIFY_ENABLED=true"
+    "mcp-epic:3008:2Gi:1:EPIC_LOG_LEVEL=INFO:DEIDENTIFY_ENABLED=true"
     "mcp-perturbation:3009:4Gi:2:PERTURBATION_LOG_LEVEL=INFO:PERTURBATION_DRY_RUN=false"
     "mcp-quantum-celltype-fidelity:3010:2Gi:2:QUANTUM_BACKEND=cpu:QUANTUM_LOG_LEVEL=INFO"
     "mcp-patient-report:3011:2Gi:1:PATIENT_REPORT_LOG_LEVEL=INFO:PATIENT_REPORT_DRY_RUN=false"
     "mcp-genomic-results:3012:2Gi:1:GENOMIC_RESULTS_LOG_LEVEL=INFO:GENOMIC_RESULTS_DRY_RUN=false"
 )
+
+# Apply deployment profile to SERVERS array.
+#
+# - production (HOSPITAL1): exclude mcp-mockepic and mcp-mocktcga; keep mcp-epic.
+#                           cBioPortal (replacement for mcp-mocktcga) is an
+#                           external community MCP server and is not deployed
+#                           by this script.
+# - development:            exclude mcp-epic (requires Epic FHIR secrets that
+#                           only exist in the hospital GCP project); keep the
+#                           mock servers for CI and student Streamlit UIs.
+#
+# The filter is bypassed when --server <name> is used so operators can
+# explicitly deploy a single server (e.g., testing mcp-epic against the
+# Epic sandbox from a dev project) regardless of mode.
+apply_deployment_profile() {
+    if [ -n "$SINGLE_SERVER" ]; then
+        return 0
+    fi
+    local filtered=()
+    local entry
+    local name
+    for entry in "${SERVERS[@]}"; do
+        name="${entry%%:*}"
+        case "$DEPLOYMENT_MODE" in
+            production)
+                case "$name" in
+                    mcp-mockepic|mcp-mocktcga) continue ;;
+                esac
+                ;;
+            development)
+                case "$name" in
+                    mcp-epic) continue ;;
+                esac
+                ;;
+        esac
+        filtered+=("$entry")
+    done
+    SERVERS=("${filtered[@]}")
+}
+apply_deployment_profile
 
 # Helper function to get server-specific secrets (production only)
 get_server_secrets() {
