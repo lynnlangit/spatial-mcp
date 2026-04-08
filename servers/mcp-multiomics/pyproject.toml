@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "mcp-multiomics"
@@ -46,8 +46,8 @@ dev = [
     "types-requests",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_multiomics"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
