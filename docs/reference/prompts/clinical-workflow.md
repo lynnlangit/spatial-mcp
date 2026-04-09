@@ -119,6 +119,61 @@ Implements the full clinician-in-the-loop (CitL) workflow via mcp-patient-report
 
 ---
 
+## Stage 5: Report Synthesis (PatientReportData v2 Schema)
+
+**IMPORTANT — Always call `get_report_template_schema` first before constructing
+report JSON.** The `PatientReportData` Pydantic schema (mcp-patient-report v2)
+requires specific nested structures (`PatientInfo`, `DiagnosisSummary`,
+`TreatmentOption`, `MonitoringPlan`) that differ from the flat dicts used in
+v1. Callers that hand-roll JSON from pre-v2 field names will hit 20+ "Field
+required" validation errors.
+
+### Required fields that changed in v2
+
+- **`patient_info`**: `name`, `age`, `sex` (all required), plus `patient_id`
+  and `diagnosis`
+- **`diagnosis_summary`**: `cancer_type` (required — separate from `subtype`),
+  `stage`, `plain_language_description`, `key_positive_factors[]` and
+  `key_challenges[]` (both required arrays, not optional)
+- **`treatment_options[].evidence_level`** must be an `EvidenceLevel` enum
+  value — one of:
+  `FDA_APPROVED`, `NCCN_1`, `NCCN_2A`, `NCCN_2B`,
+  `ESCAT_I`, `ESCAT_II`, `ESCAT_III`, `ESCAT_IV`, `ESCAT_V`,
+  `CLINICAL_TRIAL`
+- **`treatment_options[].plain_language_description`** (required — was
+  `plain_language` in v1; the rename is the single most common source of
+  validation errors)
+- **`monitoring_plan.schedule[]`** must be a list of `MonitoringScheduleItem`
+  objects with `test_name`, `frequency`, `purpose` — NOT bare strings
+
+### Workflow
+
+1. **Call `get_report_template_schema`** → read `required_sections` and the
+   `example` field. Do not guess field names.
+2. **Construct JSON** matching the schema exactly. When in doubt, diff your
+   payload against the canonical fixture.
+3. **Call `validate_report_data`** → confirm the response includes
+   `valid=true` before proceeding. Fix any `errors[]` entries before
+   generating.
+4. **Call `generate_patient_report`** with the validated JSON → expect
+   `{"status": "success", "is_draft": true}`.
+5. **Route the draft through Prompt 6 (Clinician-in-the-Loop Validation)**
+   above to capture attestation and produce the final `CLINICALLY_APPROVED`
+   report.
+
+### Reference fixture
+
+A complete valid `PatientReportData` example lives at:
+
+```
+servers/mcp-patient-report/tests/fixtures/pat001_report_data.json
+```
+
+Use this as a template for hand-constructed payloads, and as a regression
+anchor when the schema evolves.
+
+---
+
 ## Additional Clinical Use Cases (9 Prompts)
 
 ### Prompt 7: BRCA1/2 Testing and PARP Inhibitor Eligibility
