@@ -259,3 +259,67 @@ def test_readme_exists_and_complete():
     assert "predict_perturbation_effect" in readme_content
     assert "analyze_tls_quantum_signature" in readme_content
     assert "export_for_downstream" in readme_content
+
+
+# ---------------------------------------------------------------------------
+# Phase 8a.6 Fix 3 — learn_spatial_cell_embeddings dry_run regression test
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_learn_spatial_cell_embeddings_dry_run_fast_path(tmp_path):
+    """dry_run=True must complete in <5s and populate _EMBEDDINGS_CACHE.
+
+    No quantum circuit construction, no trainer.train invocation, no
+    AnnData full-matrix read.
+    """
+    import time
+
+    from quantum_celltype_fidelity.server import (
+        _EMBEDDINGS_CACHE,
+        learn_spatial_cell_embeddings,
+    )
+
+    # FastMCP wraps @mcp.tool() in FunctionTool; .fn is the underlying coroutine
+    fn = learn_spatial_cell_embeddings.fn
+
+    # Path does not need to exist — _build_mock_embedding tolerates missing
+    # files and falls back to default cell types / n_cells.
+    fake_path = str(tmp_path / "nonexistent_pat001.h5ad")
+
+    start = time.monotonic()
+    result = await fn(
+        adata_path=fake_path,
+        dry_run=True,
+        n_qubits=4,
+        feature_dim=16,
+    )
+    elapsed = time.monotonic() - start
+
+    assert elapsed < 5.0, f"dry_run path took {elapsed:.2f}s (>5s limit)"
+    assert result["success"] is True
+    assert "embedding_id" in result
+    assert result["embedding_id"].startswith("mock_embedding_")
+    # Populated cache entry lookup works for downstream tools
+    assert result["embedding_id"] in _EMBEDDINGS_CACHE
+    cached = _EMBEDDINGS_CACHE[result["embedding_id"]]
+    assert getattr(cached, "is_mock", False) is True
+    # Dry-run warning is present
+    assert "_DRY_RUN_WARNING" in result
+    # Training summary reflects the mock mode
+    assert result["training_summary"]["mode"] == "dry_run"
+    assert result["training_summary"]["n_epochs"] == 0
+
+
+@pytest.mark.asyncio
+async def test_learn_spatial_cell_embeddings_n_epochs_zero_also_dry_run(tmp_path):
+    """Passing n_epochs=0 should also trigger the fast dry-run path."""
+    from quantum_celltype_fidelity.server import learn_spatial_cell_embeddings
+
+    fn = learn_spatial_cell_embeddings.fn
+    result = await fn(
+        adata_path=str(tmp_path / "missing.h5ad"),
+        n_epochs=0,
+    )
+    assert result["success"] is True
+    assert result["training_summary"]["mode"] == "dry_run"

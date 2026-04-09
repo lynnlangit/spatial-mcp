@@ -777,6 +777,24 @@ def _calculate_morans_i(
     row_sums[row_sums == 0] = 1  # Avoid division by zero
     weights = weights / row_sums[:, np.newaxis]
 
+    # Phase 8a.6 Fix 5 — detect the degenerate uniform-weights case. When
+    # distance_threshold exceeds the full coordinate span, every off-diagonal
+    # entry becomes 1/(n-1) and Moran's I collapses algebraically to -1/(n-1)
+    # for every gene regardless of expression. Surface a warning so callers
+    # can correct the threshold instead of reporting a false "random" pattern.
+    if n > 2:
+        nonzero = weights[weights > 0]
+        if nonzero.size > 0:
+            unique_nonzero = np.unique(np.round(nonzero, 10))
+            if len(unique_nonzero) == 1:
+                logger.warning(
+                    f"Degenerate uniform weights matrix detected (n={n}, "
+                    f"all off-diagonal weights = {float(unique_nonzero[0]):.6f}). "
+                    f"Moran's I will collapse to -1/(n-1) = {-1.0 / (n - 1):.6f} "
+                    f"for every gene. distance_threshold={distance_threshold:.4f} "
+                    f"is likely larger than the coordinate span — try a smaller value."
+                )
+
     # Calculate Moran's I
     mean_expr = expression_values.mean()
     deviations = expression_values - mean_expr
@@ -864,6 +882,29 @@ async def calculate_spatial_autocorrelation(
         # Load or extract coordinates
         if coordinates_file:
             coord_data = pd.read_csv(coordinates_file, index_col=0)
+
+            # Phase 8a.6 Fix 5 — align expression rows to coordinate index
+            # before doing anything else. Without this, mismatched spot-IDs
+            # silently produce a degenerate distance matrix.
+            common = expr_data.index.intersection(coord_data.index)
+            if len(common) == 0:
+                return {
+                    "status": "error",
+                    "error": "No spot IDs matched between expression and coordinates files",
+                    "message": (
+                        "Expression row index and coordinate row index have no "
+                        "common values. Check that both files use the same "
+                        "spot/barcode identifiers."
+                    ),
+                }
+            if len(common) < len(expr_data.index) or len(common) < len(coord_data.index):
+                logger.warning(
+                    f"Only {len(common)}/{len(expr_data.index)} expression rows "
+                    f"matched coordinate rows; subsetting both to intersection"
+                )
+                expr_data = expr_data.loc[common]
+                coord_data = coord_data.loc[common]
+
             # Detect coordinate columns (handle Visium and generic formats)
             col_lower = {c: c.lower() for c in coord_data.columns}
             # Priority 1: Visium pixel coordinates
@@ -883,11 +924,21 @@ async def calculate_spatial_autocorrelation(
                 numeric_cols = [c for c in coord_data.columns if coord_data[c].dtype in ('int64', 'float64')]
                 coord_cols = numeric_cols[:2] if len(numeric_cols) >= 2 else coord_data.columns[:2]
             coordinates = coord_data[coord_cols].values
-            # Auto-adjust distance threshold if using pixel coordinates with large spacing
-            coord_range = coordinates.max() - coordinates.min()
-            if distance_threshold == 100.0 and coord_range.max() > 500:
-                distance_threshold = coord_range.max() * 0.15
-                logger.info(f"Auto-adjusted distance_threshold to {distance_threshold:.0f} for pixel coordinates")
+
+            # Phase 8a.6 Fix 5 — always auto-scale the neighbor radius when the
+            # caller left the sentinel default of 100.0. The old gate also
+            # required `coord_range.max() > 500` (Visium-pixel heuristic), which
+            # silently failed for small-scale (unit-range) coordinates and
+            # produced a uniform-weights matrix. Downstream Moran's I then
+            # collapsed to -1/(n-1) for every gene regardless of expression.
+            coord_range = coordinates.max(axis=0) - coordinates.min(axis=0)
+            if distance_threshold == 100.0:
+                distance_threshold = float(coord_range.max()) * 0.15
+                logger.info(
+                    f"Auto-scaled distance_threshold to {distance_threshold:.4f} "
+                    f"(coord_range={float(coord_range.max()):.4f}); pass an "
+                    f"explicit distance_threshold != 100.0 to bypass this."
+                )
         elif 'x_coord' in expr_data.columns and 'y_coord' in expr_data.columns:
             # Coordinates embedded in expression file
             coordinates = expr_data[['x_coord', 'y_coord']].values
