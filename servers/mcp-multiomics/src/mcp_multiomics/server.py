@@ -8,6 +8,7 @@ Provides tools for:
 - Multi-omics visualizations
 """
 
+import json
 import logging
 import os
 import sys
@@ -91,6 +92,52 @@ All findings must be:
         result = disclaimer + "\n" + result
 
     return result
+
+
+# ============================================================================
+# PARAMETER COERCION HELPERS (FastMCP 2.x JSON-string fallback)
+# ============================================================================
+#
+# FastMCP 2.x may serialize some LLM-supplied complex Optional[Dict[...]] /
+# Optional[List[...]] tool parameters as JSON strings before Pydantic
+# validation. That surfaces as:
+#   ValidationError: Input should be a valid dictionary/list [input_type=str]
+# The helpers below accept both native Python types and JSON-encoded strings
+# and raise a clear ValueError if the payload is unrecoverable.
+
+
+def _coerce_dict(val):
+    """FastMCP 2.x may pass dict params as JSON strings. Coerce safely."""
+    if val is None or isinstance(val, dict):
+        return val
+    if isinstance(val, str):
+        try:
+            parsed = json.loads(val)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Expected dict, got unparseable string: {e}") from e
+        if not isinstance(parsed, dict):
+            raise ValueError(
+                f"Expected dict after JSON decode, got {type(parsed).__name__}"
+            )
+        return parsed
+    raise ValueError(f"Cannot coerce {type(val).__name__} to dict")
+
+
+def _coerce_list(val):
+    """FastMCP 2.x may pass list params as JSON strings. Coerce safely."""
+    if val is None or isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        try:
+            parsed = json.loads(val)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Expected list, got unparseable string: {e}") from e
+        if not isinstance(parsed, list):
+            raise ValueError(
+                f"Expected list after JSON decode, got {type(parsed).__name__}"
+            )
+        return parsed
+    raise ValueError(f"Cannot coerce {type(val).__name__} to list")
 
 
 # ============================================================================
@@ -443,6 +490,10 @@ def visualize_data_quality(
         # Generates PCA plots showing batch effect removal (0.82 → 0.12)
         ```
     """
+    # FastMCP 2.x may deliver dict params as JSON strings. Coerce before use.
+    data_paths = _coerce_dict(data_paths)
+    before_data_paths = _coerce_dict(before_data_paths)
+
     logger.info(f"visualize_data_quality called with {len(data_paths)} modalities")
 
     if config.dry_run:
@@ -652,6 +703,11 @@ def calculate_stouffer_meta(
         # Use: result['q_values'] for identifying significant features
         ```
     """
+    # FastMCP 2.x may deliver dict params as JSON strings. Coerce before use.
+    p_values_dict = _coerce_dict(p_values_dict)
+    effect_sizes_dict = _coerce_dict(effect_sizes_dict)
+    weights = _coerce_dict(weights)
+
     logger.info(f"calculate_stouffer_meta called with {len(p_values_dict)} modalities")
 
     if config.dry_run:
@@ -753,6 +809,9 @@ def create_multiomics_heatmap(
         )
         ```
     """
+    # FastMCP 2.x may deliver list params as JSON strings. Coerce before use.
+    features = _coerce_list(features)
+
     logger.info(f"create_multiomics_heatmap called: data_path={data_path}")
 
     if config.dry_run:
@@ -822,6 +881,9 @@ def run_multiomics_pca(
         # PC1 explains 42% variance, separates Resistant vs Sensitive
         ```
     """
+    # FastMCP 2.x may deliver list params as JSON strings. Coerce before use.
+    modalities = _coerce_list(modalities)
+
     logger.info(f"run_multiomics_pca called: n_components={n_components}")
 
     if config.dry_run:
@@ -918,6 +980,10 @@ def predict_upstream_regulators(
         # - Drugs: Alpelisib (PI3K inhibitor, targets activated pathway)
         ```
     """
+    # FastMCP 2.x may deliver dict/list params as JSON strings. Coerce before use.
+    differential_genes = _coerce_dict(differential_genes)
+    regulator_types = _coerce_list(regulator_types)
+
     logger.info(f"predict_upstream_regulators called with {len(differential_genes)} genes")
 
     if config.dry_run:
