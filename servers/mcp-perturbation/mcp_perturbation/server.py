@@ -5,6 +5,10 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Literal, List
 import json
 import logging
+import os
+import sys
+from pathlib import Path
+
 import scanpy as sc
 import numpy as np
 
@@ -13,6 +17,18 @@ from .gears_wrapper import GearsWrapper
 from .prediction import PerturbationPredictor, DifferentialExpressionAnalyzer
 from .visualization import PerturbationVisualizer
 
+# Add shared/ to import path for dry_run helper (match other servers)
+_repo_root = Path(__file__).resolve().parents[3]
+if str(_repo_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_repo_root / "shared"))
+try:
+    from common.dry_run import add_dry_run_warning as _shared_add_dry_run_warning
+except ImportError:  # pragma: no cover - fall back when shared/ not available
+    def _shared_add_dry_run_warning(result, *, dry_run, env_var="PERTURBATION_DRY_RUN"):
+        if dry_run and isinstance(result, dict):
+            result["_DRY_RUN_WARNING"] = "SYNTHETIC DATA - NOT FOR RESEARCH USE"
+        return result
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,9 +36,36 @@ logger = logging.getLogger(__name__)
 # Initialize FastMCP server
 mcp = FastMCP("perturbation")
 
+# DRY_RUN flag — defaults to true so callers can smoke-test without GEARS/torch
+DRY_RUN = os.getenv("PERTURBATION_DRY_RUN", "true").lower() == "true"
+
 # Global state for models and datasets
 _models = {}  # name -> GearsWrapper
 _datasets = {}  # dataset_id -> AnnData
+
+
+def add_dry_run_warning(result, *, forced: bool = False):
+    """Shared DRY_RUN warning wrapper for this server."""
+    return _shared_add_dry_run_warning(
+        result,
+        dry_run=DRY_RUN or forced,
+        env_var="PERTURBATION_DRY_RUN",
+    )
+
+
+# Canonical PAT001 dry-run payload for perturbation_predict_response.
+# Matches the Stage IV Ovarian Cancer PatientOne demo scenario.
+_PAT001_PREDICT_DRY_RUN = {
+    "mode": "dry_run",
+    "treatment": "NNMT+STAT3",
+    "cell_type": "tumor_core",
+    "top_upregulated": ["PRF1", "GZMB", "IFNG"],
+    "top_downregulated": ["STAT3", "COL3A1", "NNMT"],
+    "interpretation": (
+        "NNMT knockdown reduces CAF signaling and increases cytotoxic T-cell "
+        "markers"
+    ),
+}
 
 
 def _coerce_params(raw, model_class):
@@ -88,12 +131,40 @@ class PredictResponseInput(BaseModel):
     """Input for predicting treatment response."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    model_name: str = Field(..., description="Trained model name")
-    patient_data_path: str = Field(..., description="Path to patient .h5ad file")
-    cell_type_to_predict: str = Field(..., description="Cell type to transform")
+    model_name: Optional[str] = Field(
+        default=None,
+        description=(
+            "Trained model name (from setup_model + train_model). Either "
+            "model_name OR dataset_id is required when dry_run is False."
+        ),
+    )
+    dataset_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Dataset ID from load_dataset. Falls back to a dry-run payload "
+            "when no trained model is present — the one-step predict path "
+            "does not perform live training."
+        ),
+    )
+    patient_data_path: Optional[str] = Field(
+        default=None,
+        description="Path to patient .h5ad file (not required in dry_run)",
+    )
+    cell_type_to_predict: Optional[str] = Field(
+        default=None,
+        description="Cell type to transform (not required in dry_run)",
+    )
     control_key: str = Field(default="control", description="Control condition label")
     treatment_key: str = Field(default="tumor", description="Treatment condition label")
     output_path: Optional[str] = Field(default=None, description="Path to save predictions")
+    dry_run: bool = Field(
+        default=False,
+        description=(
+            "If true, return the canonical PAT001 synthetic payload without "
+            "running GEARS inference. Also honored implicitly when the "
+            "PERTURBATION_DRY_RUN env var is true and no trained model exists."
+        ),
+    )
 
 
 class DEInput(BaseModel):
@@ -296,6 +367,117 @@ async def perturbation_compute_delta(params: str) -> str:
         return json.dumps({"status": "error", "message": str(e)}, indent=2)
 
 
+def _predict_response_impl(
+    model_name: Optional[str] = None,
+    dataset_id: Optional[str] = None,
+    patient_data_path: Optional[str] = None,
+    cell_type_to_predict: Optional[str] = None,
+    control_key: str = "control",
+    treatment_key: str = "tumor",
+    output_path: Optional[str] = None,
+    dry_run: bool = False,
+) -> dict:
+    """Core implementation for perturbation_predict_response.
+
+    Returns a plain dict (not a JSON string) so tests can assert on fields
+    directly. The dry-run path honors either an explicit ``dry_run=True`` arg
+    or the ``PERTURBATION_DRY_RUN`` env var when no trained model is present.
+    """
+    # --- Dry-run fast path ---
+    # Explicit dry_run always returns the canonical payload.
+    if dry_run:
+        payload = {"status": "success", **_PAT001_PREDICT_DRY_RUN}
+        return add_dry_run_warning(payload, forced=True)
+
+    # If env-var DRY_RUN is on and we don't have a trained model, also return
+    # the canonical payload rather than forcing the caller to spin up GEARS.
+    if DRY_RUN and (not model_name or model_name not in _models):
+        logger.info(
+            "perturbation_predict_response: PERTURBATION_DRY_RUN=true and no "
+            "trained model found; returning canonical PAT001 dry-run payload."
+        )
+        payload = {"status": "success", **_PAT001_PREDICT_DRY_RUN}
+        if dataset_id:
+            payload["dataset_id_hint"] = dataset_id
+        return add_dry_run_warning(payload)
+
+    # --- Dataset-id fallback hint ---
+    # If the caller passed dataset_id (from load_dataset) but no trained
+    # model, explain the missing setup/train steps rather than returning
+    # "Model not found" silently.
+    if (not model_name or model_name not in _models) and dataset_id in _datasets:
+        logger.warning(
+            "perturbation_predict_response: dataset_id='%s' is loaded but no "
+            "trained model exists. The one-step predict path requires "
+            "setup_model -> train_model first. Returning dry-run payload "
+            "with setup hint.",
+            dataset_id,
+        )
+        payload = {
+            "status": "success",
+            "hint": (
+                "dataset_id is loaded but no trained GEARS model exists. "
+                "Call perturbation_setup_model then perturbation_train_model "
+                "before perturbation_predict_response, or pass dry_run=true "
+                "for a synthetic preview."
+            ),
+            **_PAT001_PREDICT_DRY_RUN,
+        }
+        return add_dry_run_warning(payload, forced=True)
+
+    # --- Real GEARS inference path ---
+    if not model_name or model_name not in _models:
+        return {
+            "status": "error",
+            "message": f"Model '{model_name}' not found.",
+        }
+
+    if not patient_data_path or not cell_type_to_predict:
+        return {
+            "status": "error",
+            "message": (
+                "patient_data_path and cell_type_to_predict are required for "
+                "the live inference path. Pass dry_run=true for a synthetic "
+                "preview."
+            ),
+        }
+
+    wrapper = _models[model_name]
+
+    # Load patient data
+    patient_adata = sc.read_h5ad(patient_data_path)
+
+    # Parse treatment_key as list of genes
+    if isinstance(treatment_key, str):
+        perturbations = [g.strip() for g in treatment_key.split(',')]
+    else:
+        perturbations = treatment_key
+
+    # Make prediction
+    predicted_adata, pert_effect = wrapper.predict(
+        perturbations=perturbations,
+        cell_type=cell_type_to_predict,
+        return_anndata=True,
+    )
+
+    # Save if output path specified
+    if output_path:
+        predicted_adata.write_h5ad(output_path)
+        resolved_output = output_path
+    else:
+        resolved_output = "./data/predictions/predicted_response.h5ad"
+        predicted_adata.write_h5ad(resolved_output)
+
+    return {
+        "status": "success",
+        "output_path": resolved_output,
+        "perturbations": perturbations,
+        "cell_type": cell_type_to_predict,
+        "effect_magnitude": float(np.linalg.norm(pert_effect)),
+        "n_cells_predicted": int(predicted_adata.n_obs) if predicted_adata else 0,
+    }
+
+
 @mcp.tool()
 async def perturbation_predict_response(params: str) -> str:
     """Predict treatment response using GEARS GNN.
@@ -303,54 +485,37 @@ async def perturbation_predict_response(params: str) -> str:
     Predicts how cells will respond to genetic perturbations using
     learned gene regulatory network relationships.
 
-    Example:
-        {"model_name": "my_model", "patient_data_path": "./data/patient_001.h5ad", "cell_type_to_predict": "T_cells", "treatment_key": "CD4,CD8A"}
+    Accepts either a trained ``model_name`` (after setup_model + train_model)
+    or a ``dataset_id`` (from load_dataset) combined with ``dry_run=true`` for
+    a synthetic preview payload. When ``PERTURBATION_DRY_RUN=true`` and no
+    trained model is present, the canonical PAT001 dry-run payload is
+    returned automatically.
+
+    Example (live inference):
+        {"model_name": "my_model", "patient_data_path": "./data/patient_001.h5ad",
+         "cell_type_to_predict": "T_cells", "treatment_key": "CD4,CD8A"}
+
+    Example (dry-run preview):
+        {"dataset_id": "GSE184880", "dry_run": true}
     """
-    params = _coerce_params(params, PredictResponseInput)
     try:
-        if params.model_name not in _models:
-            return json.dumps({
-                "status": "error",
-                "message": f"Model '{params.model_name}' not found."
-            }, indent=2)
+        parsed = _coerce_params(params, PredictResponseInput)
+    except Exception as e:
+        logger.error(f"Failed to parse predict_response params: {e}")
+        return json.dumps({"status": "error", "message": str(e)}, indent=2)
 
-        wrapper = _models[params.model_name]
-
-        # Load patient data
-        patient_adata = sc.read_h5ad(params.patient_data_path)
-
-        # Parse treatment_key as list of genes
-        if isinstance(params.treatment_key, str):
-            perturbations = [g.strip() for g in params.treatment_key.split(',')]
-        else:
-            perturbations = params.treatment_key
-
-        # Make prediction
-        predicted_adata, pert_effect = wrapper.predict(
-            perturbations=perturbations,
-            cell_type=params.cell_type_to_predict,
-            return_anndata=True
+    try:
+        result = _predict_response_impl(
+            model_name=parsed.model_name,
+            dataset_id=parsed.dataset_id,
+            patient_data_path=parsed.patient_data_path,
+            cell_type_to_predict=parsed.cell_type_to_predict,
+            control_key=parsed.control_key,
+            treatment_key=parsed.treatment_key,
+            output_path=parsed.output_path,
+            dry_run=parsed.dry_run,
         )
-
-        # Save if output path specified
-        if params.output_path:
-            predicted_adata.write_h5ad(params.output_path)
-            output_path = params.output_path
-        else:
-            output_path = "./data/predictions/predicted_response.h5ad"
-            predicted_adata.write_h5ad(output_path)
-
-        result = {
-            "status": "success",
-            "output_path": output_path,
-            "perturbations": perturbations,
-            "cell_type": params.cell_type_to_predict,
-            "effect_magnitude": float(np.linalg.norm(pert_effect)),
-            "n_cells_predicted": int(predicted_adata.n_obs) if predicted_adata else 0
-        }
-
         return json.dumps(result, indent=2)
-
     except Exception as e:
         logger.error(f"Failed to predict response: {e}")
         return json.dumps({"status": "error", "message": str(e)}, indent=2)
