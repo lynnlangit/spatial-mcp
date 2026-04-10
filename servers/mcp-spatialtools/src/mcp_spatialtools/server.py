@@ -795,6 +795,17 @@ def _calculate_morans_i(
                     f"is likely larger than the coordinate span — try a smaller value."
                 )
 
+    # Guard: if no spots have any neighbors, W=0 and n/W → NaN.
+    W = weights.sum()
+    if W == 0:
+        logger.warning(
+            f"No neighbors found for any spot (n={n}, "
+            f"distance_threshold={distance_threshold:.4f}). "
+            f"All weights are zero — cannot compute Moran's I. "
+            f"Increase distance_threshold or check coordinate scale."
+        )
+        return None, None, None
+
     # Calculate Moran's I
     mean_expr = expression_values.mean()
     deviations = expression_values - mean_expr
@@ -805,10 +816,9 @@ def _calculate_morans_i(
     if denominator == 0:
         return 0.0, 0.0, 1.0
 
-    morans_i = (n / weights.sum()) * (numerator / denominator)
+    morans_i = (n / W) * (numerator / denominator)
 
-    # Calculate expected value and variance for z-score
-    W = weights.sum()
+    # Calculate expected value and variance for z-score (W already computed above)
     E_I = -1.0 / (n - 1)  # Expected value under null hypothesis
 
     # Simplified variance calculation
@@ -950,6 +960,29 @@ async def calculate_spatial_autocorrelation(
                 "message": "Provide coordinates_file or include x_coord/y_coord in expression file"
             }
 
+        # Neighbor-count sanity check: verify the distance_threshold
+        # produces a reasonable number of neighbors per spot. If not,
+        # auto-adjust using median nearest-neighbor distance.
+        computation_notes = []
+        from scipy.spatial import cKDTree
+        tree = cKDTree(coordinates)
+        nn_dists, _ = tree.query(coordinates, k=2)  # k=2: self + nearest
+        median_nn_dist = float(np.median(nn_dists[:, 1]))
+        avg_neighbors = float(np.mean(
+            np.sum(cdist(coordinates, coordinates) < distance_threshold, axis=1) - 1
+        ))
+        if avg_neighbors < 1:
+            old_threshold = distance_threshold
+            distance_threshold = median_nn_dist * 2.5
+            msg = (
+                f"distance_threshold={old_threshold:.1f} yields {avg_neighbors:.1f} "
+                f"neighbors/spot (median NN dist={median_nn_dist:.1f}). "
+                f"Auto-adjusted to {distance_threshold:.1f} for meaningful "
+                f"spatial weights."
+            )
+            logger.warning(msg)
+            computation_notes.append(msg)
+
         # Calculate autocorrelation for each gene
         autocorr_results = []
 
@@ -970,6 +1003,24 @@ async def calculate_spatial_autocorrelation(
                 coordinates,
                 distance_threshold
             )
+
+            # Handle computation failure (e.g., zero-weight matrix)
+            if morans_i is None:
+                autocorr_results.append({
+                    "gene": str(gene),
+                    "morans_i": None,
+                    "z_score": None,
+                    "p_value": None,
+                    "significant": False,
+                    "interpretation": "computation_failed",
+                    "error": (
+                        f"No spatial neighbors found within "
+                        f"distance_threshold={distance_threshold:.1f}. "
+                        f"Check coordinate scale."
+                    ),
+                    "distance_threshold": float(distance_threshold),
+                })
+                continue
 
             # Interpret result
             if p_value < 0.05:
@@ -1005,13 +1056,14 @@ async def calculate_spatial_autocorrelation(
             if r.get("significant") and r.get("morans_i", 0) < -0.3
         )
 
-        return {
+        result = {
             "status": "success",
             "method": method,
             "genes_analyzed": int(len([r for r in autocorr_results if "morans_i" in r])),
             "genes_not_found": int(len([r for r in autocorr_results if r.get("status") == "not_found"])),
             "distance_threshold": float(distance_threshold),
             "num_spots": int(len(coordinates)),
+            "median_nn_distance": round(median_nn_dist, 2),
             "results": autocorr_results,
             "summary": {
                 "significantly_clustered": int(significant_clustered),
@@ -1019,6 +1071,9 @@ async def calculate_spatial_autocorrelation(
                 "random_pattern": int(len(autocorr_results) - significant_clustered - significant_dispersed)
             }
         }
+        if computation_notes:
+            result["computation_notes"] = computation_notes
+        return result
 
     except Exception as e:
         logger.error(f"Error calculating spatial autocorrelation: {e}")
