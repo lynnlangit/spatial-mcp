@@ -419,3 +419,82 @@ async def test_empty_bam_path():
 
     result = await _get_hla_typing_from_rna_impl(bam_path="")
     assert result["status"] == "error"
+
+
+# ---------------------------------------------------------------------------
+# FastMCP 2.x JSON-string coercion regression tests
+# ---------------------------------------------------------------------------
+# These exercise the Pydantic BeforeValidator path by calling tool.run()
+# which processes arguments through Pydantic validation before reaching
+# the function body.
+
+import asyncio
+import json
+
+
+def _get_tool(name: str):
+    """Fetch FunctionTool from mcp registry (FastMCP 3.x returns raw fn from decorator)."""
+    from mcp_neoantigen.server import mcp
+    return asyncio.get_event_loop().run_until_complete(mcp.get_tool(name))
+
+
+def _run_tool(name: str, arguments: dict):
+    """Call tool.run() (Pydantic-validated path) and return parsed JSON result."""
+    tool = _get_tool(name)
+    result = asyncio.get_event_loop().run_until_complete(
+        tool.run(arguments=arguments)
+    )
+    text = result.content[0].text
+    return json.loads(text)
+
+
+def test_estimate_neoantigen_burden_json_string_hla_alleles():
+    """estimate_neoantigen_burden accepts hla_alleles as JSON string."""
+    result = _run_tool("estimate_neoantigen_burden", {
+        "tmb_mutations_per_mb": 47.3,
+        "cancer_type": "HGSOC",
+        "hla_alleles": json.dumps(["HLA-A*02:01", "HLA-B*07:02", "HLA-C*07:02"]),
+    })
+    assert result["status"] == "success"
+    assert result["estimated_neoantigens"] > 0
+
+
+def test_estimate_neoantigen_burden_native_hla_alleles():
+    """estimate_neoantigen_burden accepts hla_alleles as native list."""
+    result = _run_tool("estimate_neoantigen_burden", {
+        "tmb_mutations_per_mb": 47.3,
+        "cancer_type": "HGSOC",
+        "hla_alleles": ["HLA-A*02:01", "HLA-B*07:02", "HLA-C*07:02"],
+    })
+    assert result["status"] == "success"
+
+
+def test_score_antigen_presentation_json_string_mhc1():
+    """score_antigen_presentation_pathway accepts mhc1_expression as JSON string."""
+    result = _run_tool("score_antigen_presentation_pathway", {
+        "neoantigen_count": 42,
+        "mhc1_expression": json.dumps({
+            "HLA-A": 8.5, "HLA-B": 6.2, "HLA-C": 4.1,
+        }),
+    })
+    assert result["status"] == "success"
+    assert "pathway_score" in result
+
+
+def test_run_pvacseq_json_string_alleles_and_lengths():
+    """run_pvacseq accepts hla_alleles and epitope_lengths as JSON strings."""
+    result = _run_tool("run_pvacseq", {
+        "vcf_path": "/data/patient/somatic.vcf",
+        "hla_alleles": json.dumps(["HLA-A*02:01", "HLA-B*07:02"]),
+        "epitope_lengths": json.dumps([8, 9, 10]),
+    })
+    assert result["status"] == "success"
+
+
+def test_predict_mhc1_binding_json_string_params():
+    """predict_mhc1_binding accepts peptides and hla_alleles as JSON strings."""
+    result = _run_tool("predict_mhc1_binding", {
+        "peptides": json.dumps(["RMPEAAPPV", "SLYNTVAVL"]),
+        "hla_alleles": json.dumps(["HLA-A*02:01"]),
+    })
+    assert result["status"] == "success"

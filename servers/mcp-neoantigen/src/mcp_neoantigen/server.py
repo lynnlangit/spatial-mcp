@@ -3,9 +3,11 @@
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional
+import json
+from typing import Annotated, Any, Dict, List, Optional
 
 from fastmcp import FastMCP
+from pydantic import BeforeValidator
 
 from .hla_utils import normalize_hla_allele, normalize_hla_list, is_class_i, is_class_ii
 from .iedb_client import predict_mhc_class_i, predict_mhc_class_ii, predict_mhc_batch
@@ -54,6 +56,40 @@ WEAK_BINDER_THRESHOLD = float(os.getenv("NEOANTIGEN_WEAK_BINDER_NM", "500.0"))
 def add_dry_run_warning(result):
     """Add DRY_RUN warning — delegates to shared implementation."""
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="NEOANTIGEN_DRY_RUN")
+
+
+# ---------------------------------------------------------------------------
+# Parameter coercion (FastMCP 2.x JSON-string fallback)
+# ---------------------------------------------------------------------------
+# FastMCP 2.x may deliver complex Optional[Dict/List] params as JSON strings
+# instead of parsed Python objects. BeforeValidator fires at Pydantic
+# validation time — BEFORE the function body — so the string is coerced
+# before Pydantic rejects it with "Input should be a valid dictionary/list".
+
+def _coerce_dict(val):
+    """Coerce JSON-string dicts for BeforeValidator."""
+    if val is None or isinstance(val, dict):
+        return val
+    if isinstance(val, str):
+        parsed = json.loads(val)
+        if not isinstance(parsed, dict):
+            raise ValueError(f"Expected dict after JSON decode, got {type(parsed).__name__}")
+        return parsed
+    return val
+
+def _coerce_list(val):
+    """Coerce JSON-string lists for BeforeValidator."""
+    if val is None or isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        parsed = json.loads(val)
+        if not isinstance(parsed, list):
+            raise ValueError(f"Expected list after JSON decode, got {type(parsed).__name__}")
+        return parsed
+    return val
+
+_CoerceDict = BeforeValidator(_coerce_dict)
+_CoerceList = BeforeValidator(_coerce_list)
 
 
 def _classify_binder(ic50_nm: float) -> tuple[bool, str]:
@@ -516,8 +552,8 @@ async def _score_antigen_presentation_pathway_impl(
 
 @mcp.tool()
 async def predict_mhc1_binding(
-    peptides: List[str],
-    hla_alleles: List[str],
+    peptides: Annotated[List[str], _CoerceList],
+    hla_alleles: Annotated[List[str], _CoerceList],
     method: str = "netmhcpan_ba",
     length: int = 9,
 ) -> Dict[str, Any]:
@@ -542,8 +578,8 @@ async def predict_mhc1_binding(
 
 @mcp.tool()
 async def predict_mhc2_binding(
-    peptides: List[str],
-    hla_alleles: List[str],
+    peptides: Annotated[List[str], _CoerceList],
+    hla_alleles: Annotated[List[str], _CoerceList],
     method: str = "netmhciipan",
     length: int = 15,
 ) -> Dict[str, Any]:
@@ -569,9 +605,9 @@ async def predict_mhc2_binding(
 @mcp.tool()
 async def run_pvacseq(
     vcf_path: str,
-    hla_alleles: List[str],
+    hla_alleles: Annotated[List[str], _CoerceList],
     output_dir: Optional[str] = None,
-    epitope_lengths: Optional[List[int]] = None,
+    epitope_lengths: Annotated[Optional[List[int]], _CoerceList] = None,
     binding_threshold: float = 500.0,
 ) -> Dict[str, Any]:
     """Run pVACseq neoantigen prediction pipeline from a VCF file.
@@ -597,7 +633,7 @@ async def run_pvacseq(
 @mcp.tool()
 async def estimate_neoantigen_burden(
     tmb_mutations_per_mb: float,
-    hla_alleles: Optional[List[str]] = None,
+    hla_alleles: Annotated[Optional[List[str]], _CoerceList] = None,
     cancer_type: str = "HGSOC",
 ) -> Dict[str, Any]:
     """Estimate neoantigen burden from tumor mutational burden (TMB).
@@ -642,7 +678,7 @@ async def get_hla_typing_from_rna(
 @mcp.tool()
 async def score_antigen_presentation_pathway(
     neoantigen_count: int,
-    mhc1_expression: Optional[Dict[str, float]] = None,
+    mhc1_expression: Annotated[Optional[Dict[str, float]], _CoerceDict] = None,
     b2m_expression: Optional[float] = None,
     tap1_expression: Optional[float] = None,
     tap2_expression: Optional[float] = None,
