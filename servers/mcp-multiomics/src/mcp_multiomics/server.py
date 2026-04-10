@@ -13,9 +13,10 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 from fastmcp import FastMCP
+from pydantic import BeforeValidator
 
 from .config import config
 
@@ -138,6 +139,13 @@ def _coerce_list(val):
             )
         return parsed
     raise ValueError(f"Cannot coerce {type(val).__name__} to list")
+
+
+# Pydantic BeforeValidator type aliases — these fire at validation time,
+# BEFORE the function body, so JSON-string params are coerced before
+# Pydantic rejects them with "Input should be a valid dictionary/list".
+_CoerceDict = BeforeValidator(_coerce_dict)
+_CoerceList = BeforeValidator(_coerce_list)
 
 
 # ============================================================================
@@ -446,11 +454,11 @@ def preprocess_multiomics_data(
 
 @mcp.tool()
 def visualize_data_quality(
-    data_paths: Dict[str, str],
+    data_paths: Annotated[Dict[str, str], _CoerceDict],
     metadata_path: Optional[str] = None,
     output_dir: Optional[str] = None,
     compare_before_after: bool = False,
-    before_data_paths: Optional[Dict[str, str]] = None,
+    before_data_paths: Annotated[Optional[Dict[str, str]], _CoerceDict] = None,
 ) -> Dict[str, Any]:
     """Generate quality control visualizations for multi-omics data.
 
@@ -490,10 +498,6 @@ def visualize_data_quality(
         # Generates PCA plots showing batch effect removal (0.82 → 0.12)
         ```
     """
-    # FastMCP 2.x may deliver dict params as JSON strings. Coerce before use.
-    data_paths = _coerce_dict(data_paths)
-    before_data_paths = _coerce_dict(before_data_paths)
-
     logger.info(f"visualize_data_quality called with {len(data_paths)} modalities")
 
     if config.dry_run:
@@ -643,9 +647,9 @@ def run_halla_analysis(
 
 @mcp.tool()
 def calculate_stouffer_meta(
-    p_values_dict: Dict[str, List[float]],
-    effect_sizes_dict: Optional[Dict[str, List[float]]] = None,
-    weights: Optional[Dict[str, float]] = None,
+    p_values_dict: Annotated[Dict[str, List[float]], _CoerceDict],
+    effect_sizes_dict: Annotated[Optional[Dict[str, List[float]]], _CoerceDict] = None,
+    weights: Annotated[Optional[Dict[str, float]], _CoerceDict] = None,
     use_directionality: bool = True,
 ) -> Dict[str, Any]:
     """Combine p-values across omics modalities using Stouffer's Z-score method.
@@ -703,11 +707,6 @@ def calculate_stouffer_meta(
         # Use: result['q_values'] for identifying significant features
         ```
     """
-    # FastMCP 2.x may deliver dict params as JSON strings. Coerce before use.
-    p_values_dict = _coerce_dict(p_values_dict)
-    effect_sizes_dict = _coerce_dict(effect_sizes_dict)
-    weights = _coerce_dict(weights)
-
     logger.info(f"calculate_stouffer_meta called with {len(p_values_dict)} modalities")
 
     if config.dry_run:
@@ -775,7 +774,7 @@ def calculate_stouffer_meta(
 @mcp.tool()
 def create_multiomics_heatmap(
     data_path: str,
-    features: Optional[List[str]] = None,
+    features: Annotated[Optional[List[str]], _CoerceList] = None,
     cluster_rows: bool = True,
     cluster_cols: bool = True,
     output_path: Optional[str] = None,
@@ -809,9 +808,6 @@ def create_multiomics_heatmap(
         )
         ```
     """
-    # FastMCP 2.x may deliver list params as JSON strings. Coerce before use.
-    features = _coerce_list(features)
-
     logger.info(f"create_multiomics_heatmap called: data_path={data_path}")
 
     if config.dry_run:
@@ -846,7 +842,7 @@ def create_multiomics_heatmap(
 @mcp.tool()
 def run_multiomics_pca(
     data_path: str,
-    modalities: Optional[List[str]] = None,
+    modalities: Annotated[Optional[List[str]], _CoerceList] = None,
     n_components: int = 3,
     scale_features: bool = True,
     output_path: Optional[str] = None,
@@ -881,9 +877,6 @@ def run_multiomics_pca(
         # PC1 explains 42% variance, separates Resistant vs Sensitive
         ```
     """
-    # FastMCP 2.x may deliver list params as JSON strings. Coerce before use.
-    modalities = _coerce_list(modalities)
-
     logger.info(f"run_multiomics_pca called: n_components={n_components}")
 
     if config.dry_run:
@@ -921,8 +914,8 @@ def run_multiomics_pca(
 
 @mcp.tool()
 def predict_upstream_regulators(
-    differential_genes: Dict[str, Dict[str, float]],
-    regulator_types: Optional[List[str]] = None,
+    differential_genes: Annotated[Dict[str, Dict[str, float]], _CoerceDict],
+    regulator_types: Annotated[Optional[List[str]], _CoerceList] = None,
     fdr_threshold: float = 0.05,
     activation_zscore_threshold: float = 2.0,
 ) -> Dict[str, Any]:
@@ -980,10 +973,6 @@ def predict_upstream_regulators(
         # - Drugs: Alpelisib (PI3K inhibitor, targets activated pathway)
         ```
     """
-    # FastMCP 2.x may deliver dict/list params as JSON strings. Coerce before use.
-    differential_genes = _coerce_dict(differential_genes)
-    regulator_types = _coerce_list(regulator_types)
-
     logger.info(f"predict_upstream_regulators called with {len(differential_genes)} genes")
 
     if config.dry_run:

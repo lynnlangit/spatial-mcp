@@ -1,9 +1,16 @@
-"""Regression tests for mcp-multiomics Fix 1 (FastMCP 2.x JSON-string coercion).
+"""Regression tests for mcp-multiomics FastMCP 2.x JSON-string coercion.
 
 Tests that tools accept Optional[Dict] / Optional[List] parameters both as
-native Python types and as JSON-encoded strings, which FastMCP 2.x may deliver
-from some LLM clients before Pydantic validation.
+native Python types (via .fn direct call) and as JSON-encoded strings (via
+tool.run() which exercises Pydantic BeforeValidator coercion).
+
+Architecture:
+- BeforeValidator(_coerce_dict / _coerce_list) on Annotated type aliases
+  fires at Pydantic validation time, BEFORE the function body.
+- .fn bypasses Pydantic → native Python types only.
+- .run(arguments={...}) goes through Pydantic → JSON strings coerced.
 """
+import asyncio
 import json
 import os
 
@@ -16,6 +23,8 @@ from mcp_multiomics.server import (  # noqa: E402
     _coerce_dict,
     _coerce_list,
 )
+
+# Import tool objects (FunctionTool) for both .fn and .run() paths
 from mcp_multiomics.server import calculate_stouffer_meta as _stouffer_tool  # noqa: E402
 from mcp_multiomics.server import create_multiomics_heatmap as _heatmap_tool  # noqa: E402
 from mcp_multiomics.server import (  # noqa: E402
@@ -26,13 +35,20 @@ from mcp_multiomics.server import (  # noqa: E402
     visualize_data_quality as _visualize_tool,
 )
 
-# FastMCP wraps @mcp.tool() functions in FunctionTool; .fn exposes the underlying
-# callable so tests exercise the full coercion path.
+# .fn = raw function (no Pydantic), for native-type tests
 calculate_stouffer_meta = _stouffer_tool.fn
 create_multiomics_heatmap = _heatmap_tool.fn
 predict_upstream_regulators = _regulators_tool.fn
 run_multiomics_pca = _pca_tool.fn
 visualize_data_quality = _visualize_tool.fn
+
+
+def _run_tool(tool, arguments: dict):
+    """Call tool.run() (Pydantic-validated path) and return parsed JSON result."""
+    result = asyncio.get_event_loop().run_until_complete(tool.run(arguments=arguments))
+    # ToolResult.content is a list of TextContent; parse the first one as JSON
+    text = result.content[0].text
+    return json.loads(text)
 
 
 # ---------------------------------------------------------------------------
@@ -88,11 +104,11 @@ class TestCoerceList:
 
 
 # ---------------------------------------------------------------------------
-# Tool-level regression tests (native + JSON-string inputs both succeed)
+# Tool-level tests — native Python types via .fn (direct call)
 # ---------------------------------------------------------------------------
 
 
-class TestStoufferMetaCoercion:
+class TestStoufferMetaNativeTypes:
     def test_native_dict_params(self):
         result = calculate_stouffer_meta(
             p_values_dict={
@@ -108,21 +124,6 @@ class TestStoufferMetaCoercion:
         )
         assert result["status"].startswith("success")
 
-    def test_json_string_params(self):
-        result = calculate_stouffer_meta(
-            p_values_dict=json.dumps({
-                "rna": [0.001, 0.05, 0.3],
-                "protein": [0.002, 0.04, 0.25],
-            }),
-            effect_sizes_dict=json.dumps({
-                "rna": [2.5, 1.2, -0.3],
-                "protein": [1.8, 1.5, -0.2],
-            }),
-            weights=json.dumps({"rna": 1.0, "protein": 1.0}),
-            use_directionality=True,
-        )
-        assert result["status"].startswith("success")
-
     def test_none_optional_params(self):
         result = calculate_stouffer_meta(
             p_values_dict={"rna": [0.001, 0.05], "protein": [0.002, 0.04]},
@@ -132,7 +133,7 @@ class TestStoufferMetaCoercion:
         assert result["status"].startswith("success")
 
 
-class TestPredictUpstreamRegulatorsCoercion:
+class TestPredictUpstreamRegulatorsNativeTypes:
     def test_native_params(self):
         result = predict_upstream_regulators(
             differential_genes={
@@ -143,42 +144,100 @@ class TestPredictUpstreamRegulatorsCoercion:
         )
         assert result["status"].startswith("success")
 
-    def test_json_string_params(self):
-        result = predict_upstream_regulators(
-            differential_genes=json.dumps({
-                "AKT1": {"log2fc": 2.5, "p_value": 0.0001},
-                "TP53": {"log2fc": -2.1, "p_value": 0.0005},
-            }),
-            regulator_types=json.dumps(["kinase", "drug"]),
-        )
-        assert result["status"].startswith("success")
 
+class TestBlastRadiusNativeTypes:
+    """Blast-radius tools accept native Python types via .fn."""
 
-class TestBlastRadiusCoercion:
-    """The three blast-radius candidates should also accept JSON-string inputs."""
-
-    def test_visualize_data_quality_json_dicts(self):
+    def test_visualize_data_quality_native_dicts(self):
         result = visualize_data_quality(
-            data_paths=json.dumps({
+            data_paths={
                 "rna": "/data/rna_preprocessed.csv",
                 "protein": "/data/protein_preprocessed.csv",
-            }),
-            before_data_paths=json.dumps({"rna": "/data/rna_raw.csv"}),
+            },
+            before_data_paths={"rna": "/data/rna_raw.csv"},
             compare_before_after=True,
         )
         assert result["status"].startswith("success")
 
-    def test_create_multiomics_heatmap_json_list(self):
+    def test_create_multiomics_heatmap_native_list(self):
         result = create_multiomics_heatmap(
             data_path="/cache/integrated.pkl",
-            features='["TP53", "MYC", "EGFR"]',
+            features=["TP53", "MYC", "EGFR"],
         )
         assert result["status"].startswith("success")
 
-    def test_run_multiomics_pca_json_list(self):
+    def test_run_multiomics_pca_native_list(self):
         result = run_multiomics_pca(
             data_path="/cache/integrated.pkl",
-            modalities='["rna", "protein"]',
+            modalities=["rna", "protein"],
             n_components=3,
         )
+        assert result["status"].startswith("success")
+
+
+# ---------------------------------------------------------------------------
+# Tool-level tests — JSON strings via tool.run() (Pydantic BeforeValidator)
+# ---------------------------------------------------------------------------
+# These exercise the ACTUAL MCP flow: arguments pass through Pydantic
+# validation where BeforeValidator(_coerce_dict/_coerce_list) fires.
+
+
+class TestStoufferMetaJsonString:
+    """JSON-string coercion through Pydantic BeforeValidator on tool.run()."""
+
+    def test_json_string_params(self):
+        result = _run_tool(_stouffer_tool, {
+            "p_values_dict": json.dumps({
+                "rna": [0.001, 0.05, 0.3],
+                "protein": [0.002, 0.04, 0.25],
+            }),
+            "effect_sizes_dict": json.dumps({
+                "rna": [2.5, 1.2, -0.3],
+                "protein": [1.8, 1.5, -0.2],
+            }),
+            "weights": json.dumps({"rna": 1.0, "protein": 1.0}),
+            "use_directionality": True,
+        })
+        assert result["status"].startswith("success")
+
+
+class TestPredictUpstreamRegulatorsJsonString:
+    def test_json_string_params(self):
+        result = _run_tool(_regulators_tool, {
+            "differential_genes": json.dumps({
+                "AKT1": {"log2fc": 2.5, "p_value": 0.0001},
+                "TP53": {"log2fc": -2.1, "p_value": 0.0005},
+            }),
+            "regulator_types": json.dumps(["kinase", "drug"]),
+        })
+        assert result["status"].startswith("success")
+
+
+class TestBlastRadiusJsonString:
+    """JSON-string coercion for blast-radius tools via tool.run()."""
+
+    def test_visualize_data_quality_json_dicts(self):
+        result = _run_tool(_visualize_tool, {
+            "data_paths": json.dumps({
+                "rna": "/data/rna_preprocessed.csv",
+                "protein": "/data/protein_preprocessed.csv",
+            }),
+            "before_data_paths": json.dumps({"rna": "/data/rna_raw.csv"}),
+            "compare_before_after": True,
+        })
+        assert result["status"].startswith("success")
+
+    def test_create_multiomics_heatmap_json_list(self):
+        result = _run_tool(_heatmap_tool, {
+            "data_path": "/cache/integrated.pkl",
+            "features": json.dumps(["TP53", "MYC", "EGFR"]),
+        })
+        assert result["status"].startswith("success")
+
+    def test_run_multiomics_pca_json_list(self):
+        result = _run_tool(_pca_tool, {
+            "data_path": "/cache/integrated.pkl",
+            "modalities": json.dumps(["rna", "protein"]),
+            "n_components": 3,
+        })
         assert result["status"].startswith("success")
