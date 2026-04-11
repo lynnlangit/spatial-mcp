@@ -7,6 +7,7 @@ using quantum computing methods.
 import asyncio
 import os
 import json
+from functools import partial
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import numpy as np
@@ -282,8 +283,13 @@ async def learn_spatial_cell_embeddings(
             optimizer="adam"
         )
         trainer = QuCoWETrainer(embedding, config)
-        training_summary = await asyncio.to_thread(
-            trainer.train, training_data, True  # verbose=True
+        # Use run_in_executor with partial to pass keyword args correctly.
+        # Previous code passed True as positional arg, which set n_epochs=True
+        # instead of verbose=True, overriding the user's n_epochs setting.
+        loop = asyncio.get_running_loop()
+        training_summary = await loop.run_in_executor(
+            None,
+            partial(trainer.train, training_data, verbose=True),
         )
 
         # Save embeddings if output_dir provided
