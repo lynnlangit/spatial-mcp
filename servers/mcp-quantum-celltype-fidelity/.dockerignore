@@ -20,8 +20,5 @@ build
 venv
 env
 .env
-README.md
 tests/
 examples/
-*.md
-!pyproject.toml
