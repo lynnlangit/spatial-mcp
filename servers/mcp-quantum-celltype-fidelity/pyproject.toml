@@ -15,6 +15,7 @@ license = {text = "Apache-2.0"}
 dependencies = [
     "fastmcp>=2.13.0",
     "qiskit>=1.0.0",
+    "qiskit-aer>=0.15.0",
     "numpy>=1.24.0,<2.0",
     "scipy>=1.11.0",
     "pandas>=2.0.0",
@@ -43,12 +44,15 @@ dev = [
     "mypy>=1.4.0",
 ]
 aer = [
-    "qiskit-aer>=0.13.0",
+    "qiskit-aer>=0.15.0",
 ]
 gpu = [
-    "qiskit-aer>=0.13.0",
+    "qiskit-aer>=0.15.0",
     "cuquantum-python>=23.3.0",
-    "qiskit-aer-gpu>=0.13.0",
+    "qiskit-aer-gpu>=0.15.0",
+]
+mps = [
+    "torch>=2.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]

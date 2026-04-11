@@ -190,7 +190,7 @@ async def learn_spatial_cell_embeddings(
         n_epochs: Number of training epochs (default: 50)
         learning_rate: Learning rate (default: 0.01)
         k_neighbors: Number of spatial neighbors to consider (default: 10)
-        backend: Quantum backend ("cpu", "gpu", "ibm")
+        backend: Quantum backend ("cpu", "gpu", "mps", "ibm")
         output_dir: Directory to save trained embeddings (optional)
         dry_run: If True (or n_epochs == 0), skip variational training and
             return a deterministic mock embedding cached under a

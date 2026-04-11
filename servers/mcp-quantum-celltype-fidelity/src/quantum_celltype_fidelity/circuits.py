@@ -179,7 +179,7 @@ class QuCoWECircuit:
         Args:
             features: Gene expression features (feature_dim,)
             theta: Variational parameters
-            backend: Simulation backend ("cpu", "gpu", or "ibm")
+            backend: Simulation backend ("cpu", "gpu", "mps", or "ibm")
 
         Returns:
             Complex state vector (2^n_qubits,)
@@ -189,30 +189,58 @@ class QuCoWECircuit:
 
         # Simulate based on backend
         if backend == "cpu":
-            # Use Qiskit's statevector simulator (CPU)
-            from qiskit.quantum_info import Statevector
-            statevector = Statevector(bound_circuit)
-            return statevector.data
+            # Use Qiskit Aer C++ multi-threaded statevector simulator
+            from qiskit_aer import AerSimulator
+            sim_circuit = bound_circuit.copy()
+            sim_circuit.save_statevector()
+            simulator = AerSimulator(method='statevector')
+            result = simulator.run(sim_circuit).result()
+            return np.array(result.get_statevector())
 
         elif backend == "gpu":
             # Use cuStateVec (requires CUDA + cuQuantum)
             try:
                 from qiskit_aer import AerSimulator
+                sim_circuit = bound_circuit.copy()
+                sim_circuit.save_statevector()
                 simulator = AerSimulator(method='statevector', device='GPU')
-                result = simulator.run(bound_circuit).result()
-                statevector = result.get_statevector()
-                return np.array(statevector)
+                result = simulator.run(sim_circuit).result()
+                return np.array(result.get_statevector())
             except ImportError:
                 raise ImportError(
                     "GPU backend requires qiskit-aer with cuQuantum. "
                     "Install with: pip install qiskit-aer-gpu"
                 )
 
+        elif backend == "mps":
+            # Apple Silicon Metal Performance Shaders via PyTorch
+            try:
+                import torch
+            except ImportError:
+                raise ImportError(
+                    "MPS backend requires PyTorch. "
+                    "Install with: pip install torch"
+                )
+            if not torch.backends.mps.is_available():
+                raise RuntimeError(
+                    "MPS backend not available on this device. "
+                    "Requires Apple Silicon (M1/M2/M3/M4) with macOS 12.3+."
+                )
+            from qiskit.quantum_info import Operator
+            unitary = Operator(bound_circuit).data
+            initial_state = np.zeros(2 ** self.n_qubits, dtype=np.complex64)
+            initial_state[0] = 1.0
+            device = torch.device("mps")
+            u_tensor = torch.tensor(unitary, dtype=torch.complex64, device=device)
+            s_tensor = torch.tensor(initial_state, dtype=torch.complex64, device=device)
+            result = torch.matmul(u_tensor, s_tensor)
+            return result.cpu().numpy()
+
         elif backend == "ibm":
             # IBM Quantum hardware (requires API token)
             raise NotImplementedError(
                 "IBM Quantum hardware execution not yet implemented. "
-                "Use backend='cpu' or 'gpu' for simulation."
+                "Use backend='cpu', 'gpu', or 'mps' for simulation."
             )
 
         else:
