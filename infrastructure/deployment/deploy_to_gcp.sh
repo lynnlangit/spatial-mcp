@@ -98,6 +98,11 @@ SERVERS=(
     "mcp-quantum-celltype-fidelity:3010:2Gi:2:QUANTUM_BACKEND=cpu:QUANTUM_LOG_LEVEL=INFO"
     "mcp-patient-report:3011:2Gi:1:PATIENT_REPORT_LOG_LEVEL=INFO:PATIENT_REPORT_DRY_RUN=false"
     "mcp-genomic-results:3012:2Gi:1:GENOMIC_RESULTS_LOG_LEVEL=INFO:GENOMIC_RESULTS_DRY_RUN=false"
+    "mcp-cell-classify:3009:2Gi:1:CELL_CLASSIFY_LOG_LEVEL=INFO:CELL_CLASSIFY_DRY_RUN=true"
+    "mcp-geodownload:3013:2Gi:1:GEODOWNLOAD_LOG_LEVEL=INFO:GEODOWNLOAD_DRY_RUN=true"
+    "mcp-cibersortx:3014:2Gi:1:CIBERSORTX_LOG_LEVEL=INFO:CIBERSORTX_DRY_RUN=true"
+    "mcp-opentargets:3015:2Gi:1:OPENTARGETS_LOG_LEVEL=INFO:OPENTARGETS_DRY_RUN=true"
+    "mcp-neoantigen:3016:2Gi:1:NEOANTIGEN_LOG_LEVEL=INFO:NEOANTIGEN_DRY_RUN=true"
 )
 
 # Apply deployment profile to SERVERS array.
@@ -169,6 +174,11 @@ get_service_account() {
         mcp-patient-report) echo "mcp-patient-report-sa" ;;
         mcp-quantum-celltype-fidelity) echo "mcp-quantum-sa" ;;
         mcp-genomic-results) echo "mcp-genomic-results-sa" ;;
+        mcp-cell-classify) echo "mcp-cell-classify-sa" ;;
+        mcp-geodownload) echo "mcp-geodownload-sa" ;;
+        mcp-cibersortx) echo "mcp-cibersortx-sa" ;;
+        mcp-opentargets) echo "mcp-opentargets-sa" ;;
+        mcp-neoantigen) echo "mcp-neoantigen-sa" ;;
         *) echo "" ;;
     esac
 }
