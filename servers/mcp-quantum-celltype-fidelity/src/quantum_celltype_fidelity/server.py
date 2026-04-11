@@ -175,6 +175,11 @@ async def learn_spatial_cell_embeddings(
     quantum circuits to embed cell types into Hilbert space such that
     fidelity reflects cell type similarity.
 
+    **Timing:** Real training (dry_run=False) with default n_epochs=50 on CPU
+    typically takes 60-120 seconds depending on dataset size and qubit count.
+    The MCP client timeout should be set to at least 180 seconds (180000 ms)
+    for real training runs. Use dry_run=True for fast (<5s) mock results.
+
     Args:
         adata_path: Path to AnnData (.h5ad) file or GCS URI
         cell_type_key: Key in adata.obs for cell type labels

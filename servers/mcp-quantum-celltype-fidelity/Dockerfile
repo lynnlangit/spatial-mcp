@@ -28,6 +28,7 @@ RUN pip install --no-cache-dir -e .
 
 # Set environment variables for SSE transport
 ENV MCP_TRANSPORT=sse
+ENV MCP_TOOL_TIMEOUT=180
 ENV QUANTUM_BACKEND=cpu
 ENV QUANTUM_DATA_DIR=/app/data/quantum
 ENV QUANTUM_CACHE_DIR=/app/data/cache/quantum

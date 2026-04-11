@@ -197,6 +197,7 @@
         "-m",
         "quantum_celltype_fidelity"
       ],
+      "timeout": 180000,
       "env": {
         "QUANTUM_BACKEND": "cpu",
         "QUANTUM_DATA_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/quantum",
