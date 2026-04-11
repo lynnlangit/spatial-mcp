@@ -66,7 +66,7 @@ def main():
     st.markdown("""
     **Real-time observability for precision medicine MCP server architecture**
 
-    Monitor token usage, latency, and costs across all 9 deployed MCP servers.
+    Monitor token usage, latency, and costs across all 21 deployed MCP servers.
     Optimize resource planning and identify cost-reduction opportunities.
     """)
 
@@ -172,7 +172,7 @@ def main():
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📚 Documentation")
     st.sidebar.markdown("[Cost Calculator](cost_calculator.py) | [Metrics Aggregator](metrics_aggregator.py)")
-    st.sidebar.markdown("**Last Updated:** 2026-01-12")
+    st.sidebar.markdown("**Last Updated:** 2026-04-11")
 
 
 def render_server_health_badges(health: dict):
