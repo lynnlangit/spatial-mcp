@@ -322,6 +322,7 @@ deploy_server() {
     print_info "Staging shared utilities..."
     mkdir -p "${server_path}/_shared_temp"
     cp -r "${REPO_ROOT}/shared/utils" "${server_path}/_shared_temp/"
+    cp -r "${REPO_ROOT}/shared/common" "${server_path}/_shared_temp/"
 
     # Build gcloud deploy command
     local deploy_cmd="gcloud run deploy ${server_name}"

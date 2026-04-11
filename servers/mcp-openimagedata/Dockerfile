@@ -10,10 +10,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directory structure
-RUN mkdir -p /app/servers/mcp-openimagedata /app/shared/utils
+RUN mkdir -p /app/servers/mcp-openimagedata /app/shared/utils /app/shared/common
 
 # Copy temporarily staged shared utilities
 COPY _shared_temp/utils/ /app/shared/utils/
+COPY _shared_temp/common/ /app/shared/common/
 
 # Copy server code
 COPY . /app/servers/mcp-openimagedata/

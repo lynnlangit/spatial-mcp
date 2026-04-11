@@ -15,11 +15,18 @@ RUN apt-get update && apt-get install -y \
     libhdf5-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Create directory structure
+RUN mkdir -p /app/servers/mcp-deepcell /app/shared/utils /app/shared/common
+
+# Copy temporarily staged shared utilities
+COPY _shared_temp/utils/ /app/shared/utils/
+COPY _shared_temp/common/ /app/shared/common/
+
 # Copy server code
-COPY . /app
+COPY . /app/servers/mcp-deepcell/
 
 # Install Python dependencies
-WORKDIR /app
+WORKDIR /app/servers/mcp-deepcell
 RUN pip install --no-cache-dir -e .
 
 # Set environment variables for SSE transport
