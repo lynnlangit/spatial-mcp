@@ -101,6 +101,44 @@ def _classify_binder(ic50_nm: float) -> tuple[bool, str]:
     return False, "non_binder"
 
 
+def _build_mock_binding_predictions(
+    peptides: List[str],
+    alleles: List[str],
+    canonical_predictions: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Generate input-aware mock predictions for DRY_RUN mode.
+
+    Uses canonical mock predictions for known (peptide, allele) pairs
+    and deterministic mock values for unknown pairs.
+    """
+    # Index canonical predictions by (peptide, allele)
+    canonical: Dict[tuple, Dict[str, Any]] = {}
+    for pred in canonical_predictions:
+        key = (pred["peptide"], pred["allele"])
+        canonical[key] = pred
+
+    predictions: List[Dict[str, Any]] = []
+    for peptide in peptides:
+        for allele in alleles:
+            match = canonical.get((peptide, allele))
+            if match:
+                predictions.append(dict(match))
+            else:
+                # Deterministic mock: character-sum seed → IC50 in 50-950 range
+                seed = sum(ord(c) for c in f"{peptide}:{allele}") % 900
+                ic50 = 50.0 + seed
+                is_binder, level = _classify_binder(ic50)
+                predictions.append({
+                    "peptide": peptide,
+                    "allele": allele,
+                    "ic50_nm": round(ic50, 1),
+                    "percentile_rank": round(ic50 / 100, 1),
+                    "binder": is_binder,
+                    "binder_level": level,
+                })
+    return predictions
+
+
 # ---------------------------------------------------------------------------
 # Tool implementation functions
 # ---------------------------------------------------------------------------
@@ -134,7 +172,9 @@ async def _predict_mhc1_binding_impl(
             }
 
     if DRY_RUN:
-        predictions = MOCK_MHC1_PREDICTIONS
+        predictions = _build_mock_binding_predictions(
+            peptides, normalized, MOCK_MHC1_PREDICTIONS,
+        )
         strong = sum(1 for p in predictions if p["binder_level"] == "strong")
         weak = sum(1 for p in predictions if p["binder_level"] == "weak")
         return add_dry_run_warning({
@@ -144,7 +184,7 @@ async def _predict_mhc1_binding_impl(
             "predictions": predictions,
             "strong_binders": strong,
             "weak_binders": weak,
-            "total_peptides": len(predictions),
+            "total_peptides": len(peptides),
         })
 
     # Production: call IEDB API
@@ -206,7 +246,9 @@ async def _predict_mhc2_binding_impl(
         return {"status": "error", "message": str(e)}
 
     if DRY_RUN:
-        predictions = MOCK_MHC2_PREDICTIONS
+        predictions = _build_mock_binding_predictions(
+            peptides, normalized, MOCK_MHC2_PREDICTIONS,
+        )
         strong = sum(1 for p in predictions if p["binder_level"] == "strong")
         weak = sum(1 for p in predictions if p["binder_level"] == "weak")
         return add_dry_run_warning({
@@ -216,7 +258,7 @@ async def _predict_mhc2_binding_impl(
             "predictions": predictions,
             "strong_binders": strong,
             "weak_binders": weak,
-            "total_peptides": len(predictions),
+            "total_peptides": len(peptides),
         })
 
     results = await predict_mhc_class_ii(

@@ -175,7 +175,7 @@ def test_is_class_ii():
 
 @pytest.mark.asyncio
 async def test_predict_mhc1_binding_dry_run():
-    """Test predict_mhc1_binding returns PatientOne mock predictions."""
+    """Test predict_mhc1_binding returns input-aware mock predictions."""
     from mcp_neoantigen.server import _predict_mhc1_binding_impl
 
     result = await _predict_mhc1_binding_impl(
@@ -185,9 +185,24 @@ async def test_predict_mhc1_binding_dry_run():
 
     assert result["status"] == "success"
     assert "predictions" in result
-    assert result["total_peptides"] > 0
+    assert result["total_peptides"] == 2  # matches input peptide count
     assert result["strong_binders"] >= 1
     assert "_DRY_RUN_WARNING" in result
+
+    # Canonical RMPEAAPPV / HLA-A*02:01 must be a strong binder
+    rmpeaappv = [
+        p for p in result["predictions"]
+        if p.get("peptide") == "RMPEAAPPV" and "A*02:01" in p.get("allele", "")
+    ]
+    assert len(rmpeaappv) == 1, "RMPEAAPPV/HLA-A*02:01 prediction missing"
+    assert rmpeaappv[0]["ic50_nm"] < 50, (
+        f"RMPEAAPPV IC50={rmpeaappv[0]['ic50_nm']} nM — expected <50 nM"
+    )
+
+    # No empty peptide or allele strings
+    for pred in result["predictions"]:
+        assert pred["peptide"] != "", "Empty peptide string"
+        assert pred["allele"] != "", "Empty allele string"
 
 
 @pytest.mark.asyncio
