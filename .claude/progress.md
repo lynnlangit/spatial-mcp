@@ -24,9 +24,10 @@
 | 6 | PAT001 end-to-end smoke test (local) | ✅ signature audit 17/17 |
 | 7 | Housekeeping (layout / build-backend normalization) | ✅ 3/3 (layout move deferred) |
 | 8a | Local validation matrix (automated steps) | ✅ 8a.1-8a.4 + 8a.5 pre-check |
-| 8a.5 | PAT001 manual walkthrough in Claude Desktop | ☐ operator-driven — HARD STOP |
-| 8b | Build containers locally | ☐ blocked on operator green-light |
-| 8c-h | GCP re-deploy (dev → prod → rollback drill) | ☐ blocked on 8b |
+| 8a.5 | PAT001 manual walkthrough in Claude Desktop | ✅ operator verified |
+| 8b | Build containers + fix Dockerfiles (shared/common) | ✅ 56d1e5a, ba29145 |
+| 8c | GCP Cloud Run re-deploy (dev mode, 20 services) | ✅ 16 servers + 4 clients |
+| 8d-h | Prod deploy / rollback drill | ☐ future phase |
 
 ---
 
