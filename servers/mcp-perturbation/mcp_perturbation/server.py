@@ -11,6 +11,11 @@ from pathlib import Path
 
 import scanpy as sc
 import numpy as np
+import anndata as ad
+try:
+    ad.settings.allow_write_nullable_strings = True
+except AttributeError:
+    pass  # older anndata versions don't need this setting
 
 from .data_loader import load_geo_dataset
 from .gears_wrapper import GearsWrapper

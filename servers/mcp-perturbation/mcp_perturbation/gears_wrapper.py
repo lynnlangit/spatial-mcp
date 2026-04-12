@@ -2,6 +2,10 @@
 
 import scanpy as sc
 import anndata as ad
+try:
+    ad.settings.allow_write_nullable_strings = True
+except AttributeError:
+    pass  # older anndata versions don't need this setting
 import numpy as np
 import torch
 from pathlib import Path
