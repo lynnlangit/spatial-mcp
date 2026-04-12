@@ -110,48 +110,81 @@ class DatasetLoader:
         )
 
     def _load_gse184880(self) -> ad.AnnData:
-        """Create synthetic GSE184880-like dataset for testing.
+        """Create synthetic GSE184880-like dataset for GEARS training.
 
-        Real GSE184880 has:
-        - 12 samples: 5 healthy controls + 7 HGSOC patients
-        - Cell types: T cells, B cells, Macrophages, Epithelial cells, etc.
-        - Conditions: control, tumor
+        Generates a GEARS-compatible AnnData with:
+        - Real HGSOC-relevant gene names (first 50), rest synthetic
+        - GEARS-format perturbation conditions ('GENE+ctrl', 'ctrl')
+        - 10 single-gene perturbations + control
+        - Knockdown effect on the perturbed gene for each condition
+        - Sparse count matrix (required by GEARS internals)
         """
-        np.random.seed(42)
+        import scipy.sparse as sp
 
-        # Simulate 5000 cells, 10000 genes
+        rng = np.random.default_rng(42)
+
         n_cells = 5000
         n_genes = 10000
 
-        # Generate sparse count matrix
-        X = np.random.negative_binomial(5, 0.3, size=(n_cells, n_genes))
+        # Gene names — real HGSOC-relevant genes first, then synthetic
+        real_genes = [
+            "NNMT", "STAT3", "TP53", "BRCA1", "MYC", "PIK3CA", "PTEN",
+            "CCNE1", "AKT1", "CDK2", "EGFR", "VEGFA", "CD8A", "FOXP3",
+            "CD68", "FAP", "COL1A1", "VIM", "EPCAM", "KRT8", "CD4",
+            "CD3E", "B2M", "TAP1", "HLA-A", "HLA-B", "GZMB", "PRF1",
+            "IFNG", "TNF", "PDCD1", "CD274", "CTLA4", "LAG3", "HAVCR2",
+            "TIGIT", "IDO1", "TGFB1", "IL6", "IL10", "CXCL10", "CCL5",
+            "CXCR3", "CXCL9", "MKI67", "TOP2A", "PCNA", "RRM2", "CDK1",
+            "AURKA",
+        ]
+        gene_names = real_genes + [
+            f"GENE_{i:04d}" for i in range(n_genes - len(real_genes))
+        ]
 
-        # Create cell metadata
-        cell_types = np.random.choice(
-            ["T_cells", "B_cells", "Macrophages", "Epithelial", "Fibroblasts"],
-            size=n_cells,
-            p=[0.3, 0.2, 0.2, 0.2, 0.1]
+        # Perturbation conditions in GEARS format
+        pert_genes = real_genes[:10]  # 10 single-gene perturbations
+        conditions = ["ctrl"] + [f"{g}+ctrl" for g in pert_genes]
+        # ~20% control, ~8% each perturbation
+        cell_conditions = rng.choice(
+            conditions, size=n_cells, p=[0.2] + [0.08] * 10,
         )
 
-        conditions = np.random.choice(
-            ["control", "tumor"],
-            size=n_cells,
-            p=[0.4, 0.6]
+        # Expression matrix — lognormal base, knockdown on perturbed gene
+        X = rng.lognormal(mean=1.0, sigma=1.0, size=(n_cells, n_genes))
+        X = X.astype(np.float32)
+        gene_index = {g: i for i, g in enumerate(gene_names)}
+        for i, cond in enumerate(cell_conditions):
+            if cond != "ctrl" and "+ctrl" in cond:
+                gene = cond.replace("+ctrl", "")
+                idx = gene_index.get(gene)
+                if idx is not None:
+                    X[i, idx] *= 0.05  # knockdown effect
+
+        obs = pd.DataFrame(
+            {
+                "condition": cell_conditions,
+                "cell_type": rng.choice(
+                    ["T_cells", "B_cells", "Macrophages", "Epithelial",
+                     "Fibroblasts"],
+                    size=n_cells,
+                    p=[0.3, 0.2, 0.2, 0.2, 0.1],
+                ),
+                "patient_id": rng.choice(
+                    [f"P{i:02d}" for i in range(1, 13)], size=n_cells,
+                ),
+            },
+            index=[f"Cell_{i:05d}" for i in range(n_cells)],
         )
 
-        obs = pd.DataFrame({
-            "cell_type": cell_types,
-            "condition": conditions,
-            "patient_id": np.random.choice([f"P{i:02d}" for i in range(1, 13)], size=n_cells),
-        })
+        var = pd.DataFrame({"gene_name": gene_names}, index=gene_names)
 
-        # Create gene metadata
-        var = pd.DataFrame(index=[f"Gene_{i}" for i in range(n_genes)])
+        adata = ad.AnnData(X=sp.csr_matrix(X), obs=obs, var=var)
 
-        adata = ad.AnnData(X=X, obs=obs, var=var)
-        adata.obs_names = [f"Cell_{i}" for i in range(n_cells)]
-
-        logger.info("Created synthetic GSE184880 dataset")
+        logger.info(
+            "Created GEARS-compatible synthetic GSE184880 dataset: "
+            "%d cells, %d genes, %d perturbation conditions",
+            n_cells, n_genes, len(conditions),
+        )
         return adata
 
     def _preprocess(
