@@ -247,14 +247,18 @@ async def _predict_mhc1_binding_impl(
         })
 
     # Production: call IEDB API
-    results = await predict_mhc_batch(
-        peptides=peptides,
-        alleles=normalized,
-        method=method,
-        length=length,
-        batch_size=IEDB_BATCH_SIZE,
-        api_url=IEDB_API_URL,
-    )
+    try:
+        results = await predict_mhc_batch(
+            peptides=peptides,
+            alleles=normalized,
+            method=method,
+            length=length,
+            batch_size=IEDB_BATCH_SIZE,
+            api_url=IEDB_API_URL,
+        )
+    except Exception as exc:
+        logger.error("IEDB API call failed: %s", exc)
+        return {"status": "error", "message": f"IEDB API error: {exc}"}
 
     # Index API results by (peptide, allele) for reliable lookup
     api_index: Dict[tuple, Dict[str, Any]] = {}
@@ -270,6 +274,11 @@ async def _predict_mhc1_binding_impl(
     for peptide, allele in itertools.product(peptides, normalized):
         r = api_index.get((peptide, allele), {})
         ic50 = _extract_ic50(r, method)
+        if ic50 == 999999.0:
+            logger.warning(
+                "ic50 fallback for (%s, %s): api_index hit=%s, row keys=%s",
+                peptide, allele, (peptide, allele) in api_index, list(r.keys()),
+            )
         is_binder, level = _classify_binder(ic50)
         predictions.append({
             "peptide": peptide,

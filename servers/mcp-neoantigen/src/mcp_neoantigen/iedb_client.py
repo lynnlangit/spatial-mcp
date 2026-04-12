@@ -39,11 +39,14 @@ async def predict_mhc_class_i(
     sequence_text = "\n".join(peptides)
     allele_text = ",".join(alleles)
 
+    # IEDB API requires one length value per allele (comma-separated).
+    length_text = ",".join([str(length)] * len(alleles))
+
     payload = {
         "method": method,
         "sequence_text": sequence_text,
         "allele": allele_text,
-        "length": str(length),
+        "length": length_text,
     }
 
     async with _rate_semaphore:
@@ -84,11 +87,14 @@ async def predict_mhc_class_ii(
     sequence_text = "\n".join(peptides)
     allele_text = ",".join(alleles)
 
+    # IEDB API requires one length value per allele (comma-separated).
+    length_text = ",".join([str(length)] * len(alleles))
+
     payload = {
         "method": method,
         "sequence_text": sequence_text,
         "allele": allele_text,
-        "length": str(length),
+        "length": length_text,
     }
 
     async with _rate_semaphore:
@@ -118,6 +124,11 @@ def _parse_iedb_response(text: str) -> List[Dict[str, Any]]:
     Returns:
         List of prediction result dicts.
     """
+    # IEDB returns HTML error pages on invalid requests (200 status but
+    # body contains <ul class="errorlist">).  Detect and raise early.
+    if "<html" in text.lower() or "errorlist" in text.lower():
+        raise RuntimeError(f"IEDB API returned an error page: {text[:500]}")
+
     lines = text.strip().split("\n")
     if len(lines) < 2:
         return []
