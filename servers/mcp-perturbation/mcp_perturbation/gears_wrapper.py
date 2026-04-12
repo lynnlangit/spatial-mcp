@@ -95,16 +95,40 @@ class GearsWrapper:
             logger.warning(f"pert_key '{pert_key}' not found, using condition_key")
             self.adata.obs[pert_key] = self.adata.obs[condition_key]
 
-        # Create PertData object from AnnData
-        # Save to temporary h5ad file for GEARS to load
-        temp_path = self.model_dir / "temp_adata.h5ad"
-        self.adata.write_h5ad(temp_path)
+        # Ensure AnnData has the columns GEARS expects:
+        #   obs: 'condition' (with 'ctrl' for controls), 'cell_type'
+        #   var: 'gene_name'
+        if condition_key != "condition":
+            self.adata.obs["condition"] = self.adata.obs[condition_key]
+        # GEARS uses 'ctrl' (not 'control') for the control label
+        if ctrl_key != "ctrl":
+            self.adata.obs["condition"] = self.adata.obs["condition"].replace(
+                ctrl_key, "ctrl"
+            )
+        if "cell_type" not in self.adata.obs.columns:
+            self.adata.obs["cell_type"] = "unknown"
+        if "gene_name" not in self.adata.var.columns:
+            self.adata.var["gene_name"] = self.adata.var_names
 
-        # Initialize PertData
+        # GEARS expects sparse X (calls X.toarray() internally)
+        import scipy.sparse as sp
+        if not sp.issparse(self.adata.X):
+            self.adata.X = sp.csr_matrix(self.adata.X)
+
+        # Use GEARS' own new_data_process to build the PertData object.
+        # This computes DE genes, creates PyG graph objects, and saves
+        # perturb_processed.h5ad — everything that load() would expect.
         self.pert_data = PertData(str(self.model_dir))
+        self.pert_data.new_data_process(
+            dataset_name="custom_pert",
+            adata=self.adata,
+        )
 
-        # Load from temporary file
-        # Note: GEARS expects specific format, may need custom data loader
+        # Store split params — dataloaders are built in _ensure_dataloader()
+        # which is called by initialize_model() before GEARS needs them.
+        self._split = split
+        self._split_seed = split_seed
+
         logger.info(
             f"Setup AnnData with condition_key={condition_key}, "
             f"ctrl_key={ctrl_key}, pert_key={pert_key}"
@@ -126,9 +150,25 @@ class GearsWrapper:
         self.pert_data = PertData(str(self.model_dir))
         self.pert_data.load(data_name=data_name)
         self.pert_data.prepare_split(split=split, seed=split_seed)
+        self.pert_data.get_dataloader(batch_size=32, test_batch_size=128)
         self.adata = self.pert_data.adata
 
         logger.info(f"Loaded GEARS dataset: {data_name}")
+
+    def _ensure_dataloader(self, batch_size: int = 32) -> None:
+        """Prepare data split and build dataloaders if not already done.
+
+        GEARS model initialization requires pert_data.dataloader to exist.
+        This is called automatically by initialize_model().
+        """
+        if hasattr(self.pert_data, "dataloader") and self.pert_data.dataloader:
+            return
+        split = getattr(self, "_split", "simulation")
+        seed = getattr(self, "_split_seed", 1)
+        self.pert_data.prepare_split(split=split, seed=seed)
+        self.pert_data.get_dataloader(
+            batch_size=batch_size, test_batch_size=min(128, batch_size * 4),
+        )
 
     def initialize_model(
         self,
@@ -151,6 +191,7 @@ class GearsWrapper:
         if self.pert_data is None:
             raise ValueError("Call setup() or setup_from_dataset() before initializing model")
 
+        self._ensure_dataloader()
         self.model = GEARS(self.pert_data, device=self.device)
         self.model.model_initialize(
             hidden_size=hidden_size,
