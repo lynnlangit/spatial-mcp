@@ -168,6 +168,13 @@ class GearsWrapper:
         if not sp.issparse(self.adata.X):
             self.adata.X = sp.csr_matrix(self.adata.X)
 
+        # Clear stale GEARS artifacts from previous runs so cached splits
+        # or PyG objects from a different dataset don't get reloaded.
+        import shutil
+        stale_dir = self.model_dir / "custom_pert"
+        if stale_dir.exists():
+            shutil.rmtree(stale_dir, ignore_errors=True)
+
         # Use GEARS' own new_data_process to build the PertData object.
         # This computes DE genes, creates PyG graph objects, and saves
         # perturb_processed.h5ad — everything that load() would expect.
@@ -216,8 +223,24 @@ class GearsWrapper:
         """
         if hasattr(self.pert_data, "dataloader") and self.pert_data.dataloader:
             return
+
         split = getattr(self, "_split", "simulation")
         seed = getattr(self, "_split_seed", 1)
+
+        # 'simulation' split requires many distinct perturbation conditions
+        # to populate train/val/test sets.  Fall back to 'no_test' for
+        # datasets with fewer than 10 non-ctrl perturbations.
+        if split == "simulation" and hasattr(self.pert_data, "adata"):
+            conditions = self.pert_data.adata.obs["condition"].unique()
+            n_perts = sum(1 for c in conditions if c != "ctrl")
+            if n_perts < 10:
+                logger.info(
+                    "Only %d perturbation conditions — using split='no_test' "
+                    "instead of 'simulation'",
+                    n_perts,
+                )
+                split = "no_test"
+
         try:
             self.pert_data.prepare_split(split=split, seed=seed)
             self.pert_data.get_dataloader(
@@ -231,10 +254,9 @@ class GearsWrapper:
                 else "N/A"
             )
             raise RuntimeError(
-                f"GEARS prepare_split/get_dataloader failed. "
-                f"Condition labels in adata.obs['condition']: {conditions!r}. "
-                f"GEARS expects perturbation-format labels like 'ctrl', "
-                f"'GENE+ctrl', 'GENE1+GENE2'. Original error: {exc}"
+                f"GEARS prepare_split/get_dataloader failed (split={split!r}). "
+                f"Condition labels: {conditions!r}. "
+                f"Original error: {exc}"
             ) from exc
 
     def initialize_model(
