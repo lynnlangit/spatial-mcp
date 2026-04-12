@@ -242,9 +242,32 @@ async def learn_spatial_cell_embeddings(
                     "success": False
                 }
 
+        # Cap training complexity for small circuits to fit within MCP timeout.
+        # For n_qubits<=4 the parameter-shift gradient cost is:
+        #   P * 2 * (1 + neg) * 2 statevectors per training example
+        # where P = n_qubits * 3 * n_layers.  Capping k_neighbors, negatives,
+        # and samples keeps total wall-time under 45s on M4 CPU.
+        if n_qubits <= 4:
+            effective_k = min(k_neighbors, 3)
+            effective_neg = 1
+            max_samples_per_type = 3
+            print(
+                f"Small circuit mode (n_qubits={n_qubits}): "
+                f"k={effective_k}, neg_samples={effective_neg}, "
+                f"max_samples_per_type={max_samples_per_type}"
+            )
+        elif n_qubits <= 6:
+            effective_k = min(k_neighbors, 5)
+            effective_neg = 2
+            max_samples_per_type = 5
+        else:
+            effective_k = k_neighbors
+            effective_neg = 5
+            max_samples_per_type = None
+
         # Extract features and cell types
         spatial_gen = SpatialContextGenerator(
-            k_neighbors=k_neighbors,
+            k_neighbors=effective_k,
             coordinate_keys=tuple(coordinate_keys)
         )
         spatial_gen.fit(adata)
@@ -278,6 +301,12 @@ async def learn_spatial_cell_embeddings(
         for i, (features, cell_type) in enumerate(zip(features_all, cell_type_labels)):
             training_data[cell_type].append(features)
 
+        # Subsample training data per cell type
+        if max_samples_per_type is not None:
+            for ct in training_data:
+                if len(training_data[ct]) > max_samples_per_type:
+                    training_data[ct] = training_data[ct][:max_samples_per_type]
+
         # Create embeddings
         print(f"Creating quantum embeddings with {n_qubits} qubits, {n_layers} layers...")
         embedding = QuCoWECellTypeEmbedding(
@@ -293,7 +322,8 @@ async def learn_spatial_cell_embeddings(
         config = TrainingConfig(
             n_epochs=n_epochs,
             learning_rate=learning_rate,
-            optimizer="adam"
+            optimizer="adam",
+            negative_samples=effective_neg,
         )
         trainer = QuCoWETrainer(embedding, config)
         # Use run_in_executor with partial to pass keyword args correctly.

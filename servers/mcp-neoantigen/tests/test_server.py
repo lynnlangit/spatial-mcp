@@ -589,3 +589,44 @@ async def test_mhc1_single_peptide_single_allele():
     assert result["predictions"][0]["peptide"] == "RMPEAAPPV"
     assert result["predictions"][0]["allele"] == "HLA-A*02:01"
     assert result["predictions"][0]["ic50_nm"] < 50
+
+
+# ---------------------------------------------------------------------------
+# _extract_ic50 / _extract_rank helper tests
+# ---------------------------------------------------------------------------
+
+def test_extract_ic50_method_specific():
+    """_extract_ic50 finds method-specific IEDB column names."""
+    from mcp_neoantigen.server import _extract_ic50
+
+    # netmhcpan_ba method → netmhcpan_ba_ic50 column
+    row = {"peptide": "RMPEAAPPV", "allele": "HLA-A*02:01", "netmhcpan_ba_ic50": 7.8}
+    assert _extract_ic50(row, "netmhcpan_ba") == 7.8
+
+    # ann method → ann_ic50 column
+    row = {"peptide": "RMPEAAPPV", "ann_ic50": 12.3}
+    assert _extract_ic50(row, "ann") == 12.3
+
+    # smm method → smm_ic50 column
+    row = {"peptide": "RMPEAAPPV", "smm_ic50": 45.6}
+    assert _extract_ic50(row, "smm") == 45.6
+
+
+def test_extract_ic50_generic_fallback():
+    """_extract_ic50 falls back to generic 'ic50' or 'score' keys."""
+    from mcp_neoantigen.server import _extract_ic50
+
+    assert _extract_ic50({"ic50": 100.0}, "") == 100.0
+    assert _extract_ic50({"score": 200.0}, "") == 200.0
+    assert _extract_ic50({}, "") == 999999.0  # sentinel for missing
+
+
+def test_extract_rank_method_specific():
+    """_extract_rank finds method-specific rank columns."""
+    from mcp_neoantigen.server import _extract_rank
+
+    row = {"netmhcpan_ba_rank": 0.3}
+    assert _extract_rank(row, "netmhcpan_ba") == 0.3
+
+    row = {"percentile_rank": 1.5}
+    assert _extract_rank(row, "netmhcpan_ba") == 1.5

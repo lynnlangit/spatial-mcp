@@ -102,6 +102,49 @@ def _classify_binder(ic50_nm: float) -> tuple[bool, str]:
     return False, "non_binder"
 
 
+def _extract_ic50(row: Dict[str, Any], method: str = "") -> float:
+    """Extract IC50 from an IEDB API result row.
+
+    The IEDB API uses method-specific column names (e.g., netmhcpan_ba_ic50,
+    ann_ic50, smm_ic50). This function tries method-specific names first,
+    then generic fallbacks.
+    """
+    method_lower = method.lower().replace("-", "_")
+    # Method-specific columns (highest priority)
+    candidates = [f"{method_lower}_ic50", f"{method_lower}_score"]
+    # Generic fallbacks covering all IEDB methods
+    candidates += [
+        "ic50", "ic50_nm", "score",
+        "netmhcpan_ba_ic50", "netmhcpan_el_score",
+        "ann_ic50", "smm_ic50",
+        "comblib_sidney2008_score",
+        "netmhciipan_ic50", "nn_align_ic50", "smm_align_ic50",
+    ]
+    for key in candidates:
+        val = row.get(key)
+        if val is not None and isinstance(val, (int, float)):
+            return float(val)
+    return 999999.0
+
+
+def _extract_rank(row: Dict[str, Any], method: str = "") -> float:
+    """Extract percentile rank from an IEDB API result row."""
+    method_lower = method.lower().replace("-", "_")
+    candidates = [f"{method_lower}_rank"]
+    candidates += [
+        "percentile_rank", "rank",
+        "netmhcpan_ba_rank", "netmhcpan_el_rank",
+        "ann_rank", "smm_rank",
+        "comblib_sidney2008_rank",
+        "netmhciipan_rank", "nn_align_rank", "smm_align_rank",
+    ]
+    for key in candidates:
+        val = row.get(key)
+        if val is not None and isinstance(val, (int, float)):
+            return float(val)
+    return 0.0
+
+
 def _build_mock_binding_predictions(
     peptides: List[str],
     alleles: List[str],
@@ -226,13 +269,13 @@ async def _predict_mhc1_binding_impl(
     weak_count = 0
     for peptide, allele in itertools.product(peptides, normalized):
         r = api_index.get((peptide, allele), {})
-        ic50 = r.get("ic50", r.get("score", 999999))
+        ic50 = _extract_ic50(r, method)
         is_binder, level = _classify_binder(ic50)
         predictions.append({
             "peptide": peptide,
             "allele": allele,
             "ic50_nm": ic50,
-            "percentile_rank": r.get("percentile_rank", r.get("rank", 0)),
+            "percentile_rank": _extract_rank(r, method),
             "binder": is_binder,
             "binder_level": level,
         })
@@ -320,13 +363,13 @@ async def _predict_mhc2_binding_impl(
     weak_count = 0
     for peptide, allele in itertools.product(peptides, normalized):
         r = api_index.get((peptide, allele), {})
-        ic50 = r.get("ic50", r.get("score", 999999))
+        ic50 = _extract_ic50(r, method)
         is_binder, level = _classify_binder(ic50)
         predictions.append({
             "peptide": peptide,
             "allele": allele,
             "ic50_nm": ic50,
-            "percentile_rank": r.get("percentile_rank", r.get("rank", 0)),
+            "percentile_rank": _extract_rank(r, method),
             "binder": is_binder,
             "binder_level": level,
         })
