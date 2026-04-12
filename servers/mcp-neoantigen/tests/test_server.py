@@ -185,7 +185,9 @@ async def test_predict_mhc1_binding_dry_run():
 
     assert result["status"] == "success"
     assert "predictions" in result
-    assert result["total_peptides"] == 2  # matches input peptide count
+    # 2 peptides x 2 alleles = 4 predictions (cartesian product)
+    assert result["total_peptides"] == 4
+    assert len(result["predictions"]) == 4
     assert result["strong_binders"] >= 1
     assert "_DRY_RUN_WARNING" in result
 
@@ -513,3 +515,77 @@ def test_predict_mhc1_binding_json_string_params():
         "hla_alleles": json.dumps(["HLA-A*02:01"]),
     })
     assert result["status"] == "success"
+
+
+# ---------------------------------------------------------------------------
+# Multi-peptide cartesian product regression tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_mhc1_multi_peptide_cartesian():
+    """3 peptides x 2 alleles must produce 6 predictions with correct fields."""
+    from mcp_neoantigen.server import _predict_mhc1_binding_impl
+
+    result = await _predict_mhc1_binding_impl(
+        peptides=["RMPEAAPPV", "GILGFVFTL", "NLVPMVATV"],
+        hla_alleles=["HLA-A*02:01", "HLA-B*07:02"],
+    )
+
+    assert result["status"] == "success"
+    assert len(result["predictions"]) == 6, (
+        f"Expected 6 predictions (3x2), got {len(result['predictions'])}"
+    )
+    assert result["total_peptides"] == 6
+
+    for pred in result["predictions"]:
+        assert pred["peptide"] != "", f"Empty peptide: {pred}"
+        assert pred["allele"] != "", f"Empty allele: {pred}"
+        assert pred["ic50_nm"] != 999999, f"Sentinel IC50: {pred}"
+
+    # RMPEAAPPV + HLA-A*02:01 must be a strong binder
+    rmpeaappv_a0201 = next(
+        p for p in result["predictions"]
+        if p["peptide"] == "RMPEAAPPV" and "A*02:01" in p["allele"]
+    )
+    assert rmpeaappv_a0201["ic50_nm"] < 50, (
+        f"RMPEAAPPV/A*02:01 IC50={rmpeaappv_a0201['ic50_nm']:.1f} — expected <50 nM"
+    )
+
+
+@pytest.mark.asyncio
+async def test_mhc2_multi_peptide_cartesian():
+    """2 peptides x 2 alleles must produce 4 predictions."""
+    from mcp_neoantigen.server import _predict_mhc2_binding_impl
+
+    result = await _predict_mhc2_binding_impl(
+        peptides=["VVRCPHHERCSTHH", "PKYVKQNTLKLAT"],
+        hla_alleles=["HLA-DRB1*01:01", "HLA-DRB1*04:01"],
+    )
+
+    assert result["status"] == "success"
+    assert len(result["predictions"]) == 4, (
+        f"Expected 4 predictions (2x2), got {len(result['predictions'])}"
+    )
+    assert result["total_peptides"] == 4
+
+    for pred in result["predictions"]:
+        assert pred["peptide"] != "", f"Empty peptide: {pred}"
+        assert pred["allele"] != "", f"Empty allele: {pred}"
+
+
+@pytest.mark.asyncio
+async def test_mhc1_single_peptide_single_allele():
+    """1 peptide x 1 allele = 1 prediction (regression guard)."""
+    from mcp_neoantigen.server import _predict_mhc1_binding_impl
+
+    result = await _predict_mhc1_binding_impl(
+        peptides=["RMPEAAPPV"],
+        hla_alleles=["HLA-A*02:01"],
+    )
+
+    assert result["status"] == "success"
+    assert result["total_peptides"] == 1
+    assert len(result["predictions"]) == 1
+    assert result["predictions"][0]["peptide"] == "RMPEAAPPV"
+    assert result["predictions"][0]["allele"] == "HLA-A*02:01"
+    assert result["predictions"][0]["ic50_nm"] < 50

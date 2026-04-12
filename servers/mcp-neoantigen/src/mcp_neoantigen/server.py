@@ -150,10 +150,25 @@ async def _predict_mhc1_binding_impl(
     length: int = 9,
 ) -> Dict[str, Any]:
     """Implementation for predict_mhc1_binding."""
+    # Type guards — catch coercion failures early with clear errors
+    if not isinstance(peptides, list):
+        return {
+            "status": "error",
+            "message": f"peptides must be a list of strings, got {type(peptides).__name__}",
+        }
+    if not isinstance(hla_alleles, list):
+        return {
+            "status": "error",
+            "message": f"hla_alleles must be a list of strings, got {type(hla_alleles).__name__}",
+        }
     if not peptides:
         return {"status": "error", "message": "Peptide list cannot be empty."}
     if not hla_alleles:
         return {"status": "error", "message": "HLA allele list cannot be empty."}
+    if not all(isinstance(p, str) and len(p) > 0 for p in peptides):
+        return {"status": "error", "message": "All peptides must be non-empty strings."}
+    if not all(isinstance(a, str) and len(a) > 0 for a in hla_alleles):
+        return {"status": "error", "message": "All HLA alleles must be non-empty strings."}
 
     # Validate HLA alleles are class I
     try:
@@ -184,7 +199,7 @@ async def _predict_mhc1_binding_impl(
             "predictions": predictions,
             "strong_binders": strong,
             "weak_binders": weak,
-            "total_peptides": len(peptides),
+            "total_peptides": len(predictions),
         })
 
     # Production: call IEDB API
@@ -235,10 +250,25 @@ async def _predict_mhc2_binding_impl(
     length: int = 15,
 ) -> Dict[str, Any]:
     """Implementation for predict_mhc2_binding."""
+    # Type guards — catch coercion failures early with clear errors
+    if not isinstance(peptides, list):
+        return {
+            "status": "error",
+            "message": f"peptides must be a list of strings, got {type(peptides).__name__}",
+        }
+    if not isinstance(hla_alleles, list):
+        return {
+            "status": "error",
+            "message": f"hla_alleles must be a list of strings, got {type(hla_alleles).__name__}",
+        }
     if not peptides:
         return {"status": "error", "message": "Peptide list cannot be empty."}
     if not hla_alleles:
         return {"status": "error", "message": "HLA allele list cannot be empty."}
+    if not all(isinstance(p, str) and len(p) > 0 for p in peptides):
+        return {"status": "error", "message": "All peptides must be non-empty strings."}
+    if not all(isinstance(a, str) and len(a) > 0 for a in hla_alleles):
+        return {"status": "error", "message": "All HLA alleles must be non-empty strings."}
 
     try:
         normalized = normalize_hla_list(hla_alleles)
@@ -258,7 +288,7 @@ async def _predict_mhc2_binding_impl(
             "predictions": predictions,
             "strong_binders": strong,
             "weak_binders": weak,
-            "total_peptides": len(peptides),
+            "total_peptides": len(predictions),
         })
 
     results = await predict_mhc_class_ii(

@@ -190,7 +190,15 @@ async def learn_spatial_cell_embeddings(
         n_epochs: Number of training epochs (default: 50)
         learning_rate: Learning rate (default: 0.01)
         k_neighbors: Number of spatial neighbors to consider (default: 10)
-        backend: Quantum backend ("cpu", "gpu", "mps", "ibm")
+        backend: Quantum simulation backend.
+            - "cpu": Qiskit Aer statevector with max_parallel_threads
+                     (auto-detected, up to 8 threads on M4).
+                     n_qubits=4, n_epochs=5 target: <45s on M4 CPU.
+            - "gpu": NVIDIA CUDA via cuStateVec if available.
+                     On Apple Silicon, falls back to multi-threaded CPU
+                     with a warning (Aer does not support Metal natively).
+            - "mps": Alias for "gpu" on Apple Silicon (CPU fallback).
+            - "ibm": IBM Quantum cloud (requires IBMQ credentials).
         output_dir: Directory to save trained embeddings (optional)
         dry_run: If True (or n_epochs == 0), skip variational training and
             return a deterministic mock embedding cached under a

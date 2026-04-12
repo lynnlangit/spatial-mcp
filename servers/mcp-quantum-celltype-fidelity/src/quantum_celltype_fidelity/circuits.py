@@ -4,11 +4,80 @@ Uses Qiskit to build parameterized quantum circuits (PQCs) for encoding
 cell type features into quantum states for fidelity-based analysis.
 """
 
+import os
+import warnings
+
 import numpy as np
 from typing import Optional, List, Dict, Any
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter, ParameterVector
-from qiskit.quantum_info import Statevector
+
+
+def _has_cuda_gpu() -> bool:
+    """Check if an NVIDIA CUDA GPU is available."""
+    try:
+        import torch
+        return torch.cuda.is_available()
+    except ImportError:
+        return False
+
+
+def _build_simulator(backend: str):
+    """Return the best available AerSimulator for the requested backend.
+
+    - "cpu": Qiskit Aer statevector with max_parallel_threads (auto-detected).
+    - "gpu"/"mps": NVIDIA CUDA via cuStateVec if available. On Apple Silicon,
+      falls back to multi-threaded CPU with a warning.
+
+    Args:
+        backend: One of "cpu", "gpu", "mps".
+
+    Returns:
+        Configured AerSimulator instance.
+    """
+    from qiskit_aer import AerSimulator
+
+    if backend in ("gpu", "mps"):
+        # NVIDIA CUDA path
+        if _has_cuda_gpu():
+            return AerSimulator(
+                method="statevector",
+                device="GPU",
+                cuStateVec_enable=True,
+            )
+        # Apple Silicon path — AerSimulator itself runs on CPU with parallelism
+        _is_apple_silicon = False
+        try:
+            import torch
+            _is_apple_silicon = torch.backends.mps.is_available()
+        except ImportError:
+            pass
+
+        if _is_apple_silicon:
+            warnings.warn(
+                "Apple Silicon detected: AerSimulator does not support Metal GPU "
+                "natively. Using CPU statevector with max_parallel_threads. "
+                "For true GPU acceleration, use an NVIDIA GPU with cuStateVec.",
+                RuntimeWarning,
+                stacklevel=3,
+            )
+            # Fall through to CPU with max threads
+        else:
+            raise RuntimeError(
+                f"backend='{backend}' requested but no compatible GPU found.\n"
+                "  NVIDIA: install qiskit-aer-gpu and cuQuantum\n"
+                "  Apple Silicon: install torch for MPS detection (falls back to CPU)\n"
+                "  Use backend='cpu' to suppress this error."
+            )
+
+    # CPU path (default and Apple Silicon fallback)
+    n_threads = min(8, os.cpu_count() or 1)
+    return AerSimulator(
+        method="statevector",
+        max_parallel_threads=n_threads,
+        max_parallel_experiments=1,
+        statevector_parallel_threshold=4,
+    )
 
 
 class QuCoWECircuit:
@@ -179,72 +248,42 @@ class QuCoWECircuit:
         Args:
             features: Gene expression features (feature_dim,)
             theta: Variational parameters
-            backend: Simulation backend ("cpu", "gpu", "mps", or "ibm")
+            backend: Simulation backend.
+                - "cpu": Qiskit Aer statevector with max_parallel_threads
+                         (auto-detected, up to 8 threads).
+                - "gpu": NVIDIA CUDA via cuStateVec if available.
+                         On Apple Silicon, falls back to multi-threaded CPU
+                         with a warning (Aer does not support Metal natively).
+                - "mps": Alias for "gpu" on Apple Silicon (CPU fallback).
+                - "ibm": IBM Quantum cloud (requires IBMQ credentials).
 
         Returns:
             Complex state vector (2^n_qubits,)
         """
-        # Bind parameters
-        bound_circuit = self.bind_parameters(features, theta)
-
-        # Simulate based on backend
-        if backend == "cpu":
-            # Use Qiskit Aer C++ multi-threaded statevector simulator
-            from qiskit_aer import AerSimulator
-            sim_circuit = bound_circuit.copy()
-            sim_circuit.save_statevector()
-            simulator = AerSimulator(method='statevector')
-            result = simulator.run(sim_circuit).result()
-            return np.array(result.get_statevector())
-
-        elif backend == "gpu":
-            # Use cuStateVec (requires CUDA + cuQuantum)
-            try:
-                from qiskit_aer import AerSimulator
-                sim_circuit = bound_circuit.copy()
-                sim_circuit.save_statevector()
-                simulator = AerSimulator(method='statevector', device='GPU')
-                result = simulator.run(sim_circuit).result()
-                return np.array(result.get_statevector())
-            except ImportError:
-                raise ImportError(
-                    "GPU backend requires qiskit-aer with cuQuantum. "
-                    "Install with: pip install qiskit-aer-gpu"
-                )
-
-        elif backend == "mps":
-            # Apple Silicon Metal Performance Shaders via PyTorch
-            try:
-                import torch
-            except ImportError:
-                raise ImportError(
-                    "MPS backend requires PyTorch. "
-                    "Install with: pip install torch"
-                )
-            if not torch.backends.mps.is_available():
-                raise RuntimeError(
-                    "MPS backend not available on this device. "
-                    "Requires Apple Silicon (M1/M2/M3/M4) with macOS 12.3+."
-                )
-            from qiskit.quantum_info import Operator
-            unitary = Operator(bound_circuit).data
-            initial_state = np.zeros(2 ** self.n_qubits, dtype=np.complex64)
-            initial_state[0] = 1.0
-            device = torch.device("mps")
-            u_tensor = torch.tensor(unitary, dtype=torch.complex64, device=device)
-            s_tensor = torch.tensor(initial_state, dtype=torch.complex64, device=device)
-            result = torch.matmul(u_tensor, s_tensor)
-            return result.cpu().numpy()
-
-        elif backend == "ibm":
-            # IBM Quantum hardware (requires API token)
+        if backend == "ibm":
             raise NotImplementedError(
                 "IBM Quantum hardware execution not yet implemented. "
                 "Use backend='cpu', 'gpu', or 'mps' for simulation."
             )
 
-        else:
+        if backend not in ("cpu", "gpu", "mps"):
             raise ValueError(f"Unknown backend: {backend}")
+
+        # Bind parameters and prepare circuit for simulation
+        bound_circuit = self.bind_parameters(features, theta)
+        sim_circuit = bound_circuit.copy()
+
+        # Append SaveStatevector instruction (explicit import avoids
+        # relying on qiskit-aer monkey-patching of QuantumCircuit)
+        from qiskit_aer.library import SaveStatevector
+        sim_circuit.append(
+            SaveStatevector(sim_circuit.num_qubits),
+            list(range(sim_circuit.num_qubits)),
+        )
+
+        simulator = _build_simulator(backend)
+        result = simulator.run(sim_circuit).result()
+        return np.array(result.get_statevector())
 
     def compute_fidelity(
         self,

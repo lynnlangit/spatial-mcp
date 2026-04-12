@@ -26,7 +26,7 @@ class QuCoWECellTypeEmbedding:
         cell_types: List of cell type names
         theta_dict: Dict mapping cell_type -> variational parameters
         feature_dim: Dimension of input gene expression features
-        backend: Simulation backend ("cpu", "gpu", "mps", "ibm")
+        backend: Simulation backend ("cpu", "gpu", "mps", or "ibm")
     """
 
     def __init__(
