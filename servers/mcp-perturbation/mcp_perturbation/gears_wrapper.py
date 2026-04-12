@@ -22,6 +22,57 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Labels that GEARS treats as "no perturbation" (control)
+_CONTROL_LABELS = frozenset({"control", "ctrl", "normal", "baseline", "unperturbed"})
+
+
+def _is_gears_format(condition: str) -> bool:
+    """Check if a condition label is already in GEARS format.
+
+    GEARS format examples: "ctrl", "NNMT+ctrl", "STAT3+NNMT"
+    Non-GEARS format: "tumor", "treated", "control"
+    """
+    if condition == "ctrl":
+        return True
+    # GEARS perturbation labels always contain '+'
+    return "+" in condition
+
+
+def _ensure_gears_conditions(adata: ad.AnnData, ctrl_key: str = "control") -> ad.AnnData:
+    """Convert phenotype labels to GEARS perturbation format if needed.
+
+    GEARS' prepare_split() expects condition labels like "ctrl",
+    "GENE+ctrl", "GENE1+GENE2". Phenotype labels such as "tumor",
+    "treated", "control" cause an IndexError inside the split logic.
+
+    Args:
+        adata: AnnData with obs['condition'] column.
+        ctrl_key: Original control label (e.g. "control").
+
+    Returns:
+        AnnData with GEARS-compatible condition labels.
+    """
+    conditions = adata.obs["condition"].unique().tolist()
+
+    # Check if already in GEARS format
+    if all(_is_gears_format(str(c)) for c in conditions):
+        return adata
+
+    # Build mapping: control labels → "ctrl", everything else → "LABEL+ctrl"
+    mapping = {}
+    for c in conditions:
+        if str(c).lower() in _CONTROL_LABELS:
+            mapping[c] = "ctrl"
+        else:
+            mapping[c] = f"{c}+ctrl"
+
+    logger.info(
+        "Remapping condition labels to GEARS format: %s",
+        {k: v for k, v in mapping.items() if k != v},
+    )
+    adata.obs["condition"] = adata.obs["condition"].map(mapping)
+    return adata
+
 
 @dataclass
 class PredictionResult:
@@ -100,15 +151,17 @@ class GearsWrapper:
         #   var: 'gene_name'
         if condition_key != "condition":
             self.adata.obs["condition"] = self.adata.obs[condition_key]
-        # GEARS uses 'ctrl' (not 'control') for the control label
-        if ctrl_key != "ctrl":
-            self.adata.obs["condition"] = self.adata.obs["condition"].replace(
-                ctrl_key, "ctrl"
-            )
         if "cell_type" not in self.adata.obs.columns:
             self.adata.obs["cell_type"] = "unknown"
         if "gene_name" not in self.adata.var.columns:
             self.adata.var["gene_name"] = self.adata.var_names
+
+        # GEARS expects perturbation-style condition labels:
+        #   control cells → "ctrl"
+        #   single perturbation → "GENE+ctrl"
+        #   combo perturbation  → "GENE1+GENE2"
+        # Phenotype labels like "tumor", "treated" must be remapped.
+        self.adata = _ensure_gears_conditions(self.adata, ctrl_key)
 
         # GEARS expects sparse X (calls X.toarray() internally)
         import scipy.sparse as sp
@@ -165,10 +218,24 @@ class GearsWrapper:
             return
         split = getattr(self, "_split", "simulation")
         seed = getattr(self, "_split_seed", 1)
-        self.pert_data.prepare_split(split=split, seed=seed)
-        self.pert_data.get_dataloader(
-            batch_size=batch_size, test_batch_size=min(128, batch_size * 4),
-        )
+        try:
+            self.pert_data.prepare_split(split=split, seed=seed)
+            self.pert_data.get_dataloader(
+                batch_size=batch_size,
+                test_batch_size=min(128, batch_size * 4),
+            )
+        except (IndexError, KeyError) as exc:
+            conditions = (
+                self.pert_data.adata.obs["condition"].unique().tolist()
+                if hasattr(self.pert_data, "adata") and self.pert_data.adata is not None
+                else "N/A"
+            )
+            raise RuntimeError(
+                f"GEARS prepare_split/get_dataloader failed. "
+                f"Condition labels in adata.obs['condition']: {conditions!r}. "
+                f"GEARS expects perturbation-format labels like 'ctrl', "
+                f"'GENE+ctrl', 'GENE1+GENE2'. Original error: {exc}"
+            ) from exc
 
     def initialize_model(
         self,
