@@ -1,6 +1,7 @@
 """MCP Neoantigen server — neoantigen prediction and antigen presentation scoring."""
 
 import asyncio
+import itertools
 import logging
 import os
 import json
@@ -212,16 +213,24 @@ async def _predict_mhc1_binding_impl(
         api_url=IEDB_API_URL,
     )
 
-    # Classify results
+    # Index API results by (peptide, allele) for reliable lookup
+    api_index: Dict[tuple, Dict[str, Any]] = {}
+    for r in results:
+        key = (r.get("peptide", ""), r.get("allele", ""))
+        api_index[key] = r
+
+    # Build predictions using explicit cartesian product so peptide/allele
+    # always come from loop variables, never from potentially-empty API fields.
     predictions = []
     strong_count = 0
     weak_count = 0
-    for r in results:
+    for peptide, allele in itertools.product(peptides, normalized):
+        r = api_index.get((peptide, allele), {})
         ic50 = r.get("ic50", r.get("score", 999999))
         is_binder, level = _classify_binder(ic50)
         predictions.append({
-            "peptide": r.get("peptide", ""),
-            "allele": r.get("allele", ""),
+            "peptide": peptide,
+            "allele": allele,
             "ic50_nm": ic50,
             "percentile_rank": r.get("percentile_rank", r.get("rank", 0)),
             "binder": is_binder,
@@ -299,15 +308,23 @@ async def _predict_mhc2_binding_impl(
         api_url=IEDB_API_URL,
     )
 
+    # Index API results by (peptide, allele) for reliable lookup
+    api_index: Dict[tuple, Dict[str, Any]] = {}
+    for r in results:
+        key = (r.get("peptide", ""), r.get("allele", ""))
+        api_index[key] = r
+
+    # Build predictions using explicit cartesian product
     predictions = []
     strong_count = 0
     weak_count = 0
-    for r in results:
+    for peptide, allele in itertools.product(peptides, normalized):
+        r = api_index.get((peptide, allele), {})
         ic50 = r.get("ic50", r.get("score", 999999))
         is_binder, level = _classify_binder(ic50)
         predictions.append({
-            "peptide": r.get("peptide", ""),
-            "allele": r.get("allele", ""),
+            "peptide": peptide,
+            "allele": allele,
             "ic50_nm": ic50,
             "percentile_rank": r.get("percentile_rank", r.get("rank", 0)),
             "binder": is_binder,

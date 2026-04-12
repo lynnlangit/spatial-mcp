@@ -5,6 +5,7 @@ cell type features into quantum states for fidelity-based analysis.
 """
 
 import os
+import shutil
 import warnings
 
 import numpy as np
@@ -14,23 +15,29 @@ from qiskit.circuit import Parameter, ParameterVector
 
 
 def _has_cuda_gpu() -> bool:
-    """Check if an NVIDIA CUDA GPU is available."""
+    """Check if an NVIDIA CUDA GPU is available.
+
+    Detection order:
+    1. torch.cuda.is_available() — most reliable (local dev with `mps` extras)
+    2. shutil.which("nvidia-smi") — works on GCP Cloud Run GPU instances
+       even when torch is not installed
+    """
     try:
         import torch
         return torch.cuda.is_available()
     except ImportError:
-        return False
+        pass
+    # Fallback: nvidia-smi present → NVIDIA GPU is attached (GCP Cloud Run)
+    return shutil.which("nvidia-smi") is not None
 
 
-def _build_simulator(backend: str):
-    """Return the best available AerSimulator for the requested backend.
-
-    - "cpu": Qiskit Aer statevector with max_parallel_threads (auto-detected).
-    - "gpu"/"mps": NVIDIA CUDA via cuStateVec if available. On Apple Silicon,
-      falls back to multi-threaded CPU with a warning.
+def _build_simulator(backend: str, n_qubits: int = 8):
+    """Build Qiskit Aer simulator. GPU backend falls back to CPU on Apple Silicon.
 
     Args:
         backend: One of "cpu", "gpu", "mps".
+        n_qubits: Number of qubits — circuits with <= 6 qubits use
+            matrix_product_state (faster for low-entanglement circuits).
 
     Returns:
         Configured AerSimulator instance.
@@ -38,45 +45,54 @@ def _build_simulator(backend: str):
     from qiskit_aer import AerSimulator
 
     if backend in ("gpu", "mps"):
-        # NVIDIA CUDA path
+        # Try NVIDIA CUDA first (GCP Cloud Run GPU or local NVIDIA)
         if _has_cuda_gpu():
-            return AerSimulator(
-                method="statevector",
-                device="GPU",
-                cuStateVec_enable=True,
-            )
-        # Apple Silicon path — AerSimulator itself runs on CPU with parallelism
-        _is_apple_silicon = False
-        try:
-            import torch
-            _is_apple_silicon = torch.backends.mps.is_available()
-        except ImportError:
-            pass
-
-        if _is_apple_silicon:
-            warnings.warn(
-                "Apple Silicon detected: AerSimulator does not support Metal GPU "
-                "natively. Using CPU statevector with max_parallel_threads. "
-                "For true GPU acceleration, use an NVIDIA GPU with cuStateVec.",
-                RuntimeWarning,
-                stacklevel=3,
-            )
-            # Fall through to CPU with max threads
+            try:
+                return AerSimulator(
+                    method="statevector",
+                    device="GPU",
+                    cuStateVec_enable=True,
+                )
+            except Exception as exc:
+                # qiskit-aer-gpu or cuquantum not installed — fall through to CPU
+                warnings.warn(
+                    f"CUDA GPU detected but AerSimulator GPU init failed: {exc}. "
+                    "Falling back to multi-threaded CPU. Install qiskit-aer-gpu "
+                    "and cuquantum-python for GPU acceleration.",
+                    RuntimeWarning,
+                    stacklevel=4,
+                )
         else:
-            raise RuntimeError(
-                f"backend='{backend}' requested but no compatible GPU found.\n"
-                "  NVIDIA: install qiskit-aer-gpu and cuQuantum\n"
-                "  Apple Silicon: install torch for MPS detection (falls back to CPU)\n"
-                "  Use backend='cpu' to suppress this error."
-            )
+            # No CUDA GPU — check for Apple Silicon MPS (informational warning)
+            try:
+                import torch
+                if torch.backends.mps.is_available():
+                    warnings.warn(
+                        "Apple Silicon MPS detected: Qiskit Aer does not support "
+                        "Metal GPU. Falling back to multi-threaded CPU statevector.",
+                        RuntimeWarning,
+                        stacklevel=4,
+                    )
+            except ImportError:
+                warnings.warn(
+                    "backend='gpu' requested but no CUDA GPU found and torch is "
+                    "not installed for MPS detection. Falling back to "
+                    "multi-threaded CPU statevector.",
+                    RuntimeWarning,
+                    stacklevel=4,
+                )
+        # Fall through to CPU — do NOT raise here
 
-    # CPU path (default and Apple Silicon fallback)
+    # CPU path (also the fallback for all non-CUDA gpu requests)
+    if n_qubits <= 6:
+        method = "matrix_product_state"
+    else:
+        method = "statevector"
     n_threads = min(8, os.cpu_count() or 1)
     return AerSimulator(
-        method="statevector",
+        method=method,
         max_parallel_threads=n_threads,
         max_parallel_experiments=1,
-        statevector_parallel_threshold=4,
     )
 
 
@@ -281,7 +297,7 @@ class QuCoWECircuit:
             list(range(sim_circuit.num_qubits)),
         )
 
-        simulator = _build_simulator(backend)
+        simulator = _build_simulator(backend, n_qubits=self.n_qubits)
         result = simulator.run(sim_circuit).result()
         return np.array(result.get_statevector())
 
