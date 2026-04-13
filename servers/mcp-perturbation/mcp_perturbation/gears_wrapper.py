@@ -352,39 +352,32 @@ class GearsWrapper:
         return metrics
 
     def save(self, name: str) -> str:
-        """Save model to disk.
+        """Save model to disk using GEARS' built-in serialization.
 
         Args:
-            name: Model name (without extension)
+            name: Model name (used as subdirectory under model_dir)
 
         Returns:
-            Path to saved model
+            Path to saved model directory
         """
         if self.model is None:
             raise ValueError("No model to save")
 
-        save_path = self.model_dir / f"{name}.pt"
+        save_path = self.model_dir / name
+        save_path.mkdir(parents=True, exist_ok=True)
 
-        # Save GEARS model
-        torch.save({
-            'model_state_dict': self.model.state_dict(),
-            'config': {
-                'hidden_size': self.model.hidden_size if hasattr(self.model, 'hidden_size') else 64,
-                'num_layers': getattr(self.model, 'num_layers', 2)
-            }
-        }, save_path)
-
+        self.model.save_model(str(save_path))
         self.model_name = name
         logger.info(f"Saved model to {save_path}")
         return str(save_path)
 
     def load(self, name: str) -> None:
-        """Load model from disk.
+        """Load model from disk using GEARS' built-in deserialization.
 
         Args:
-            name: Model name (without extension)
+            name: Model name (subdirectory under model_dir)
         """
-        load_path = self.model_dir / f"{name}.pt"
+        load_path = self.model_dir / name
 
         if not load_path.exists():
             raise FileNotFoundError(f"Model not found: {load_path}")
@@ -392,10 +385,8 @@ class GearsWrapper:
         if self.model is None:
             raise ValueError("Initialize model before loading weights")
 
-        checkpoint = torch.load(load_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.model.load_pretrained(str(load_path))
         self.model_name = name
-
         logger.info(f"Loaded model from {load_path}")
 
     def predict(
