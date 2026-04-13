@@ -241,6 +241,16 @@ class GearsWrapper:
                 )
                 split = "no_test"
 
+        # GEARS may call .nonzero() on adata.X during prepare_split;
+        # sparse matrices work, but if new_data_process stored a pandas
+        # object we need to ensure it's a numpy array.
+        if hasattr(self.pert_data, "adata") and self.pert_data.adata is not None:
+            _x = self.pert_data.adata.X
+            if hasattr(_x, "toarray"):
+                self.pert_data.adata.X = _x.toarray()
+            elif not isinstance(_x, np.ndarray):
+                self.pert_data.adata.X = np.array(_x)
+
         try:
             self.pert_data.prepare_split(split=split, seed=seed)
             self.pert_data.get_dataloader(

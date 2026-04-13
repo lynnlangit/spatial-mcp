@@ -210,6 +210,9 @@ def _build_gears_synthetic_adata(n_hvg: int) -> "ad.AnnData":
     can build its gene-gene interaction graph.  The number of genes matches
     ``n_hvg`` exactly, avoiding any subsequent HVG filtering that could
     remove perturbation target genes.
+
+    All arrays use plain numpy / object dtypes — GEARS calls ``.nonzero()``
+    and other numpy methods that fail on pandas StringDtype columns.
     """
     import pandas as pd
 
@@ -229,25 +232,34 @@ def _build_gears_synthetic_adata(n_hvg: int) -> "ad.AnnData":
         f"GENE_{i:04d}" for i in range(n_genes - len(pert_genes))
     ]
 
-    X = rng.lognormal(1.0, 1.0, (n_cells, n_genes)).astype("float32")
+    # Dense float32 numpy array — NOT sparse, NOT DataFrame
+    X = rng.lognormal(1.0, 1.0, (n_cells, n_genes)).astype(np.float32)
+
     cell_conds = rng.choice(all_conditions, size=n_cells, p=probs)
 
+    # Use plain object dtype for obs columns — NOT pandas StringDtype
     obs = pd.DataFrame(
         {
-            "condition": pd.array(cell_conds, dtype=str),
-            "cell_type": pd.array(
+            "condition": np.array(cell_conds, dtype=object),
+            "cell_type": np.array(
                 rng.choice(
                     ["Fibroblasts", "B_cells", "Epithelial", "Macrophages", "T_cells"],
                     size=n_cells,
                 ),
-                dtype=str,
+                dtype=object,
             ),
         },
         index=[f"cell_{i:05d}" for i in range(n_cells)],
     )
+    # Plain Index with string dtype
     var = pd.DataFrame(index=pd.Index(gene_names, name="gene_name"))
 
     adata = ad.AnnData(X=X, obs=obs, var=var)
+
+    # Force obs columns to plain object dtype (belt-and-suspenders)
+    for col in adata.obs.columns:
+        adata.obs[col] = adata.obs[col].astype(object)
+
     try:
         ad.settings.allow_write_nullable_strings = True
     except AttributeError:
