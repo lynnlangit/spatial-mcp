@@ -51,13 +51,15 @@ class TestDatasetLoader:
         assert set(cell_types).issubset(expected_types), "Should have expected cell types"
 
     def test_condition_distribution(self):
-        """Test that synthetic data has control and tumor conditions."""
+        """Test that synthetic data has GEARS-format perturbation conditions."""
         loader = DatasetLoader()
         adata = loader.load_geo_dataset("GSE184880")
 
-        conditions = adata.obs["condition"].unique()
-        assert "control" in conditions, "Should have control condition"
-        assert "tumor" in conditions, "Should have tumor condition"
+        conditions = set(adata.obs["condition"].unique())
+        assert "ctrl" in conditions, "Should have ctrl condition"
+        # At least one gene+ctrl perturbation condition
+        pert_conds = [c for c in conditions if c != "ctrl" and "+ctrl" in c]
+        assert len(pert_conds) >= 5, f"Should have gene perturbations, got {pert_conds}"
 
 
 @pytest.mark.asyncio

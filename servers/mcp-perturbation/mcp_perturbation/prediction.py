@@ -54,9 +54,10 @@ class DifferentialExpressionAnalyzer:
         # Extract results
         de_results = sc.get.rank_genes_groups_df(combined, group="predicted")
 
-        # Compute fold changes
-        baseline_mean = baseline_adata.X.mean(axis=0).A1 if hasattr(baseline_adata.X, 'A1') else baseline_adata.X.mean(axis=0)
-        predicted_mean = predicted_adata.X.mean(axis=0).A1 if hasattr(predicted_adata.X, 'A1') else predicted_adata.X.mean(axis=0)
+        # Compute fold changes — .mean(axis=0) returns np.matrix for sparse X,
+        # so always flatten to 1-D via asarray().ravel().
+        baseline_mean = np.asarray(baseline_adata.X.mean(axis=0)).ravel()
+        predicted_mean = np.asarray(predicted_adata.X.mean(axis=0)).ravel()
 
         # Avoid log(0)
         baseline_mean = np.maximum(baseline_mean, 1e-10)
@@ -251,12 +252,8 @@ def get_top_changed_genes(
     Returns:
         Tuple of (upregulated_genes, downregulated_genes)
     """
-    baseline_mean = baseline_adata.X.mean(axis=0)
-    predicted_mean = predicted_adata.X.mean(axis=0)
-
-    if hasattr(baseline_mean, 'A1'):
-        baseline_mean = baseline_mean.A1
-        predicted_mean = predicted_mean.A1
+    baseline_mean = np.asarray(baseline_adata.X.mean(axis=0)).ravel()
+    predicted_mean = np.asarray(predicted_adata.X.mean(axis=0)).ravel()
 
     # Compute fold change
     diff = predicted_mean - baseline_mean

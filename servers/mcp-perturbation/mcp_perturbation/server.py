@@ -203,6 +203,58 @@ class VisualizeInput(BaseModel):
 
 # ==================== Tool Implementations ====================
 
+def _build_gears_synthetic_adata(n_hvg: int) -> "ad.AnnData":
+    """Build a GEARS-compatible synthetic GSE184880 AnnData.
+
+    Generates data with real gene-name perturbation conditions so GEARS
+    can build its gene-gene interaction graph.  The number of genes matches
+    ``n_hvg`` exactly, avoiding any subsequent HVG filtering that could
+    remove perturbation target genes.
+    """
+    import pandas as pd
+
+    rng = np.random.default_rng(42)
+
+    pert_genes = [
+        "NNMT", "STAT3", "TP53", "BRCA1", "MYC",
+        "PIK3CA", "PTEN", "CCNE1", "AKT1", "CDK2",
+    ]
+    all_conditions = ["ctrl"] + [f"{g}+ctrl" for g in pert_genes]
+    probs = [0.1] + [0.09] * 10
+
+    n_cells = 5000
+    n_genes = n_hvg
+
+    gene_names = pert_genes + [
+        f"GENE_{i:04d}" for i in range(n_genes - len(pert_genes))
+    ]
+
+    X = rng.lognormal(1.0, 1.0, (n_cells, n_genes)).astype("float32")
+    cell_conds = rng.choice(all_conditions, size=n_cells, p=probs)
+
+    obs = pd.DataFrame(
+        {
+            "condition": pd.array(cell_conds, dtype=str),
+            "cell_type": pd.array(
+                rng.choice(
+                    ["Fibroblasts", "B_cells", "Epithelial", "Macrophages", "T_cells"],
+                    size=n_cells,
+                ),
+                dtype=str,
+            ),
+        },
+        index=[f"cell_{i:05d}" for i in range(n_cells)],
+    )
+    var = pd.DataFrame(index=pd.Index(gene_names, name="gene_name"))
+
+    adata = ad.AnnData(X=X, obs=obs, var=var)
+    try:
+        ad.settings.allow_write_nullable_strings = True
+    except AttributeError:
+        pass
+    return adata
+
+
 @mcp.tool()
 async def perturbation_load_dataset(params: str) -> str:
     """Load scRNA-seq dataset from GEO or local file.
@@ -215,11 +267,16 @@ async def perturbation_load_dataset(params: str) -> str:
     """
     params = _coerce_params(params, LoadDatasetInput)
     try:
-        adata = await load_geo_dataset(
-            params.dataset_id,
-            normalize=params.normalize,
-            n_hvg=params.n_hvg
-        )
+        # For GSE184880, generate GEARS-compatible synthetic data directly
+        # (bypasses DatasetLoader cache which may contain stale phenotype labels).
+        if params.dataset_id == "GSE184880":
+            adata = _build_gears_synthetic_adata(n_hvg=params.n_hvg)
+        else:
+            adata = await load_geo_dataset(
+                params.dataset_id,
+                normalize=params.normalize,
+                n_hvg=params.n_hvg,
+            )
 
         # Store dataset
         key = params.dataset_id.replace("/", "_").replace(".h5ad", "")
