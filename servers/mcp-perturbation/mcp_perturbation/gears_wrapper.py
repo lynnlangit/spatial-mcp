@@ -410,45 +410,55 @@ class GearsWrapper:
 
         logger.info(f"Predicting response to perturbations: {perturbations}")
 
-        # GEARS prediction
-        predictions = self.model.predict(perturbations)
+        # GEARS.predict() expects a list-of-lists: each inner list is a set
+        # of genes perturbed simultaneously (combo perturbation).
+        # E.g. [["NNMT","STAT3"]] = one combo prediction.
+        # A flat list of strings would be iterated char-by-char.
+        pert_list = [perturbations]
+        results = self.model.predict(pert_list)
 
-        # Convert to numpy array
-        if isinstance(predictions, torch.Tensor):
-            pred_array = predictions.cpu().detach().numpy()
+        # GEARS.predict() returns (results_pred, results_logvar) when
+        # uncertainty=True, or just results_pred otherwise.
+        # results_pred is a dict: {"GENE1_GENE2": np.ndarray(n_ctrl, n_genes)}
+        if isinstance(results, tuple):
+            results_pred = results[0]
         else:
-            pred_array = np.array(predictions)
+            results_pred = results
+
+        # Extract the prediction array for our perturbation
+        pert_key = "_".join(perturbations)
+        if isinstance(results_pred, dict):
+            pred_array = results_pred.get(pert_key)
+            if pred_array is None:
+                # Fall back to first key
+                pred_array = next(iter(results_pred.values()))
+            pred_array = np.asarray(pred_array)
+        elif isinstance(results_pred, torch.Tensor):
+            pred_array = results_pred.cpu().detach().numpy()
+        else:
+            pred_array = np.asarray(results_pred)
 
         # Create AnnData object with predictions
+        base_adata = self.adata if self.adata is not None else self.pert_data.adata
+        predicted_adata = None
+
         if return_anndata:
-            base_adata = self.adata if self.adata is not None else self.pert_data.adata
-
             # Filter by cell type if specified
-            if cell_type is not None:
-                if 'cell_type' in base_adata.obs:
-                    mask = base_adata.obs['cell_type'] == cell_type
-                    base_adata = base_adata[mask].copy()
+            if cell_type is not None and 'cell_type' in base_adata.obs:
+                mask = base_adata.obs['cell_type'] == cell_type
+                base_adata = base_adata[mask].copy()
 
-            # Create predicted AnnData
             predicted_adata = ad.AnnData(
                 X=pred_array,
-                obs=base_adata.obs.copy() if len(pred_array) == base_adata.n_obs else None,
-                var=base_adata.var.copy()
+                var=base_adata.var.copy(),
             )
             predicted_adata.obs['perturbation'] = ','.join(perturbations)
-        else:
-            predicted_adata = None
 
-        # Compute perturbation effect (difference from control)
-        if self.adata is not None and 'condition' in self.adata.obs:
-            ctrl_mask = self.adata.obs['condition'] == 'control'
-            if ctrl_mask.sum() > 0:
-                ctrl_mean = self.adata[ctrl_mask].X.mean(axis=0)
-                if isinstance(ctrl_mean, np.matrix):
-                    ctrl_mean = np.array(ctrl_mean).flatten()
-                pert_effect = pred_array.mean(axis=0) - ctrl_mean
-            else:
-                pert_effect = pred_array.mean(axis=0)
+        # Compute perturbation effect (difference from control mean)
+        ctrl_mask = base_adata.obs['condition'] == 'ctrl'
+        if ctrl_mask.sum() > 0:
+            ctrl_mean = np.asarray(base_adata[ctrl_mask].X.mean(axis=0)).ravel()
+            pert_effect = pred_array.mean(axis=0) - ctrl_mean
         else:
             pert_effect = pred_array.mean(axis=0)
 
