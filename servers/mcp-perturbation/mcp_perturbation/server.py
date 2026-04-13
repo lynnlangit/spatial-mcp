@@ -103,8 +103,8 @@ class SetupModelInput(BaseModel):
 
     dataset_id: str = Field(..., description="Dataset ID from load_dataset")
     hidden_size: int = Field(default=64, description="Hidden layer size", ge=32, le=256)
-    num_layers: int = Field(default=2, description="Number of GNN layers", ge=1, le=5)
-    uncertainty: bool = Field(default=True, description="Enable uncertainty quantification")
+    num_layers: int = Field(default=1, description="Number of GNN layers (GO + gene graphs)", ge=1, le=5)
+    uncertainty: bool = Field(default=False, description="Enable uncertainty quantification")
     uncertainty_reg: float = Field(default=1.0, description="Uncertainty regularization weight", ge=0, le=10)
     model_name: str = Field(default="gears_model", description="Name for this model")
     condition_key: str = Field(default="condition", description="Column with condition labels")

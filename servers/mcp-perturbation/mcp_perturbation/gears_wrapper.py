@@ -272,15 +272,15 @@ class GearsWrapper:
     def initialize_model(
         self,
         hidden_size: int = 64,
-        num_layers: int = 2,
-        uncertainty: bool = True,
+        num_layers: int = 1,
+        uncertainty: bool = False,
         uncertainty_reg: float = 1.0
     ) -> Dict[str, any]:
         """Create GEARS model instance.
 
         Args:
             hidden_size: Hidden layer dimension
-            num_layers: Number of GNN layers
+            num_layers: Number of GNN layers (applied to both GO and gene graphs)
             uncertainty: Enable uncertainty quantification
             uncertainty_reg: Uncertainty regularization weight
 
@@ -294,7 +294,8 @@ class GearsWrapper:
         self.model = GEARS(self.pert_data, device=self.device)
         self.model.model_initialize(
             hidden_size=hidden_size,
-            num_layers=num_layers,
+            num_go_gnn_layers=num_layers,
+            num_gene_gnn_layers=num_layers,
             uncertainty=uncertainty,
             uncertainty_reg=uncertainty_reg,
         )
