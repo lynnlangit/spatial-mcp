@@ -324,8 +324,8 @@ class GearsWrapper:
         Args:
             epochs: Number of training epochs
             lr: Learning rate
-            batch_size: Batch size for training
-            valid_every: Validate every N epochs
+            batch_size: (accepted but unused — GEARS sets batch_size at dataloader creation)
+            valid_every: (accepted but unused — GEARS validates every epoch)
 
         Returns:
             Training metrics
@@ -335,13 +335,8 @@ class GearsWrapper:
 
         logger.info(f"Training GEARS for {epochs} epochs")
 
-        # GEARS training
-        self.model.train(
-            epochs=epochs,
-            lr=lr,
-            batch_size=batch_size,
-            valid_every=valid_every
-        )
+        # GEARS.train() accepts only epochs, lr, weight_decay
+        self.model.train(epochs=epochs, lr=lr)
 
         # Get training history
         history = self.model.history if hasattr(self.model, 'history') else {}
