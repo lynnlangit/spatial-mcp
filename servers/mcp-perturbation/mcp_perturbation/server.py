@@ -1,5 +1,13 @@
 """MCP Server for perturbation prediction using GEARS."""
 
+# --- Monkey-patch: GEARS (gears.py:87) indexes sparse X with a pandas
+# boolean Series.  Scipy's sparse indexing calls ``idx.nonzero()`` which
+# fails on pandas Series (removed in pandas 1.0+).  Adding the method
+# back lets the library work without modifying site-packages.
+import pandas as _pd
+if not hasattr(_pd.Series, "nonzero"):
+    _pd.Series.nonzero = lambda self: self.to_numpy().nonzero()
+
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Literal, List
