@@ -430,13 +430,17 @@ class GearsWrapper:
         if isinstance(results_pred, dict):
             pred_array = results_pred.get(pert_key)
             if pred_array is None:
-                # Fall back to first key
                 pred_array = next(iter(results_pred.values()))
-            pred_array = np.asarray(pred_array)
+            pred_array = np.asarray(pred_array, dtype=np.float32)
         elif isinstance(results_pred, torch.Tensor):
             pred_array = results_pred.cpu().detach().numpy()
         else:
-            pred_array = np.asarray(results_pred)
+            pred_array = np.asarray(results_pred, dtype=np.float32)
+
+        # AnnData requires 2-D X — GEARS may return (n_genes,) for a
+        # single perturbation or (n_ctrl_cells, n_genes) for a batch.
+        if pred_array.ndim == 1:
+            pred_array = pred_array.reshape(1, -1)
 
         # Create AnnData object with predictions
         base_adata = self.adata if self.adata is not None else self.pert_data.adata
