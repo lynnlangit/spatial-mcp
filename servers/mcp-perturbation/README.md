@@ -40,15 +40,19 @@ GEARS uses graph neural networks (GNNs) combined with gene regulatory network kn
 
 ## Installation
 
-✅ **GEARS is now fully working** with Python 3.11+!
-
 ### Prerequisites
 
-- Python >= 3.10 (Python 3.11+ recommended)
+- Python >= 3.11
 - PyTorch >= 2.0.0
+- `uv` package manager
 - CUDA (optional, for GPU acceleration)
 
-> **Standard setup:** See [Server Installation Guide](../../docs/reference/shared/server-installation.md) for venv creation, pip install, and Claude Desktop config.
+### Install
+
+```bash
+cd servers/mcp-perturbation
+uv sync
+```
 
 ### Key Dependencies
 
@@ -56,8 +60,6 @@ GEARS uses graph neural networks (GNNs) combined with gene regulatory network kn
 - `torch-geometric` - Graph neural network framework
 - `scanpy`, `anndata` - Single-cell data handling
 - `torch` - Deep learning framework (PyTorch)
-
-**GEARS advantages:** Modern Python 3.11+ compatible, 40% better performance than VAE methods, handles multi-gene perturbations, integrates biological knowledge graphs.
 
 ---
 
@@ -92,8 +94,6 @@ Initialize GEARS model:
   "params": {
     "dataset_id": "GSE184880",
     "hidden_size": 64,
-    "num_layers": 2,
-    "uncertainty": true,
     "model_name": "ovarian_cancer_model"
   }
 }
@@ -107,13 +107,12 @@ Train the GEARS model:
   "params": {
     "model_name": "ovarian_cancer_model",
     "epochs": 20,
-    "batch_size": 32,
     "learning_rate": 0.001
   }
 }
 ```
 
-**Note:** GEARS trains faster than VAE-based methods (20 epochs typical vs 100+)
+**Note:** GEARS typically converges in 20 epochs. Training downloads a ~60 MB Gene Ontology graph on first run.
 
 ### 3. Compute Perturbation Effect
 
@@ -124,8 +123,7 @@ Calculate perturbation effect for specific genes:
   "tool": "perturbation_compute_delta",
   "params": {
     "model_name": "ovarian_cancer_model",
-    "source_cell_type": "T_cells",
-    "treatment_key": "CD4"
+    "treatment_key": "NNMT"
   }
 }
 ```
@@ -143,14 +141,14 @@ Apply GEARS prediction to patient data:
     "model_name": "ovarian_cancer_model",
     "patient_data_path": "./data/patient_001.h5ad",
     "cell_type_to_predict": "T_cells",
-    "treatment_key": "CD4,CD8A"
+    "treatment_key": "NNMT,STAT3"
   }
 }
 ```
 
 **Returns**: Predicted cell states, perturbation effect magnitude, number of cells predicted
 
-**Multi-gene perturbations**: GEARS excels at predicting combinatorial effects - specify multiple genes separated by commas.
+**Multi-gene perturbations**: Specify multiple genes separated by commas. GEARS predicts combinatorial effects using its gene-gene interaction graph.
 
 ---
 
@@ -176,14 +174,14 @@ Load and preprocess scRNA-seq data from GEO or local file.
 Initialize GEARS graph neural network model.
 
 **Parameters:**
-- `dataset_id` (str): Dataset ID from load_dataset
+- `dataset_id` (str, required): Dataset ID from load_dataset
 - `hidden_size` (int): Hidden layer size for GNN (default: 64)
-- `num_layers` (int): Number of GNN layers (default: 2)
-- `uncertainty` (bool): Enable uncertainty quantification (default: true)
+- `num_layers` (int): Number of GNN layers for both GO and gene graphs (default: 1)
+- `uncertainty` (bool): Enable uncertainty quantification (default: false)
 - `uncertainty_reg` (float): Uncertainty regularization weight (default: 1.0)
-- `model_name` (str): Name for this model
-- `condition_key` (str): Column with condition labels
-- `pert_key` (str): Column with perturbation labels
+- `model_name` (str): Name for this model (default: "gears_model")
+- `condition_key` (str): Column with condition labels (default: "condition")
+- `pert_key` (str): Column with perturbation labels (default: "perturbation")
 
 **Returns:** Model configuration summary
 
@@ -194,13 +192,13 @@ Initialize GEARS graph neural network model.
 Train GEARS graph neural network on perturbation data.
 
 **Parameters:**
-- `model_name` (str): Model name from setup_model
+- `model_name` (str, required): Model name from setup_model
 - `epochs` (int): Training epochs (default: 20)
-- `batch_size` (int): Batch size (default: 32)
 - `learning_rate` (float): Learning rate (default: 0.001)
-- `valid_every` (int): Validation frequency in epochs (default: 1)
 
-**Returns:** Training metrics (final loss, epochs completed, model path)
+**Returns:** Training metrics (epochs completed, model path)
+
+**Note:** GEARS sets batch size at dataloader creation (during setup_model) and validates every epoch internally.
 
 ---
 
@@ -277,32 +275,26 @@ Generate PCA/UMAP plots of baseline vs. predicted.
 
 ## Primary Dataset: GSE184880
 
-**Study**: Single-cell RNA-seq of ovarian cancer (HGSOC) and healthy controls
+**Synthetic HGSOC-modeled Perturb-seq data** for GEARS training.
 
-**Samples**:
-- 5 healthy controls
-- 7 high-grade serous ovarian cancer (HGSOC) patients
+**Cells**: 5,000 synthetic cells across 5 cell types
+**Genes**: Configurable via `n_hvg` (default 7,000); includes 10 real HGSOC-relevant genes as perturbation targets
 
-**Cell Types**:
-- T cells (CD4+, CD8+)
-- B cells
-- Macrophages
-- Epithelial cells
-- Fibroblasts
+**Cell Types**: T_cells, B_cells, Macrophages, Epithelial, Fibroblasts
 
-**Conditions**:
-- `control` - Healthy tissue
-- `tumor` - Cancer tissue
+**Perturbation Conditions** (GEARS format):
+- `ctrl` — unperturbed control cells
+- `NNMT+ctrl`, `STAT3+ctrl`, `TP53+ctrl`, `BRCA1+ctrl`, `MYC+ctrl`, `PIK3CA+ctrl`, `PTEN+ctrl`, `CCNE1+ctrl`, `AKT1+ctrl`, `CDK2+ctrl` — single-gene knockdown perturbations
 
-This dataset is ideal for learning control vs. disease perturbation vectors for ovarian cancer immunotherapy prediction.
+Each perturbation condition applies a knockdown effect (0.05x) on the target gene, allowing GEARS to learn gene-gene interaction effects.
 
 ---
 
-## Example Workflow: PatientOne
+## Example Workflow: PatientOne (NNMT Knockdown)
 
 ### Scenario
 
-PatientOne has HGSOC ovarian cancer. We want to predict how her CD8+ T cells will respond to immunotherapy.
+PatientOne has HGSOC ovarian cancer with 18.2% CAF fraction. We predict the effect of NNMT knockdown on the CAF barrier using GEARS.
 
 ### Step 1: Load Reference Data
 
@@ -317,7 +309,7 @@ PatientOne has HGSOC ovarian cancer. We want to predict how her CD8+ T cells wil
 }
 ```
 
-### Step 2: Train Model
+### Step 2: Setup and Train Model
 
 ```json
 {
@@ -334,12 +326,12 @@ PatientOne has HGSOC ovarian cancer. We want to predict how her CD8+ T cells wil
   "tool": "perturbation_train_model",
   "params": {
     "model_name": "patient_one_model",
-    "n_epochs": 100
+    "epochs": 20
   }
 }
 ```
 
-### Step 3: Predict Response
+### Step 3: Predict NNMT Knockdown Response
 
 ```json
 {
@@ -347,35 +339,19 @@ PatientOne has HGSOC ovarian cancer. We want to predict how her CD8+ T cells wil
   "params": {
     "model_name": "patient_one_model",
     "patient_data_path": "./data/patient_one_baseline.h5ad",
-    "cell_type_to_predict": "CD8_T_cells",
-    "control_key": "control",
-    "treatment_key": "tumor"
+    "cell_type_to_predict": "Fibroblasts",
+    "treatment_key": "NNMT"
   }
 }
 ```
 
-### Step 4: Analyze Changes
+### Expected Results (from Paper v16, Section 3.5)
 
-```json
-{
-  "tool": "perturbation_differential_expression",
-  "params": {
-    "baseline_path": "./data/patient_one_baseline.h5ad",
-    "predicted_path": "./data/predictions/patient_one_model_predicted.h5ad",
-    "n_top_genes": 50
-  }
-}
-```
+**NNMT knockdown predicted effects:**
+- STAT3 (−0.24), COL3A1 (−0.21) — CAF barrier dismantlement
+- PRF1 (+0.27), FOXP3 (+0.20) — immune recovery markers
 
-### Expected Results
-
-**Top Upregulated Genes** (predicted treatment response):
-- `IFNG` - Interferon gamma (immune activation)
-- `GZMB` - Granzyme B (cytotoxicity marker)
-- `PRF1` - Perforin (cell killing)
-- `CD69` - T cell activation marker
-
-**Clinical Interpretation**: The model predicts that immunotherapy will activate PatientOne's CD8+ T cells, increasing cytotoxic markers and immune response genes.
+**Clinical Interpretation**: NNMT inhibition reduces CAF signaling and increases cytotoxic T-cell markers, indicating potential for CAF-targeted therapy in HGSOC.
 
 ---
 
@@ -402,18 +378,16 @@ PatientOne has HGSOC ovarian cancer. We want to predict how her CD8+ T cells wil
 ### Prediction Process
 
 ```
-Input: Gene perturbations (e.g., ["PDCD1", "CTLA4"])
+Input: Gene perturbations (e.g., ["NNMT", "STAT3"])
        ↓
-Gene Graph: Encode relationships
+Gene Graph: Encode GO + gene-gene relationships
        ↓
-GNN Layers: Message passing (2 layers)
+GNN Layers: Message passing (1 layer default)
        ↓
 Output: Predicted gene expression changes Δ
        ↓
 Apply to baseline: Predicted cell state
 ```
-
-For detailed architecture diagrams, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -422,27 +396,15 @@ For detailed architecture diagrams, see [ARCHITECTURE.md](ARCHITECTURE.md).
 ### Run All Tests
 
 ```bash
-pytest tests/ -v
+cd servers/mcp-perturbation
+uv run pytest -v
 ```
 
 ### Run Specific Test File
 
 ```bash
-pytest tests/test_gears_wrapper.py -v
+uv run pytest tests/test_gears_wrapper.py -v
 ```
-
-### Test Coverage
-
-```bash
-pytest tests/ --cov=mcp_perturbation --cov-report=html
-```
-
-### Expected Coverage
-
-- `data_loader.py`: >85%
-- `gears_wrapper.py`: >80%
-- `prediction.py`: >75%
-- `server.py`: >70%
 
 ---
 
@@ -450,19 +412,17 @@ pytest tests/ --cov=mcp_perturbation --cov-report=html
 
 ### Training Time
 
-| Dataset Size | n_latent | n_epochs | GPU Time | CPU Time |
-|--------------|----------|----------|----------|----------|
-| 5K cells | 100 | 100 | ~2 min | ~10 min |
-| 20K cells | 100 | 100 | ~5 min | ~30 min |
-| 100K cells | 100 | 100 | ~15 min | ~2 hours |
+| Dataset Size | hidden_size | epochs | GPU Time | CPU Time |
+|--------------|-------------|--------|----------|----------|
+| 5K cells | 64 | 20 | ~1 min | ~5 min |
+| 20K cells | 64 | 20 | ~3 min | ~15 min |
 
 ### Prediction Time
 
 | Operation | Time |
 |-----------|------|
-| Predict 1K cells | ~1 second |
-| Predict 10K cells | ~5 seconds |
-| Extract latent | ~2 seconds |
+| Single perturbation | ~1 second |
+| Combo perturbation | ~2 seconds |
 
 ---
 
@@ -470,29 +430,22 @@ pytest tests/ --cov=mcp_perturbation --cov-report=html
 
 ### Issue: CUDA out of memory
 
-**Solution**: Reduce batch size or n_latent
-
-```json
-{
-  "n_latent": 50,
-  "batch_size": 16
-}
-```
+**Solution**: Reduce hidden_size (default 64, try 32)
 
 ### Issue: Model not converging
 
 **Solutions**:
-1. Increase n_epochs
-2. Reduce learning rate
-3. Increase n_hidden or n_latent
+1. Increase epochs (default 20, try 50)
+2. Reduce learning rate (default 0.001, try 0.0001)
+3. Increase hidden_size (default 64, try 128)
 
 ### Issue: Poor predictions
 
 **Solutions**:
-1. Ensure reference data has both control and treated conditions
+1. Ensure data has GEARS-format conditions (`ctrl`, `GENE+ctrl`)
 2. Check that cell types are annotated correctly
 3. Increase n_hvg (more genes = better signal)
-4. Train longer (more epochs)
+4. Verify perturbation target genes are present in the dataset
 
 ---
 
@@ -501,17 +454,7 @@ pytest tests/ --cov=mcp_perturbation --cov-report=html
 ### Key Papers
 
 1. **GEARS**: Roohani et al., "Predicting transcriptional outcomes of novel multigene perturbations with GEARS", Nature Biotechnology (2024)
-2. **scVI**: Lopez et al., "Deep generative modeling for single-cell transcriptomics", Nature Methods (2018)
-3. **HGSOC scRNA-seq**: Izar et al., "A single-cell landscape of high-grade serous ovarian cancer", Nature Medicine (2020)
-
-### Method Performance
-
-GEARS has been validated for:
-- Perturbation prediction (40% better than VAE methods)
-- Multi-gene combinatorial perturbations
-- Cross-study generalization
-- Handles unseen gene combinations
-- Integrates biological knowledge graphs
+2. **HGSOC scRNA-seq**: Izar et al., "A single-cell landscape of high-grade serous ovarian cancer", Nature Medicine (2020)
 
 ---
 
@@ -532,8 +475,7 @@ See [CONTRIBUTING.md](../../docs/for-developers/CONTRIBUTING.md) for guidelines.
 
 ```bash
 cd servers/mcp-perturbation
-pip install -e ".[dev]"
-pre-commit install
+uv sync
 ```
 
 ---

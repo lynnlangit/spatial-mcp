@@ -510,11 +510,81 @@ Include clinical context to inform the analysis.
 
 ---
 
+### 11. resolve_patient_data_paths
+
+Resolve file paths for a patient's spatial, genomic, and multi-omics data. Checks which files actually exist on disk.
+
+**Parameters:**
+- `patient_id` (string): Patient identifier (e.g., "PAT001-OVC-2025", "patient-001", "PAT001")
+
+**Returns:**
+```json
+{
+  "patient_id": "PAT001-OVC-2025",
+  "base_directory": "/data/patient-data/PAT001-OVC-2025",
+  "spatial": {
+    "files": {"expression": "...", "coordinates": "...", "annotations": "...", "h5ad": "..."},
+    "available": ["expression", "coordinates", "annotations"],
+    "ready": true
+  },
+  "genomics": {
+    "files": {"somatic_variants": "...", "copy_number": "..."},
+    "available": ["somatic_variants", "copy_number"],
+    "ready": true
+  },
+  "multiomics": {
+    "files": {"rna": "...", "protein": "...", "phospho": "...", "metadata": "..."},
+    "available": ["rna", "protein", "phospho", "metadata"],
+    "ready": true
+  }
+}
+```
+
+**Example usage with Claude:**
+```
+What data files are available for PAT001-OVC-2025?
+```
+
+---
+
+### 12. set_patient_context
+
+Set clinical context for a patient to guide spatial analysis. Maps conditions, medications, and biomarkers to genes of interest and suggested analyses.
+
+**Parameters:**
+- `patient_id` (string): Patient identifier
+- `cancer_type` (string, optional): Cancer type (e.g., "ovarian cancer")
+- `conditions` (list, optional): Clinical conditions (e.g., ["ER+ breast cancer", "BRCA2"])
+- `medications` (list, optional): Current medications (e.g., ["tamoxifen"])
+- `biomarkers` (dict, optional): Biomarker results (e.g., {"CA 15-3": 18})
+
+**Returns:**
+```json
+{
+  "patient_id": "patient-001",
+  "genes_of_interest": ["BRCA1", "CD8A", "EPCAM", "MUC16", "TP53"],
+  "num_genes": 5,
+  "suggested_analyses": [
+    "Spatial autocorrelation for proliferation markers (Ki67)",
+    "Immune infiltration pattern analysis (CD8A, CD4)"
+  ],
+  "condition_gene_mappings": {"ovarian cancer": ["MUC16", "TP53", "BRCA1"]}
+}
+```
+
+**Example usage with Claude:**
+```
+Set clinical context for Patient-001 with ovarian cancer on carboplatin.
+Then use the recommended genes for spatial analysis.
+```
+
+---
+
 ## Visualization Tools
 
 The following visualization tools generate publication-quality PNG images for spatial analysis results:
 
-### 11. generate_spatial_heatmap
+### 13. generate_spatial_heatmap
 
 Generate spatial heatmaps showing gene expression overlaid on tissue coordinates.
 
@@ -549,7 +619,7 @@ Generate spatial heatmaps for proliferation markers:
 
 **Output:** Multi-panel figure with separate heatmap for each gene, showing spatial distribution across tissue.
 
-### 12. generate_gene_expression_heatmap
+### 14. generate_gene_expression_heatmap
 
 Generate gene × region expression heatmap matrix.
 
@@ -585,7 +655,7 @@ Create a heatmap showing key genes across tumor regions:
 
 **Output:** Annotated heatmap with genes as rows, regions as columns, and mean expression values displayed.
 
-### 13. generate_region_composition_chart
+### 15. generate_region_composition_chart
 
 Generate bar chart showing spot counts per tissue region.
 
@@ -622,7 +692,7 @@ Show the distribution of spots across tissue regions:
 
 **Output:** Bar chart with region names on x-axis and spot counts on y-axis.
 
-### 14. visualize_spatial_autocorrelation
+### 16. visualize_spatial_autocorrelation
 
 Visualize Moran's I spatial autocorrelation statistics.
 
@@ -844,7 +914,7 @@ mypy src/
 
 ## Architecture
 
-### Implementation Status: 95% Real
+### Implementation Status: 95% Real (16 tools)
 
 - **align_spatial_data**: 95% real (STAR execution, log parsing, tested)
 - **filter_quality**: 95% real (statistical filtering implemented)
@@ -856,6 +926,12 @@ mypy src/
 - **deconvolve_cell_types**: 95% real (signature scoring implemented)
 - **merge_tiles**: 95% real (coordinate-based merging)
 - **get_spatial_data_for_patient**: 95% real (file mapping bridge)
+- **resolve_patient_data_paths**: 100% real (file existence checks)
+- **set_patient_context**: 100% real (condition-to-gene mapping)
+- **generate_spatial_heatmap**: 95% real (matplotlib spatial plots)
+- **generate_gene_expression_heatmap**: 95% real (seaborn heatmap)
+- **generate_region_composition_chart**: 95% real (matplotlib bar chart)
+- **visualize_spatial_autocorrelation**: 95% real (Moran's I bar chart)
 
 See [SERVER_IMPLEMENTATION_STATUS.md](SERVER_IMPLEMENTATION_STATUS.md) for details.
 
