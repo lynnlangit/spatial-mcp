@@ -24,6 +24,9 @@ jobs:
           - mcp-cibersortx
           - mcp-neoantigen
           - mcp-patient-report
+          - mcp-genomic-results
+          - mcp-cell-classify
+          - mcp-spatialtools
           - mcp-server-boilerplate
     steps:
       - uses: actions/checkout@v4
