@@ -1,9 +1,25 @@
-# Installation Guide
+# Getting Started & Installation
 
-Complete guide for setting up the Precision Medicine MCP system. Choose your preferred interface:
+## Which Setup Should I Use?
 
-- **[Claude Code (CLI)](#quick-start-claude-code)** — Best for developers, students, and study groups
-- **[Claude Desktop (GUI)](#quick-start-claude-desktop)** — Best for clinicians and non-technical users
+| You Are... | Use This | Time |
+|------------|----------|------|
+| Student (Claude) | [Claude Code (CLI)](#quick-start-claude-code) | 5 min |
+| Student (Gemini) | [Gemini Setup Guide](gemini-setup.md) | 10 min |
+| Developer | [Claude Code (CLI)](#quick-start-claude-code) | 5 min |
+| Clinician | [Claude Desktop (GUI)](#quick-start-claude-desktop) | 10 min |
+| Instructor | [Educator Guide](../for-educators/README.md) | 30 min |
+
+**Prerequisites:** Python 3.11+, git, [uv](https://docs.astral.sh/uv/). Claude Code also needs Node.js 18+.
+
+**Other setup options:** [Gemini Setup Guide](gemini-setup.md) | [Desktop Config Files](desktop-configs/README.md)
+
+---
+
+Choose your preferred interface:
+
+- **[Claude Code (CLI)](#quick-start-claude-code)** -- Best for developers, students, and study groups
+- **[Claude Desktop (GUI)](#quick-start-claude-desktop)** -- Best for clinicians and non-technical users
 
 ## Table of Contents
 

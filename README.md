@@ -2,147 +2,75 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-2025--06--18-green.svg)](https://modelcontextprotocol.io/)
-[![Claude Desktop](https://img.shields.io/badge/Claude-Desktop-orange.svg)](https://claude.ai/download)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 <img src="https://github.com/lynnlangit/precision-medicine-mcp/blob/main/data/images/repo-image.png">
 
-> AI-orchestrated multi-modal synthesis: integrate genomics, transcriptomics, spatial biology, and imaging in a single analysis — capabilities that manual workflows cannot achieve at scale.
+> **Dedicated to PatientOne** -- a dear friend who passed from High-Grade Serous Ovarian Carcinoma in 2025.
 
-## How It Works: The User Experience
+---
 
-```mermaid
-graph LR
-    A["🔬 Ask a Question<br/><i>natural language</i>"] --> B["🤖 AI Orchestrates<br/><i>selects tools automatically</i>"]
-    B --> C["📊 Review Results<br/><i>visualizations + evidence</i>"]
-    C --> D{"👨‍⚕️ Clinician Decision"}
-    D -->|Approve| E["✅ Use in Care"]
-    D -->|Revise| B
-    D -->|Reject| F["🚫 Discard"]
+## The Problem
 
-    style A fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    style B fill:#fff3cd,stroke:#ffc107,stroke-width:2px
-    style C fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style D fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    style E fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
-    style F fill:#ffcdd2,stroke:#d32f2f,stroke-width:2px
+Standard HGSOC workup (BRCA1/2, HRD panel, CT imaging) generates **no immunotherapy hypotheses**. Manual multi-modal analysis across genomics, spatial transcriptomics, imaging, and clinical data takes an estimated 40 hours and $6,000-9,000 per patient -- making integrated analysis clinically impractical.
+
+## The Platform
+
+An 18-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
+
+**Data Acquisition -> Spatial Deconvolution -> Target Profiling -> Causal Inference -> Report**
+
+| | Servers | Tools |
+|-|---------|-------|
+| **Custom** | 17 servers | 99 tools |
+| **External** | 6 connectors (PubMed, bioRxiv, ClinicalTrials.gov, Seqera, cBioPortal, HuggingFace) | 46 tools |
+
+All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant. See [Server Registry](docs/reference/shared/server-registry.md).
+
+## The Results
+
+Three treatment hypotheses unreachable by standard workup (validated on synthetic PatientOne):
+
+1. **Personalized neoantigen vaccine** -- TP53 R175H -> RMPEAAPPV peptide (IC50 7.8 nM, strong HLA-A*02:01 binding)
+2. **NNMT/CAF inhibition** -- 18.2% CAF fraction; GEARS GNN predicts NNMT knockdown recovers immune markers
+3. **Convergent checkpoint blockade** -- POLE-corrected TMB 47.3 mut/Mb + spatial CD8 exclusion -> anti-PD-1/CTLA-4
+
+Plus: cross-cancer validation on PAT002 (ER+ breast cancer) with zero code changes.
+
+---
+
+## Try It
+
+```bash
+# Clone and explore
+git clone https://github.com/lynnlangit/precision-medicine-mcp.git
+cd precision-medicine-mcp
+
+# Run tests for any server (DRY_RUN mode, no external deps needed)
+cd servers/mcp-multiomics && uv run pytest -v
+
+# Or use Claude Code to explore interactively
+claude
 ```
 
-> **Example:** *"Integrate PatientOne's RNA, protein, and spatial data to identify concordant pathway activations in platinum-resistant tumor regions"* — the AI selects the right tools, runs the analysis, and presents results for clinician review. No coding required.
+All servers default to DRY_RUN mode (synthetic data, no API keys needed).
 
 ---
 
-## Featured Use Case: Patient One
+## Learn More
 
-<kbd><img src="https://github.com/lynnlangit/precision-medicine-mcp/blob/main/tests/manual_testing/PatientOne-OvarianCancer/architecture/patient-one-holistic.png" width=800></kbd>
+| Audience | Start Here |
+|----------|------------|
+| **Getting Started** | [Installation Guide](docs/getting-started/installation.md) |
+| **Funders** | [Executive Summary](docs/for-funders/EXECUTIVE_SUMMARY.md) |
+| **Hospitals** | [Hospital Guide](docs/for-hospitals/README.md) |
+| **Developers** | [Architecture](docs/for-developers/ARCHITECTURE.md) |
+| **Researchers** | [Researcher Guide](docs/for-researchers/README.md) |
+| **Educators** | [Educator Guide](docs/for-educators/README.md) |
+| **All docs** | [Documentation Index](docs/INDEX.md) |
 
-**Stage IV High-Grade Serous Ovarian Cancer** - Platinum-resistant, 70% 5-year mortality
-
-**What This Demonstrates:**
-- **Multi-modal synthesis** — Clinical + Genomic + Multi-omics + Spatial + Imaging analyzed together, not in silos
-- **Novel integration** — Spatial transcriptomics correlated with protein phosphorylation and genomic variants in one workflow
-- **Natural language access** — Complex bioinformatics tools accessed via plain English, no coding required
-- **Clinician authority** — All outputs are recommendations for Molecular Tumor Board APPROVE/REVISE/REJECT, not autonomous decisions
-
-**Learn More**
-- 📖 [Full Case Study: PatientOne Documentation](docs/reference/testing/patient-one/README.md)
-- 📚 [Prompt Library](https://github.com/lynnlangit/precision-medicine-mcp/tree/main/docs/reference/prompts)
-- 🏗️ [Architecture Details](docs/reference/architecture/README.md)
-- 📚 [Documentation Hub](docs/INDEX.md)
+**Video:** [5-minute demo](https://www.youtube.com/watch?v=LUldOHHX5Yo) | **Paper:** [Why MCP for Healthcare](docs/reference/architecture/WHY_MCP_FOR_HEALTHCARE.md) | **External connectors:** [Setup guide](docs/for-researchers/CONNECT_EXTERNAL_MCP.md)
 
 ---
 
-## Safety & Clinical Governance
-
-> **This platform is a clinical decision support tool — AI assists clinicians, never replaces them.**
-
-| Safety Guarantee | What It Means |
-|-----------------|---------------|
-| **Clinician-in-the-Loop** | Every AI-generated report requires clinician **APPROVE / REVISE / REJECT** before clinical use ([workflow](docs/for-hospitals/citl-workflows/CITL_WORKFLOW_GUIDE.md)) |
-| **HIPAA Safe Harbor** | All 18 PHI identifiers removed before data leaves the hospital ([details](docs/for-hospitals/compliance/hipaa.md)) |
-| **Immutable Audit Trails** | Every query, tool call, routing decision, and output retained 10 years ([observability](docs/reference/architecture/platform/observability.md)) |
-| **Isolated Deployment** | MCP servers run inside hospital VPC; patient data never leaves the controlled network ([security](docs/for-hospitals/SECURITY_OVERVIEW.md)) |
-| **Full Traceability** | Every AI routing decision, parameter, and result is logged and visualizable ([details](docs/reference/architecture/platform/observability.md)) |
-| **Synthetic Data Only** | No real PHI in this repository |
-
----
-
-## 💰 For Decision-Makers
--  **[Executive Summary of Precision Medicine MCP](docs/for-funders/EXECUTIVE_SUMMARY.md)**
--  **[Why MCP for Healthcare?](docs/reference/architecture/WHY_MCP_FOR_HEALTHCARE.md)**
--  **[<5 minute demo video - shows a subset of available functionality](https://www.youtube.com/watch?v=LUldOHHX5Yo)**
-
----
-
-## 🚀 Quick Start by Role
-
-| You Are... | Start Here |
-|------------|------------|
-| 🏥 **Hospital IT/Admin** | [Hospital Deployment](docs/for-hospitals/README.md) |
-| 🔬 **Bioinformatician** | [Researcher Guide](docs/for-researchers/README.md) |
-| 💻 **MCP Developer** | [Developer Guide](docs/for-developers/README.md) |
-| 🎓 **Educator/Student** | [Educational Guide](docs/for-educators/README.md) |
-| 👥 **Patient/Family** | [Patient Resources](docs/for-patients/README.md) |
-| 💰 **Funder/Grant Reviewer** | [FUNDING.md](docs/for-funders/FUNDING.md) |
-
----
-
-## System Architecture
-
-```mermaid
-graph LR
-    subgraph Users["👥 Users"]
-        U[Clinicians<br/>Bioinformaticians<br/>Researchers]
-    end
-
-    subgraph AI["🤖 AI Orchestration"]
-        CLAUDE[Claude<br/>Native MCP]
-        GEMINI[Gemini<br/>SSE-based MCP]
-        CUSTOM[Custom<br/>Custom Orchestration MCP]
-    end
-
-    subgraph ServerTypes["🔧 MCP ServerTypes"]
-        S1[Clinical<br/>FHIR]
-        S2[Genomics<br/>VCF/FASTQ]
-        S3[Multi-omics<br/>RNA/Protein/Phospho]
-        S4[Spatial<br/>Visium]
-        S5[Imaging<br/> H&E/MxIF]
-        S6[Perturbation<br/>GEARS/GNN + scRNA-seq]
-        S7[Quantum<br/>Qiskit + spatial transcriptomics]
-        S8[Patient Reports<br/>PDF Generation]
-        S9[Genomic Results<br/>Somatic/CNV/HRD]
-        S10[External Data<br/>GEO/OpenTargets]
-        S11[Immunology<br/>CIBERSORTx/Neoantigen]
-    end
-
-    subgraph Output["📊 Orchestrated Outputs"]
-        O[Treatment Targets<br/>Predictions<br/>Visualizations<br/>Patient Reports]
-    end
-
-    U --> CLAUDE
-    U --> GEMINI
-    U --> CUSTOM
-    CLAUDE --> ServerTypes
-    GEMINI --> ServerTypes
-    CUSTOM --> ServerTypes
-    S1 --> Output
-    S2 --> Output
-    S3 --> Output
-    S4 --> Output
-    S5 --> Output
-    S6 --> Output
-    S7 --> Output
-    S8 --> Output
-    S9 --> Output
-    S10 --> Output
-    S11 --> Output
-
-    style Users fill:#e1f5ff
-    style AI fill:#fff3cd
-    style ServerTypes fill:#d4edda
-    style Output fill:#d1ecf1
-```
-
-Note: Precision Medicine MCP servers are designed to work with external connectors which provide real-world data access: ClinicalTrials.gov, PubMed, bioRxiv, Seqera, cBioPortal, and Hugging Face — [details](docs/for-researchers/CONNECT_EXTERNAL_MCP.md)
-
-
+**Apache 2.0** | **Python 3.11+** | **FastMCP >= 2.13** | **uv** for package management

@@ -405,7 +405,7 @@ The platform captures traceability data at three layers:
 
 A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analysis, performance metrics, and optimization recommendations.
 
-**[Detailed Observability Architecture](../reference/architecture/platform/observability.md)**
+**See also:** [Server Registry](../reference/shared/server-registry.md)
 
 ---
 
@@ -496,9 +496,9 @@ A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analy
 
 **Related Resources:**
 - **[ADD_NEW_MODALITY_SERVER.md](ADD_NEW_MODALITY_SERVER.md)** - Step-by-step guide for building new servers
-- **[Architecture Docs](../reference/architecture/README.md)** - Detailed technical documentation
+- **[Server Registry](../reference/shared/server-registry.md)** - Canonical server/tool counts
 - **[Server Implementations](../../servers/README.md)** - Code examples
 
 ---
 
-**Last Updated:** 2026-02-09
+**Last Updated:** 2026-04-11

@@ -1,239 +1,82 @@
 # Documentation Index
 
-**Welcome to the Precision Medicine MCP Documentation**
-
-This is your central navigation hub for all documentation. Use this index to quickly find guides, references, and resources.
+Central navigation for all documentation. Canonical references are in `reference/shared/`.
 
 ---
 
-## 📋 Shared Reference Files
+## Canonical References
 
-Canonical single-source-of-truth documents referenced across the repository:
-
-- **[PatientOne Profile](reference/shared/patientone-profile.md)** - Clinical profile, genomic findings, data locations
-- **[Platform Overview](reference/shared/README.md)** - Servers, tools, architecture summary
-- **[Server Registry](reference/shared/server-registry.md)** - Server/tool counts, production readiness
-- **[Value Proposition](reference/shared/value-proposition.md)** - Time savings, cost savings, ROI
-- **[Cost Analysis](reference/shared/cost-analysis.md)** - Per-patient costs, infrastructure, scaling projections
-- **[HIPAA Summary](reference/shared/hipaa-summary.md)** - Compliance checklist, de-identification, retention
-- **[Server Installation](reference/shared/server-installation.md)** - Standard Python MCP server setup
-- **[DRY_RUN Mode](reference/shared/dry-run-mode.md)** - Mock mode explanation and per-server variables
-- **[Deployment Templates](reference/shared/deployment-templates.md)** - Local, Streamlit Cloud, GCP Cloud Run
+| Doc | Covers |
+|-----|--------|
+| [Server Registry](reference/shared/server-registry.md) | 17 custom servers (99 tools) + 6 external |
+| [Value Proposition](reference/shared/value-proposition.md) | Time savings, cost savings, ROI |
+| [PatientOne Profile](reference/shared/patientone-profile.md) | Clinical profile, genomic findings |
+| [Cost Analysis](reference/shared/cost-analysis.md) | Per-patient costs, infrastructure |
+| [HIPAA Summary](reference/shared/hipaa-summary.md) | Compliance checklist |
+| [DRY_RUN Mode](reference/shared/dry-run-mode.md) | Mock mode explanation |
 
 ---
 
-## 🚀 Getting Started
+## By Audience
 
-**New to the Precision Medicine MCP system? Start here:**
-
-- **[Installation Guide](./getting-started/installation.md)** - Complete setup instructions (Quick Start: 5 minutes)
-- **[Executive Summary](for-funders/EXECUTIVE_SUMMARY.md)** - High-level overview for decision-makers
-- **[Why MCP for Healthcare?](reference/architecture/WHY_MCP_FOR_HEALTHCARE.md)** - Understand MCP architecture advantages
-
----
-
-## 📚 User Guides
-
-**Role-specific guides for different users:**
-
-- **[For Funders & Grant Reviewers](./for-funders/README.md)** - ROI analysis, competitive landscape, grant talking points
-- **[For Hospitals & IT Teams](./for-hospitals/README.md)** - Security, deployment, HIPAA compliance
-- **[For Developers](./for-developers/README.md)** - Architecture, contributing, building new servers
-- **[For Researchers](./for-researchers/README.md)** - Research workflows, analysis examples, production servers
-- **[For Educators](./for-educators/README.md)** - Teaching materials, course integration, classroom activities
-- **[For Patients & Families](./for-patients/README.md)** - Understanding precision medicine results (plain language)
-
-**Specialized Guides:**
-- **[Automated Patient Reports](./for-developers/automation-guides/AUTOMATED_PATIENT_REPORTS.md)** - Generate reports automatically
-- **[Patient Summaries](./for-developers/automation-guides/GENERATE_PATIENT_SUMMARIES.md)** - Create patient-friendly summaries
-- **[Add New Modality Server](./for-developers/ADD_NEW_MODALITY_SERVER.md)** - Extend the system with new data types
+| Audience | Start Here |
+|----------|------------|
+| **Funders / Grant Reviewers** | [for-funders/README.md](for-funders/README.md) |
+| **Hospital IT / Admins** | [for-hospitals/README.md](for-hospitals/README.md) |
+| **Developers** | [for-developers/README.md](for-developers/README.md) |
+| **Researchers** | [for-researchers/README.md](for-researchers/README.md) |
+| **Educators** | [for-educators/README.md](for-educators/README.md) |
+| **Patients / Families** | [for-patients/README.md](for-patients/README.md) |
 
 ---
 
-## 🏗️ Architecture
+## Getting Started
 
-**Technical system design and implementation:**
-
-- **[Architecture Overview](reference/architecture/README.md)** - System design principles
-- **[Server Status](reference/shared/server-registry.md)** - Implementation status and capabilities matrix
-- **[Clinical-Spatial Bridge](reference/architecture/clinical/clinical-spatial-bridge.md)** - Integration between clinical and spatial data
-- **[Error Handling](reference/architecture/platform/error-handling.md)** - Error handling and retry logic
-- **[Observability & Trust](reference/architecture/platform/observability.md)** - Orchestration tracing, audit logging, monitoring dashboard
-- **[References](reference/architecture/references.md)** - Technical references and citations
+- [Installation Guide](getting-started/installation.md) -- 5-minute quick start (Claude Code or Claude Desktop)
+- [Gemini Setup](getting-started/gemini-setup.md) -- For teams with Google Gemini
+- [Desktop Config Files](getting-started/desktop-configs/README.md) -- Pre-built JSON configs
 
 ---
 
-## 📋 Operations
+## Architecture & Development
 
-**Day-to-day operations and management:**
-
-- **[Cost and Budget Management](./for-hospitals/operations/cost-and-budget.md)** - Cost estimation, tracking, and optimization
-- **[Data Governance](./for-hospitals/compliance/data-governance.md)** - Data handling policies and procedures
-- **[Live Monitoring Dashboard](../ui/dashboard/README.md)** - Real-time health monitoring for MCP servers + Streamlit clients, token usage tracking, cost optimization
-
----
-
-## 🔒 Compliance
-
-**Regulatory compliance and data security:**
-
-- **[Compliance Overview](./for-hospitals/compliance/README.md)** - Compliance framework summary
-- **[HIPAA Compliance](./for-hospitals/compliance/hipaa.md)** - De-identification, audit logging, encryption
-- **[Data Governance](./for-hospitals/compliance/data-governance.md)** - GDPR, Common Rule, IRB requirements
-- **[Risk Assessment](./for-hospitals/compliance/risk-assessment.md)** - Risk mitigation strategies
-- **[Disclaimers](./for-hospitals/compliance/disclaimers.md)** - Legal disclaimers and limitations
+- [Architecture Overview](for-developers/ARCHITECTURE.md) -- System layers, data flow, integration patterns
+- [Architecture Reference](reference/architecture/README.md) -- Supplementary arch docs
+- [Add New Server](for-developers/ADD_NEW_MODALITY_SERVER.md) -- Step-by-step guide
+- [Connect External MCP](for-researchers/CONNECT_EXTERNAL_MCP.md) -- PubMed, bioRxiv, ClinicalTrials.gov, Seqera, cBioPortal, HuggingFace
 
 ---
 
-## 🚀 Deployment
+## Testing
 
-**Deployment guides and infrastructure:**
-
-- **[Security Guide](for-developers/security.md)** - API keys, secrets management, GCP Secret Manager
-- **[Hospital Deployment](./for-hospitals/)** - Enterprise deployment
-  - [Operations Manual](./for-hospitals/OPERATIONS_MANUAL.md)
-  - [User Guide](./for-hospitals/USER_GUIDE.md)
-  - [Runbooks](./for-hospitals/RUNBOOKS/) - Incident response procedures
+- [PatientOne Scenario](reference/testing/patient-one/README.md) -- End-to-end test case
+- [Test Prompts](reference/testing/patient-one/test-prompts/) -- DRY_RUN and synthetic data prompts
+- [GCP Integration Testing](reference/testing/gcp-integration.md) -- Cloud Run verification
 
 ---
 
-## 🧪 Testing
+## Compliance & Ethics
 
-**Test documentation, strategies, and test data:**
-
-- **[Test Documentation Index](reference/testing/README.md)** - Overview of all test documentation
-- **[Test Coverage & Guidelines](reference/testing/test-coverage.md)** - Test structure and best practices
-- **[Manual Testing](reference/testing)** - Quick test prompts and verification
-- **[PatientOne Scenario](reference/testing/patient-one)** - Complete end-to-end testing scenario
-  - [CITL Quick Test](reference/testing/patient-one/citl-quick-test.md)
-  - [Test Prompts](reference/testing/patient-one/test-prompts) - Ready-to-use test prompts (9 DRY_RUN + 4 SYNTHETIC_DATA)
-- **[Integration Testing](reference/testing)** - GCP and API testing
+- [HIPAA Compliance](for-hospitals/compliance/hipaa.md) -- De-identification, audit logging, encryption
+- [Ethics & Bias](for-hospitals/ethics/ETHICS_AND_BIAS.md) -- Bias detection, fairness metrics, diverse datasets
+- [Security Overview](for-hospitals/SECURITY_OVERVIEW.md) -- Security architecture
 
 ---
 
-## 🏥 Clinical Workflows
+## Book
 
-**Clinical decision support and review processes:**
-
-- **[Clinical Overview](./for-hospitals/citl-workflows/)** - Clinical workflows overview
-- **[CITL Workflow](./for-hospitals/citl-workflows/CITL_WORKFLOW_GUIDE.md)** - Clinician-in-the-Loop workflow, review templates, and examples
+- [AI-Orchestrated Precision Oncology](book/) -- Quarto book (separate from platform docs)
 
 ---
 
-## ⚖️ Ethics
+## By Task
 
-**Ethical considerations and bias auditing:**
-
-- **[Ethics Overview](./for-hospitals/ethics/README.md)** - Ethics framework
-- **[Bias Framework](./for-hospitals/ethics/ETHICS_AND_BIAS.md)** - Bias detection and mitigation
-- **[Bias Audit Guide](./for-hospitals/ethics/BIAS_AUDIT_GUIDE.md)** - Step-by-step bias audit
-
----
-
-## 📦 Examples & Templates
-
-**Example data, prompts, and templates:**
-
-- **[Example Patients](./for-developers/automation-guides/examples/)** - Sample patient data and analyses
-- **[Prompt Templates](./for-developers/automation-guides/prompts/)** - Reusable analysis prompts
-
----
-
-## 📖 Additional Resources
-
-### Quick Links
-
-- **Installation:** [5-Minute Quick Start](./getting-started/installation.md#quick-start-5-minutes)
-- **Test It:** [PatientOne Scenario](reference/testing/patient-one/README.md)
-- **Costs:** [Cost Overview](./for-hospitals/operations/cost-and-budget.md#cost-overview)
-- **HIPAA:** [HIPAA Quick Reference](./for-hospitals/compliance/hipaa.md#executive-summary)
-
-### By Task
-
-**I want to:**
-- **Install the system** → [Installation Guide](./getting-started/installation.md)
-- **Run my first analysis** → [Quick Test Prompts](reference/testing/quick-test-prompts.md)
-- **Understand costs** → [Cost and Budget Guide](./for-hospitals/operations/cost-and-budget.md)
-- **Deploy to production** → [GCP Integration Guide](reference/testing/gcp-integration.md)
-- **Ensure HIPAA compliance** → [HIPAA Compliance](./for-hospitals/compliance/hipaa.md)
-- **Add a new server** → [Add New Modality Server](./for-developers/ADD_NEW_MODALITY_SERVER.md)
-- **Review patient results** → [CITL Workflow](./for-hospitals/citl-workflows/CITL_WORKFLOW_GUIDE.md)
-- **Verify AI routing is correct** → [Observability Guide](reference/architecture/platform/observability.md)
-- **Test the system** → [PatientOne Scenario](reference/testing/patient-one/README.md)
-
-### By Role
-
-- **Funder/Grant Reviewer** → [For Funders](./for-funders/README.md) - ROI, competitive landscape, grant materials
-- **Hospital Administrator** → [For Hospitals](./for-hospitals/README.md) - Security, deployment checklist, HIPAA
-- **Developer** → [For Developers](./for-developers/README.md) - Architecture, contributing, building servers
-- **Researcher/Bioinformatician** → [For Researchers](./for-researchers/README.md) - Workflows, analysis, production servers
-- **Educator/Professor** → [For Educators](./for-educators/README.md) - Teaching materials, course integration
-- **Patient/Family** → [For Patients](./for-patients/README.md) - Understanding results (plain language)
-- **Clinician** → [CITL Workflow](./for-hospitals/citl-workflows/CITL_WORKFLOW_GUIDE.md) - Clinical workflow integration
-
----
-
-## 🗂️ Repository Structure
-
-Complete directory structure showing all major components:
-
-```
-precision-medicine-mcp/
-├── ACKNOWLEDGMENTS.md      # Credits & scientific references
-├── CLAUDE.md               # Claude Code project context
-├── LICENSE                 # Apache 2.0 License
-├── README.md               # Main repository README
-├── llms.txt                # LLM-readable project summary
-├── data/                   # Synthetic patient data (100% safe for demos)
-├── docs/                   # Documentation organized by audience
-│   ├── for-funders/        # ROI, competitive landscape, grant talking points, demos
-│   ├── for-hospitals/      # Deployment checklist, security overview, operations
-│   ├── for-developers/     # Architecture, contributing guide, quick reference
-│   ├── for-researchers/    # Analysis workflows, bioinformatics methods
-│   ├── for-educators/      # Classroom guides, learning objectives
-│   ├── for-operations/     # SLA, implementation guide, operations
-│   ├── for-patients/       # Patient-friendly resources
-│   ├── getting-started/    # Installation, quick start, desktop-configs
-│   ├── book/               # Quarto book: AI-Orchestrated Precision Oncology
-│   └── reference/          # Technical reference (architecture, prompts, tests)
-│       ├── architecture/   # System design & modality workflows
-│       ├── prompts/        # 20+ ready-to-use clinical prompts
-│       ├── shared/         # Canonical single-source-of-truth files
-│       ├── skills/         # AI skills for coding assistants
-│       └── testing/        # Testing guides & PatientOne scenarios
-├── infrastructure/         # Deployment, audit, environment setup
-│   ├── deployment/         # GCP deployment scripts
-│   ├── docker/             # Base Docker images for Cloud Run
-│   ├── audit/              # Bias detection and audit tools
-│   └── hospital-deployment/  # Hospital-specific infrastructure
-├── servers/                # MCP servers + boilerplate template (Python)
-│   ├── mcp-cell-classify/  # Cell phenotype classification
-│   ├── mcp-deepcell/       # Cell segmentation
-│   ├── mcp-epic/           # Epic FHIR integration
-│   ├── mcp-fgbio/          # Reference genomes, FASTQ QC
-│   ├── mcp-genomic-results/ # Somatic variant/CNV/HRD
-│   ├── mcp-mockepic/       # Mock Epic for testing
-│   ├── mcp-multiomics/     # Multi-omics integration
-│   ├── mcp-openimagedata/  # Imaging data (H&E, MxIF)
-│   ├── mcp-patient-report/ # Patient-facing reports
-│   ├── mcp-perturbation/   # GEARS treatment prediction
-│   ├── mcp-quantum-celltype-fidelity/ # Quantum fidelity
-│   ├── mcp-server-boilerplate/ # Template for new servers
-│   ├── mcp-spatialtools/   # Spatial transcriptomics
-│   └── mcp-mocktcga/       # Mock TCGA cohort data
-├── shared/                 # Shared Python packages
-│   ├── common/             # Common utilities
-│   ├── models/             # Data models
-│   ├── schemas/            # JSON schemas (CitL review, etc.)
-│   └── utils/              # Helper functions
-├── results/                # Analysis output files
-├── tests/                  # Automated tests (unit, integration, verification)
-└── ui/                     # User interfaces
-    ├── streamlit-app/      # Main Streamlit chat interface
-    ├── streamlit-app-students/ # Student/classroom version
-    ├── dashboard/          # Live monitoring dashboard
-    └── jupyter-notebook/   # Jupyter notebook interface
-```
-
----
-
+| I want to... | Go to |
+|--------------|-------|
+| Install the system | [Installation Guide](getting-started/installation.md) |
+| Run my first analysis | [PatientOne test prompts](reference/testing/patient-one/test-prompts/) |
+| Deploy to GCP | [GCP Integration](reference/testing/gcp-integration.md) |
+| Ensure HIPAA compliance | [HIPAA docs](for-hospitals/compliance/hipaa.md) |
+| Add a new server | [Add New Modality Server](for-developers/ADD_NEW_MODALITY_SERVER.md) |
+| Understand costs | [Cost Analysis](reference/shared/cost-analysis.md) |
+| Generate patient reports | [Automated Reports](for-developers/automation-guides/AUTOMATED_PATIENT_REPORTS.md) |

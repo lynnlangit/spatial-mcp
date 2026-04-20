@@ -1,19 +1,4 @@
 # Compliance
 
-HIPAA, data governance, and regulatory compliance documentation.
-
-## Contents
-
-- **HIPAA Compliance** - Safe Harbor de-identification, audit logging, encryption
-- **Data Governance** - Data management policies and procedures
-- **Risk Assessment** - Risk mitigation strategies
-- **Disclaimers** - Legal disclaimers and limitations
-
-## Quick Links
-
-- [Main Documentation Index](../../INDEX.md)
-- [Operations Manual](../OPERATIONS_MANUAL.md)
-
----
-
-**Last Updated:** 2026-02-19
+- [hipaa.md](hipaa.md) -- HIPAA compliance details, validation checklist, incident response
+- [HIPAA Summary](../../reference/shared/hipaa-summary.md) -- Platform-wide compliance overview (canonical)
