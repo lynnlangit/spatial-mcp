@@ -810,7 +810,7 @@ gsutil iam ch serviceAccount:mcp-audit-sa@$PROJECT_ID.iam.gserviceaccount.com:ro
 - Check service account has Logging Writer role
 - Confirm application is using structured logging
 
-**Solution**: Check `/docs/for-hospitals/AUDIT_LOG_GUIDE.md`
+**Solution**: Check [HIPAA Compliance](../../docs/for-hospitals/compliance/hipaa.md)
 
 ## Support
 
@@ -843,7 +843,7 @@ This deployment is specific to the research hospital's GCP organization. For que
 
 1. Check documentation in `/docs/for-hospitals/`
 2. Review runbooks for common issues
-3. Contact development team (see Operations Manual)
+3. Contact development team
 4. Submit issue to GitHub (redact any PHI/credentials)
 
 ## License
@@ -854,4 +854,4 @@ See main repository LICENSE file.
 
 **Last Updated**: 2026-02
 **Version**: 1.0.0
-**Contact**: See `/docs/for-hospitals/OPERATIONS_MANUAL.md` for support contacts
+**Contact**: See [Hospital Deployment Guide](../../docs/for-hospitals/README.md)
