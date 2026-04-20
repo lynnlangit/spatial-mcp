@@ -1,27 +1,21 @@
 #!/usr/bin/env bash
 #
-# Phase 6 — PAT001 signature-audit smoke test
+# Server import audit — smoke test all MCP servers
 #
-# Lightweight cross-server verification for the HOSPITAL1 FastMCP 2.13
-# migration. Walks every server in servers/mcp-*, imports it in its own
-# uv-managed venv, and lists its registered tools. Compares the observed
-# count to the canonical server registry. Reports any import errors,
-# missing tools, or signature drift.
-#
-# This is intentionally NOT a full end-to-end run (that is Phase 8 on
-# GCP). It catches the class of regression most likely to be introduced
-# by a dependency bump: a server whose import fails or whose tool set
-# silently changed.
+# Walks every server in servers/mcp-*, imports it in its own uv-managed
+# venv, and lists its registered tools. Compares the observed count to
+# the canonical server registry. Reports any import errors, missing
+# tools, or signature drift.
 #
 # Usage:
-#   ./scripts/phase6_signature_audit.sh
+#   ./shared/utils/server_import_audit.sh
 #
 # Exit code: 0 if every server imports and tool counts match expectations,
 #            1 if any server fails.
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SERVERS_DIR="${REPO_ROOT}/servers"
 
 # Canonical (name, python_package, expected_tool_count) tuples pulled from
@@ -129,7 +123,7 @@ except Exception as e:
 done
 
 echo ""
-echo "Phase 6 audit summary:"
+echo "Server import audit summary:"
 echo "  total=$total  passed=$passed  failed=$failed  skipped=$skipped  warnings=$warnings"
 
 if [ "$failed" -gt 0 ]; then
