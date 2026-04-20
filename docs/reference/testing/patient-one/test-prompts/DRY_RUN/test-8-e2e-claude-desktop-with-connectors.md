@@ -120,4 +120,4 @@ After generating the report, display a final summary that includes:
 - Typical runtime: 5-10 minutes (connector queries add ~2-3 minutes vs the base test)
 - The report in Stage 9 is still DRY_RUN (no real PDF generated) but the treatment recommendations and trial matches it references are grounded in real literature
 
-**See also:** [Base E2E test (no connectors)](test-7-e2e-claude-desktop.md) | [Connector setup guide](../../../../../for-researchers/CONNECT_EXTERNAL_MCP.md) | [Full demo guide](../../../../../for-funders/FULL_PATIENTONE_DEMO.md)
+**See also:** [Base E2E test (no connectors)](test-7-e2e-claude-desktop.md) | [Connector setup guide](../../../../../for-researchers/CONNECT_EXTERNAL_MCP.md) | [Full demo guide](../../../../../for-funders/DEMO_AND_PITCH.md)

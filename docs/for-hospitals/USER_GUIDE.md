@@ -832,6 +832,5 @@ Have an idea to improve the system?
 - Next Review: 2026-01-30 (monthly based on user feedback)
 
 **Quick Links:**
-- [Operations Manual](OPERATIONS_MANUAL.md) - For IT staff
-- [Operations Manual](OPERATIONS_MANUAL.md) - For administrators
-- [Troubleshooting Runbooks](RUNBOOKS/) - Detailed error resolution
+- [Security Overview](SECURITY_OVERVIEW.md) - For IT staff
+- [HIPAA Compliance](compliance/hipaa.md) - For administrators

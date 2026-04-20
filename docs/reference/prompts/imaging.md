@@ -214,7 +214,7 @@ Generate phenotype visualization:
 
 - **[DeepCell Server README](../../../servers/mcp-deepcell/README.md)** - Segmentation + quantification tools
 - **[Cell Classify Server README](../../../servers/mcp-cell-classify/README.md)** - Classification + visualization tools
-- **[MxIF Workflow](../architecture/imaging/MXIF_WORKFLOW.md)** - Complete MxIF pipeline
+- **[Imaging Architecture](../architecture/imaging/README.md)** - Complete imaging pipeline including MxIF
 - **[Imaging Architecture](../architecture/imaging/README.md)** - H&E vs MxIF comparison
 
 ---

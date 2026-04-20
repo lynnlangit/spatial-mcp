@@ -165,4 +165,4 @@ After generating the report, display a final summary that includes:
 - To add live literature/trial data, combine with Anthropic connectors per [test-8](test-8-e2e-claude-desktop-with-connectors.md)
 - **Key references for validation:** OlympiA (Tutt 2021, NEJM), SOLAR-1 (Andre 2019, NEJM), PALOMA-2 (Finn 2016, NEJM), monarchE (Johnston 2023, Lancet Oncol)
 
-**See also:** [Base E2E (6 servers)](test-7-e2e-claude-desktop.md) | [E2E + Connectors](test-8-e2e-claude-desktop-with-connectors.md) | [Individual test prompts](./) | [PatientOne tests](../../patient-one/test-prompts/DRY_RUN/)
+**See also:** [Base E2E (6 servers)](test-7-e2e-claude-desktop.md) | [E2E + Connectors](test-8-e2e-claude-desktop-with-connectors.md) | [Individual test prompts](./) | [PatientOne tests](../../../patient-one/test-prompts/DRY_RUN/)

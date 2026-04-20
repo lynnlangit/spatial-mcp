@@ -450,7 +450,7 @@ Precision medicine is rapidly evolving:
 - 🏥 [Hospital Deployment Guide](../for-hospitals/README.md) - For your hospital's IT team
 - 🔬 [Researcher Guide](../for-researchers/README.md) - Technical details of analysis
 - 💰 [Funding Information](../for-funders/README.md) - For hospital decision-makers
-- 🏠 [Back to Main Documentation](../README.md)
+- 🏠 [Back to Main Documentation](../INDEX.md)
 
 ---
 

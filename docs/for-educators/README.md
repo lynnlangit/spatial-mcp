@@ -437,11 +437,11 @@ Follow: [PatientOne Guide](../reference/testing/patient-one/README.md)
 ### Instructor Materials
 - **[PatientOne Guide](../reference/testing/patient-one/README.md)** - Complete walkthrough
 - **[Statistical Methods](../for-researchers/README.md)** - Detailed method explanations
-- **[Cost Analysis](../for-hospitals/operations/cost-and-budget.md)** - Budgeting for classroom use
+- **[Cost Analysis](../reference/shared/cost-analysis.md)** - Budgeting for classroom use
 
 ### Student Resources
 - **[Installation Guide](../getting-started/installation.md)** - Setup instructions
-- **[Quick Start Demo](../for-funders/NINETY_SECOND_PITCH.md)** - 90-second overview
+- **[Quick Start Demo](../for-funders/DEMO_AND_PITCH.md)** - 90-second overview
 - **[Architecture Overview](../for-developers/ARCHITECTURE.md)** - System design
 
 ---
@@ -503,7 +503,7 @@ Production mode (real data): Requires institutional GCP account and varies by us
 - 🔬 [Researcher Guide](../for-researchers/README.md) - For bioinformatics details
 - 💻 [Developer Guide](../for-developers/README.md) - For extending the platform
 - 💰 [Funding Information](../for-funders/README.md) - For grant applications
-- 🏠 [Back to Main Documentation](../README.md)
+- 🏠 [Back to Main Documentation](../INDEX.md)
 
 ---
 

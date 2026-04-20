@@ -235,9 +235,8 @@ Step-by-step checklist for deploying the Precision Medicine MCP Platform at your
 
 ## Troubleshooting Resources
 
-- **[Runbooks](../for-hospitals/RUNBOOKS/)** - Common issues and resolutions
-- **[Operations Manual](../for-hospitals/OPERATIONS_MANUAL.md)** - Day-to-day operations
-- **[Operations Manual](OPERATIONS_MANUAL.md)** - User management, monitoring, troubleshooting
+- **[Security Overview](SECURITY_OVERVIEW.md)** - Security controls and troubleshooting
+- **[HIPAA Compliance](compliance/hipaa.md)** - Compliance requirements
 
 ---
 
@@ -251,7 +250,7 @@ Step-by-step checklist for deploying the Precision Medicine MCP Platform at your
 
 **Related Resources:**
 - 🔒 [Security Overview](SECURITY_OVERVIEW.md)
-- 📊 [ROI Analysis](../for-funders/ROI_ANALYSIS.md)
+- 📊 [Executive Summary](../for-funders/EXECUTIVE_SUMMARY.md)
 - 📖 [HIPAA Compliance](compliance/hipaa.md)
 
 ---

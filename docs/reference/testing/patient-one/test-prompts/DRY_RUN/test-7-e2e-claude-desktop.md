@@ -86,4 +86,4 @@ After generating the report, display a final summary that includes:
 - Typical runtime: 2-5 minutes depending on Claude Desktop model
 - To run with real data, set `*_DRY_RUN=false` in `claude_desktop_config.json` (requires real bioinformatics tools installed)
 
-**See also:** [Individual test prompts](./) | [Quick test prompts](../../../quick-test-prompts.md) | [Full demo guide](../../../../../for-funders/FULL_PATIENTONE_DEMO.md)
+**See also:** [Individual test prompts](./) | [Quick test prompts](../../../quick-test-prompts.md) | [Full demo guide](../../../../../for-funders/DEMO_AND_PITCH.md)

@@ -153,4 +153,4 @@ After generating the report, display a final summary that includes:
 - To add live literature/trial data, combine with Anthropic connectors per [test-8](test-8-e2e-claude-desktop-with-connectors.md) — specifically PubMed for Landon 2026 (NCT02900560) and ClinicalTrials.gov for active HGSOC immunotherapy trials
 - **Key references for validation:** Vazquez-Garcia 2022 Nature (scRNA-seq atlas), Landon 2026 Comms Med (PROC serial biopsies), Xu 2022 Clin Cancer Res (TIGIT on CD8+ TEX)
 
-**See also:** [Base E2E (6 servers)](test-7-e2e-claude-desktop.md) | [E2E + Connectors](test-8-e2e-claude-desktop-with-connectors.md) | [Individual test prompts](./) | [Full demo guide](../../../../../for-funders/FULL_PATIENTONE_DEMO.md)
+**See also:** [Base E2E (6 servers)](test-7-e2e-claude-desktop.md) | [E2E + Connectors](test-8-e2e-claude-desktop-with-connectors.md) | [Individual test prompts](./) | [Full demo guide](../../../../../for-funders/DEMO_AND_PITCH.md)

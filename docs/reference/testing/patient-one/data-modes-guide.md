@@ -24,10 +24,10 @@ PatientOne supports two distinct operating modes to accommodate different use ca
 
 **📊 Quick Cost Comparison:**
 - **DRY_RUN:** 25-35 min, ~$1 total (tokens only)
-- **Actual Data:** Costs scale with data size and mode. See [Cost Analysis](../../../for-hospitals/operations/cost-and-budget.md) for detailed breakdowns.
+- **Actual Data:** Costs scale with data size and mode. See [Cost Analysis](../../shared/cost-analysis.md) for detailed breakdowns.
   - **Key insight:** Token costs stay low even with 3-8 GB files because MCP servers return summaries!
 
-**[→ See Full Cost Analysis & ROI](../../../for-hospitals/operations/cost-and-budget.md)**
+**[→ See Full Cost Analysis & ROI](../../shared/cost-analysis.md)**
 
 ---
 
@@ -945,7 +945,7 @@ convert input.png output.tiff
 - [PatientOne Overview →](./README.md)
 - [PatientOne Quick Start →](./README.md)
 - [MCP Server Configuration →](../../../getting-started/desktop-configs/README.md)
-- [Test Coverage Report →](../../../README.md)
+- [Documentation Index →](../../../INDEX.md)
 
 ### External Links
 - [TCGA API Documentation](https://docs.gdc.cancer.gov/API/Users_Guide/Getting_Started/)

@@ -70,7 +70,7 @@ flowchart LR
 
 **All data is synthetic.** Any resemblance to actual patients is coincidental.
 
-**See [complete disclaimers](../../../for-hospitals/compliance/disclaimers.md)**
+**See [HIPAA compliance](../../../for-hospitals/compliance/hipaa.md)**
 
 ---
 
@@ -423,7 +423,7 @@ All synthetic patient data located in: `/data/patient-data/PAT001-OVC-2025/`
 
 ### 4. MTB-Ready Treatment Recommendations
 
-> All recommendations are presented for Molecular Tumor Board review using AMP/ASCO/CAP evidence tiers. Clinician validation is required via the [CITL workflow](../../../for-hospitals/citl-workflows/CITL_WORKFLOW_GUIDE.md) before clinical use.
+> All recommendations are presented for Molecular Tumor Board review using AMP/ASCO/CAP evidence tiers. Clinician validation is required before clinical use.
 
 **Primary Target: PI3K/AKT Pathway** *(Tier 1 — FDA-approved biomarker)*
 - Consider: **Alpelisib** (PIK3CA inhibitor) given E545K mutation
@@ -449,7 +449,7 @@ The PatientOne workflow has undergone comprehensive bias auditing. Key findings:
 - **Fairness metrics:** All within acceptable thresholds (<10% disparity)
 - **No proxy features** used (geographic, socioeconomic data excluded)
 
-**Full details:** [Bias Audit Guide](../../../for-hospitals/ethics/BIAS_AUDIT_GUIDE.md) | [Ethics & Bias Framework](../../../for-hospitals/ethics/ETHICS_AND_BIAS.md)
+**Full details:** [Ethics & Bias Framework](../../../for-hospitals/ethics/ETHICS_AND_BIAS.md)
 
 ---
 
@@ -628,10 +628,10 @@ Comprehensive report including:
 - **Data Modes:** [data-modes-guide.md](./data-modes-guide.md) — DRY_RUN vs Actual Data configuration
 - **CitL Testing:** [citl-quick-test.md](./citl-quick-test.md) — Clinician-in-the-Loop workflow test
 - **Immunotherapy:** [immunotherapy-reference.md](./immunotherapy-reference.md) — Next-gen immunotherapy candidates
-- **Spatial Workflow:** [Architecture](../../architecture/spatial/README.md)
+- **Spatial Workflow:** [Architecture](../../architecture/spatial/OVERVIEW.md)
 - **Imaging Workflow:** [Architecture](../../architecture/imaging/README.md)
-- **Multiomics Workflow:** [Architecture](../../architecture/rna/multiomics.md)
-- **Main Project:** [Precision Medicine MCP Servers](../../../README.md)
+- **Multiomics Workflow:** [Server README](../../../../servers/mcp-multiomics/README.md)
+- **Main Project:** [Precision Medicine MCP Servers](../../../INDEX.md)
 
 ---
 

@@ -157,7 +157,7 @@ Every call returns:
 - **Typical session (10 queries):** ~$0.20-0.80
 - **Cloud JupyterLab:** ~$0.50-2.00/hr active use, scales to zero when idle
 
-See [Cost Analysis](../../docs/for-hospitals/operations/cost-and-budget.md) for detailed breakdowns.
+See [Cost Analysis](../../docs/reference/shared/cost-analysis.md) for detailed breakdowns.
 
 ## Deployment
 

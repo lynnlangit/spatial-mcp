@@ -273,7 +273,7 @@ See [Server Registry](../reference/shared/server-registry.md) for current counts
 
 ### Architecture Documentation
 - **System Design:** [Architecture Overview](../reference/architecture/README.md)
-- **Data Flow:** [Clinical-Spatial Integration](../reference/architecture/clinical/clinical-spatial-bridge.md)
+- **Data Flow:** [Clinical EHR Integration](../reference/architecture/clinical/ehr-integration.md)
 
 ### Testing Resources
 - **Unit Tests:** [Test Examples](../../tests/unit/)
@@ -455,10 +455,10 @@ Restart Claude Desktop and test:
 ---
 
 **Related Resources:**
-- 🏥 [Hospital Operations Manual](../for-hospitals/OPERATIONS_MANUAL.md) - For IT teams deploying to production
+- 🏥 [Hospital Deployment Guide](../for-hospitals/README.md) - For IT teams deploying to production
 - 🔬 [Researcher Guide](../for-researchers/README.md) - For bioinformaticians using the platform
 - 📊 [Architecture Documentation](../reference/architecture/README.md) - Deep technical dive
-- 🏠 [Back to Main Documentation](../README.md)
+- 🏠 [Back to Main Documentation](../INDEX.md)
 
 ---
 

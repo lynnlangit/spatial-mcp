@@ -498,9 +498,7 @@ To support ethical AI practices and comply with FDA, AMA, and NIH standards, the
 - HTML/JSON audit report generation
 
 **Related Documentation:**
-- [Ethics & Bias Framework](../../docs/for-hospitals/ethics/ETHICS_AND_BIAS.md) - Comprehensive methodology
-- [Bias Audit Guide](../../docs/for-hospitals/ethics/BIAS_AUDIT_GUIDE.md) - Step-by-step guide
-- [Operations Manual - Bias Auditing](../../docs/for-hospitals/OPERATIONS_MANUAL.md#bias-auditing-procedures) - Procedures
+- [Ethics & Bias Framework](../../docs/for-hospitals/ethics/ETHICS_AND_BIAS.md) - Comprehensive methodology and audit guide
 
 ### Prerequisites
 
@@ -791,21 +789,21 @@ gsutil iam ch serviceAccount:mcp-audit-sa@$PROJECT_ID.iam.gserviceaccount.com:ro
 - Verify `azure-ad-client-secret` is correct and not expired
 - Check user is in `precision-medicine-users` Azure AD group
 
-**Solution**: See [`/docs/for-hospitals/RUNBOOKS/sso-issues.md`](../../docs/for-hospitals/RUNBOOKS/sso-issues.md)
+**Solution**: See [Security Overview](../../docs/for-hospitals/SECURITY_OVERVIEW.md)
 
 **2. Epic FHIR connection fails**
 - Verify research FHIR endpoint URL is correct
 - Check OAuth client credentials are valid
 - Ensure service account has Secret Manager access
 
-**Solution**: See [`/docs/for-hospitals/RUNBOOKS/epic-connection-failure.md`](../../docs/for-hospitals/RUNBOOKS/epic-connection-failure.md)
+**Solution**: See [Security Overview](../../docs/for-hospitals/SECURITY_OVERVIEW.md)
 
 **3. Server deployment fails**
 - Check VPC connector exists and is ready
 - Verify service account has necessary IAM roles
 - Ensure secrets are populated
 
-**Solution**: See [`/docs/for-hospitals/RUNBOOKS/server-down.md`](../../docs/for-hospitals/RUNBOOKS/server-down.md)
+**Solution**: See [Security Overview](../../docs/for-hospitals/SECURITY_OVERVIEW.md)
 
 **4. Audit logs missing**
 - Verify log sink is created
@@ -822,7 +820,7 @@ gsutil iam ch serviceAccount:mcp-audit-sa@$PROJECT_ID.iam.gserviceaccount.com:ro
 
 ### Development Team Support
 - **Tier 2**: Server errors, Epic integration, complex issues
-- **Contact**: See `/docs/for-hospitals/OPERATIONS_MANUAL.md`
+- **Contact**: See [Hospital Deployment Guide](../../docs/for-hospitals/README.md)
 
 ### Vendor Support
 - **Tier 3**: Anthropic API, GCP platform issues
@@ -835,13 +833,9 @@ gsutil iam ch serviceAccount:mcp-audit-sa@$PROJECT_ID.iam.gserviceaccount.com:ro
 - **[FAQ](../../docs/for-hospitals/USER_GUIDE.md#faq)**: Common questions and answers
 
 ### For Administrators
-- **[Operations Manual](../../docs/for-hospitals/OPERATIONS_MANUAL.md)**: System architecture and operations
+- **[Hospital Deployment Guide](../../docs/for-hospitals/README.md)**: System architecture and operations
 - **[HIPAA Compliance](../../docs/for-hospitals/compliance/hipaa.md)**: Compliance validation
-
-### Runbooks
-- **[Server Down](../../docs/for-hospitals/RUNBOOKS/server-down.md)**: Server troubleshooting
-- **[Epic Connection Failure](../../docs/for-hospitals/RUNBOOKS/epic-connection-failure.md)**: Epic FHIR issues
-- **[SSO Issues](../../docs/for-hospitals/RUNBOOKS/sso-issues.md)**: Azure AD login problems
+- **[Security Overview](../../docs/for-hospitals/SECURITY_OVERVIEW.md)**: Security controls and troubleshooting
 
 ## Contributing
 

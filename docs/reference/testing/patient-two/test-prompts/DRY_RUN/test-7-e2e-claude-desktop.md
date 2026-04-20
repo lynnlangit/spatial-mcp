@@ -105,4 +105,4 @@ After generating the report, display a final summary that includes:
 - Typical runtime: 2-5 minutes depending on Claude Desktop model
 - MockEpic now returns PAT002-specific clinical data (breast cancer profile)
 
-**See also:** [Individual test prompts](./) | [PatientOne tests](../../patient-one/test-prompts/DRY_RUN/)
+**See also:** [Individual test prompts](./) | [PatientOne tests](../../../patient-one/test-prompts/DRY_RUN/)

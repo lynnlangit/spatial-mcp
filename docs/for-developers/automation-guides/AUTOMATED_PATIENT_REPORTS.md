@@ -682,7 +682,7 @@ python servers/mcp-patient-report/scripts/finalize_patient_report.py --patient-i
 **Result:** `final_report_approved.json` with status "clinically_approved" + 10-year HIPAA audit trail
 
 **Documentation:**
-- **[CITL Workflow Guide](../../for-hospitals/citl-workflows/CITL_WORKFLOW_GUIDE.md)** - Complete clinician training, review templates, and example scenarios
+- **[Hospital Deployment Guide](../../for-hospitals/README.md)** - Deployment and clinical workflow overview
 - **[TEST_6_CITL_REVIEW](../../reference/testing/patient-one/test-prompts/DRY_RUN/test-6-citl-review.md)** - End-to-end test workflow
 
 ## API Reference

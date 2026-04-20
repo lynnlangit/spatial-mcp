@@ -80,16 +80,10 @@ graph TB
 
 ## Quick Navigation
 
-### Workflows
-- **[HE_WORKFLOW.md](HE_WORKFLOW.md)** - ⭐ **H&E brightfield morphology** (openimagedata ONLY, no segmentation)
-- **[MXIF_WORKFLOW.md](MXIF_WORKFLOW.md)** - **MxIF fluorescence cell segmentation** (openimagedata → deepcell pipeline)
-
 ### Servers
 - **[mcp-openimagedata README](../../../../servers/mcp-openimagedata/README.md)** - Histology image processing (5 tools, 100% real)
 - **[mcp-deepcell README](../../../../servers/mcp-deepcell/README.md)** - Cell segmentation and phenotyping (3 tools, 100% real)
-
-### Reference
-- **[GLOSSARY.md](GLOSSARY.md)** - Imaging terminology (H&E, MxIF, DeepCell, segmentation)
+- **[mcp-cell-classify README](../../../../servers/mcp-cell-classify/README.md)** - Cell phenotype classification (3 tools, 100% real)
 
 ---
 
@@ -207,7 +201,7 @@ Imaging analysis component for histology and multiplexed immunofluorescence (MxI
 
 ## Quick Start
 
-**For users:** Read [HE_WORKFLOW.md](HE_WORKFLOW.md) and [MXIF_WORKFLOW.md](MXIF_WORKFLOW.md) → Run [PatientOne TEST_4_IMAGING](../../testing/patient-one/test-prompts/DRY_RUN/test-4-imaging.md)
+**For users:** See server READMEs above for workflow details → Run [PatientOne TEST_4_IMAGING](../../testing/patient-one/test-prompts/DRY_RUN/test-4-imaging.md)
 
 **For developers:** See [mcp-openimagedata README](../../../../servers/mcp-openimagedata/README.md) and [mcp-deepcell README](../../../../servers/mcp-deepcell/README.md) for tool details
 
@@ -215,8 +209,8 @@ Imaging analysis component for histology and multiplexed immunofluorescence (MxI
 
 ## Related Workflows
 
-- [Spatial Transcriptomics](../spatial/README.md) - Gene expression analysis (TEST_3)
-- [Multiomics Integration](../rna/multiomics.md) - RNA/Protein/Phospho integration (TEST_2)
+- [Spatial Transcriptomics](../spatial/OVERVIEW.md) - Gene expression analysis (TEST_3)
+- [Multiomics Integration](../../../../servers/mcp-multiomics/README.md) - RNA/Protein/Phospho integration (TEST_2)
 - [PatientOne Workflow](../../testing/patient-one/README.md) - Complete end-to-end workflow
 
 ---

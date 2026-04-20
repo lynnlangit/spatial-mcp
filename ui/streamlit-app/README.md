@@ -390,4 +390,4 @@ lsof -ti:8501 | xargs kill -9
 
 ## Cost
 
-Claude's automatic caching provides estimated cost savings on warm prompts. Gemini Flash is cheaper for simple queries. See [Benchmark Findings](../../docs/for-developers/benchmark-findings-2026-02-19.md) for details and [Cost Analysis](../../docs/for-hospitals/operations/cost-and-budget.md) for budget planning.
+Claude's automatic caching provides estimated cost savings on warm prompts. Gemini Flash is cheaper for simple queries. See [Cost Analysis](../../docs/reference/shared/cost-analysis.md) for budget planning.

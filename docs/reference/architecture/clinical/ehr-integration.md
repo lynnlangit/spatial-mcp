@@ -328,9 +328,9 @@ export DEIDENTIFY_ENABLED="true"
 
 ## Related Workflows
 
-- [Multi-omics Integration](../rna/multiomics.md) - Biomarker-expression correlation
-- [Spatial Transcriptomics](../spatial/README.md) - Clinical-spatial outcome linkage
-- [Genomic Cohorts](../dna/genomic-cohorts.md) - Patient-cohort comparison
+- [Multi-omics Integration](../../../../servers/mcp-multiomics/README.md) - Biomarker-expression correlation
+- [Spatial Transcriptomics](../spatial/OVERVIEW.md) - Clinical-spatial outcome linkage
+- [Genomic Cohorts](../../../../servers/mcp-mocktcga/README.md) - Patient-cohort comparison
 - [PatientOne Workflow](../../testing/patient-one/README.md) - Complete precision medicine workflow
 
 ---

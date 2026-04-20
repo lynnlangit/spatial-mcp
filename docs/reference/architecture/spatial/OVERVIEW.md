@@ -178,6 +178,6 @@ Claude (MCP host) coordinates:
 ---
 
 **See Also:**
-- [CSV_WORKFLOW.md](CSV_WORKFLOW.md) - Current PatientOne workflow details
-- [SERVERS.md](SERVERS.md) - All MCP servers documented
-- [DEPLOYMENT.md](DEPLOYMENT.md) - GCP deployment procedures
+- [mcp-spatialtools README](../../../../servers/mcp-spatialtools/README.md) - Spatial tools (16 tools)
+- [mcp-fgbio README](../../../../servers/mcp-fgbio/README.md) - Reference genomes, FASTQ QC
+- [Server Registry](../../shared/server-registry.md) - All servers and tool counts
