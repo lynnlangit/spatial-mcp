@@ -63,12 +63,6 @@ Central navigation for all documentation. Canonical references are in `reference
 
 ---
 
-## Book
-
-- [AI-Orchestrated Precision Oncology](book/) -- Quarto book (separate from platform docs)
-
----
-
 ## By Task
 
 | I want to... | Go to |
