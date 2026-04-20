@@ -241,6 +241,9 @@ servers/mcp-perturbation/data/gears_datasets/
 **/gears_datasets/**/*.h5ad
 
 
+# Claude Code scratch files
+.claude/*.md
+
 docs/book
 .DS_Store
 ._*
