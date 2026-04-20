@@ -53,7 +53,7 @@ cd servers/mcp-multiomics && uv run pytest -v
 claude
 ```
 
-All servers default to DRY_RUN mode (synthetic data, no API keys needed).
+All servers default to **DRY_RUN mode** (mock responses, no API keys needed) for quick validation. Set `*_DRY_RUN=false` to use **synthetic patient data** for end-to-end testing.
 
 ---
 
