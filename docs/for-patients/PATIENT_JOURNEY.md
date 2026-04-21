@@ -1,4 +1,4 @@
-<!-- REVIEW CHECKLIST: [ ] Patient advocate [ ] Oncology nurse [ ] PatientOne approval -->
+<!-- REVIEW CHECKLIST: [ ] Reviewed by patient advocate [ ] Reviewed by oncology nurse [ ] Approved by PatientOne — do NOT publish without all three checkboxes filled -->
 
 # Your Journey Through Precision Medicine Analysis
 
