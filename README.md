@@ -1,6 +1,7 @@
 # Precision Medicine MCP Platform
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastMCP](https://img.shields.io/badge/FastMCP-%E2%89%A5%202.13-green.svg)](https://github.com/jlowin/fastmcp)
 [![MCP](https://img.shields.io/badge/MCP-2025--06--18-green.svg)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
@@ -47,6 +48,35 @@ flowchart LR
     AI -.-> E
 ```
 
+### Architecture at a glance
+
+```
+                     ┌──────────────────────────────────┐
+                     │        CLIENT LAYER               │
+                     │  Claude Desktop / Hospital EHR    │
+                     │  Adapter / Research Notebook      │
+                     └────────────┬─────────────────────┘
+                                  │ MCP (FastMCP ≥ 2.13)
+  ┌───────────────────────────────┼───────────────────────────────┐
+  │                               │                               │
+  │  DATA ACQUISITION        ANALYSIS & INFERENCE          REPORTING  │
+  │  ┌──────────────┐   ┌──────────────────────┐   ┌──────────────┐  │
+  │  │ mockepic     │   │ spatialtools (16)    │   │ patient-     │  │
+  │  │ epic         │   │ multiomics  (10)     │   │  report (5)  │  │
+  │  │ geodownload  │   │ perturbation  (8)    │   └──────────────┘  │
+  │  │ mocktcga     │   │ quantum-fidelity (6) │                     │
+  │  │ genomic-     │   │ opentargets   (6)    │                     │
+  │  │  results     │   │ neoantigen    (6)    │                     │
+  │  │ fgbio        │   │ cibersortx    (5)    │                     │
+  │  └──────────────┘   │ openimagedata (5)    │                     │
+  │    7 servers         │ deepcell      (3)    │                     │
+  │                      │ cell-classify (3)    │                     │
+  │                      └──────────────────────┘                     │
+  │                        10 servers                                 │
+  └───────────────────────────────────────────────────────────────────┘
+                        17 custom servers, 99 tools
+```
+
 | | Servers | Tools |
 |-|---------|-------|
 | **Custom** | 17 servers | 99 tools |
@@ -63,6 +93,21 @@ Three treatment hypotheses unreachable by standard workup (validated on syntheti
 3. **Convergent checkpoint blockade** -- POLE-corrected TMB 47.3 mut/Mb + spatial CD8 exclusion -> anti-PD-1/CTLA-4
 
 Plus: cross-cancer validation on PAT002 (ER+ breast cancer) with zero code changes.
+
+### Validated results (PAT001)
+
+| Metric | Value | Source server |
+|--------|-------|---------------|
+| HRD score | 72 | mcp-genomic-results |
+| TMB | 4.2 mut/Mb | mcp-genomic-results |
+| Top neoantigen IC50 (RMPEAAPPV) | 7.8 nM | mcp-neoantigen |
+| Spatial spot count | 300 | mcp-spatialtools |
+| Moran's I (global) | -0.0033 | mcp-spatialtools |
+| Deconvolution: tumor | 56 cells | mcp-cibersortx |
+| Deconvolution: endothelial | 44 cells | mcp-cibersortx |
+| Deconvolution: macrophages | 43 cells | mcp-cibersortx |
+| Deconvolution: fibroblasts | 41 cells | mcp-cibersortx |
+| Deconvolution: CD8+ T cells | 30 cells | mcp-cibersortx |
 
 ---
 
@@ -97,6 +142,14 @@ All servers default to **DRY_RUN mode** (mock responses, no API keys needed) for
 | **All docs** | [Documentation Index](docs/INDEX.md) |
 
 **Video:** [5-minute demo](https://www.youtube.com/watch?v=LUldOHHX5Yo) | **Paper:** [Why MCP for Healthcare](docs/reference/architecture/WHY_MCP_FOR_HEALTHCARE.md) | **External connectors:** [Setup guide](docs/for-researchers/CONNECT_EXTERNAL_MCP.md)
+
+---
+
+## Known limitations
+
+- **DRY_RUN mode returns synthetic data** — not for clinical decisions. Set `*_DRY_RUN=false` with real data for validated results.
+- **GEARS model trained on synthetic GSE184880 subset** — retrain on real TCGA data before clinical use.
+- **Quantum server falls back to CPU** on non-CUDA hardware (Apple Silicon, cloud VMs without GPU). Results are identical; training is slower.
 
 ---
 
