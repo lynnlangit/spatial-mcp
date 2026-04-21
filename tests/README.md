@@ -1,50 +1,25 @@
 # Tests
 
-This directory contains all **test code** for the Precision Medicine MCP system.
+## Running Tests
 
-## Contents
+Each server has its own test suite in `servers/mcp-*/tests/`. Run with `uv`:
 
-- **Unit Tests** (`/tests/unit/`) - 42 pytest unit test files
-- **Integration Tests** (`/tests/integration/`) - End-to-end integration tests
-- **Verification** (`/tests/verification/`) - Server verification scripts
-- **Test Fixtures** (`/tests/unit/mcp-multiomics/fixtures/`) - Test data (CSV files)
-- **Test Scripts** (`/tests/manual_testing/Solution-Testing/`) - Setup and verification shell scripts
+```bash
+cd servers/mcp-spatialtools && uv run pytest -v
+cd servers/mcp-multiomics && uv run pytest -v
+```
+
+All tests run in **DRY_RUN mode** by default — no API keys or external services needed.
+
+CI runs a subset automatically on every PR: see [ci.yml](../.github/workflows/ci.yml).
+
+## Directory Contents
+
+- **unit/** — Older unit tests (pre-server-local layout). Canonical tests now live in each server's `tests/` directory.
+- **integration/** — End-to-end and GCP Cloud Run integration tests.
+- **verification/** — Server import and health-check scripts.
+- **manual_testing/** — Sample outputs and FASTQ fixtures from PatientOne testing.
 
 ## Test Documentation
 
-📚 **Test documentation has moved to `/docs/reference/testing/`**
-
-For testing guides, test prompts, and testing strategies, see:
-- [Test Documentation Index](../docs/reference/testing/README.md)
-- [Test Coverage & Guidelines](../docs/reference/testing/test-coverage.md)
-- [Manual Testing Guides](../docs/reference/testing/)
-- [PatientOne Testing Scenario](../docs/reference/testing/patient-one/)
-
-## Running Tests
-
-### Unit Tests
-```bash
-# Run all unit tests
-pytest tests/unit/ -v
-
-# Run specific server tests
-pytest tests/unit/mcp-spatialtools/ -v
-pytest tests/unit/mcp-multiomics/ -v
-```
-
-### Integration Tests
-```bash
-# Run integration tests
-pytest tests/integration/ -v
-
-# Run CitL end-to-end tests
-pytest tests/integration/test_citl_end_to_end.py -v
-```
-
-### Manual Testing
-See [Manual Testing Documentation](../docs/reference/testing/) for copy-paste prompts and testing procedures.
-
----
-
-**Test Code:** This directory
-**Test Documentation:** `/docs/reference/testing/`
+Test prompts, data mode guides, and patient scenarios are in [docs/reference/testing/](../docs/reference/testing/).
