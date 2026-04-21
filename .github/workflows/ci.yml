@@ -42,3 +42,15 @@ jobs:
       - name: Run tests
         working-directory: servers/${{ matrix.server }}
         run: uv run pytest -v
+      - name: PAT001 canonical values summary
+        if: success()
+        run: |
+          echo "## PAT001 Regression Checkpoint" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Expected |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| HRD score | 72 |" >> $GITHUB_STEP_SUMMARY
+          echo "| TMB | 4.2 mut/Mb |" >> $GITHUB_STEP_SUMMARY
+          echo "| IC50 (RMPEAAPPV) | 7.8 nM |" >> $GITHUB_STEP_SUMMARY
+          echo "| Spatial spots | 300 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Moran's I | ≈ -0.0033 |" >> $GITHUB_STEP_SUMMARY
+          echo "| CD8+ T cells | 30 |" >> $GITHUB_STEP_SUMMARY

@@ -45,7 +45,7 @@ This project integrates and builds upon numerous open-source bioinformatics tool
 
 ## Personal Dedication
 
-### PatientOne
+### PatientOne — Our Inspiration
 This project is dedicated to the memory of a dear friend who passed away from High-Grade Serous Ovarian Carcinoma (HGSOC) in 2025. Her courage and grace throughout her battle with cancer inspired the creation of these tools.
 
 **PatientOne** represents:
@@ -54,6 +54,8 @@ This project is dedicated to the memory of a dear friend who passed away from Hi
 - Hope that AI-orchestrated bioinformatics can accelerate research and improve outcomes for future patients
 
 *"In memory of strength, hope, and the pursuit of better treatments for all patients fighting ovarian cancer."*
+
+Before adding or modifying any content in docs/for-patients/, re-read this section.
 
 ---
 
