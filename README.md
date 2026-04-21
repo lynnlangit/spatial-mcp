@@ -18,7 +18,34 @@ Standard HGSOC workup (BRCA1/2, HRD panel, CT imaging) generates **no immunother
 
 An 18-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
 
-**Data Acquisition -> Spatial Deconvolution -> Target Profiling -> Causal Inference -> Report**
+```mermaid
+flowchart LR
+    A["1 Data<br/>Acquisition"] --> B["2 Spatial<br/>Deconvolution"]
+    B --> C["3 Target<br/>Profiling"]
+    C --> D["4 Causal<br/>Inference"]
+    D --> E["5 Report"]
+
+    subgraph servers [" "]
+        direction TB
+        S1["EHR · GEO · TCGA"]
+        S2["Spatial · DeepCell · CIBERSORTx"]
+        S3["OpenTargets · Neoantigen"]
+        S4["Perturbation · Quantum"]
+        S5["Patient Report"]
+    end
+
+    A --- S1
+    B --- S2
+    C --- S3
+    D --- S4
+    E --- S5
+
+    AI(["AI Orchestrator<br/>Claude + Gemini"]) -.-> A
+    AI -.-> B
+    AI -.-> C
+    AI -.-> D
+    AI -.-> E
+```
 
 | | Servers | Tools |
 |-|---------|-------|
