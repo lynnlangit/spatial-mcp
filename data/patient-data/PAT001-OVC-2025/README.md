@@ -318,20 +318,10 @@ find . -type f -exec sha256sum {} \; > checksums.txt
 
 ## Related Documentation
 
-- **PatientOne Workflow:** `tests/manual_testing/PatientOne-OvarianCancer/README.md`
-- **Data Modes Guide:** `tests/manual_testing/PatientOne-OvarianCancer/DATA_MODES_GUIDE.md`
-- **Architecture:** `architecture/patient-one/README.md`
-- **Main README:** `README.md`
+- **PatientOne Test Prompts:** [Test prompts](../../../docs/reference/testing/patient-one/test-prompts/)
+- **Data Modes Guide:** [DRY_RUN vs synthetic data](../../../docs/reference/testing/patient-one/data-modes-guide.md)
+- **PatientOne Profile:** [Clinical profile](../../../docs/reference/shared/patientone-profile.md)
 
 ---
 
-## Support
-
-**Issues:** https://github.com/lynnlangit/precision-medicine-mcp/issues
-**Questions:** See repository documentation
-
----
-
-**Last Updated:** 2026-02
-**Dataset Version:** 1.0
-**Status:** 100% Synthetic - Research/Demo Use Only
+**Last Updated:** 2026-02 | **Version:** 1.0 | **Status:** 100% Synthetic — Research/Demo Only

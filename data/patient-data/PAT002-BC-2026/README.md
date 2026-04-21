@@ -387,7 +387,7 @@ If you need real breast cancer patient data, consider these public resources:
 This synthetic dataset is released under the **Apache License 2.0**.
 
 ```
-Copyright 2026 Anthropic PBC
+Copyright 2026 Lynn Langit
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -402,7 +402,7 @@ If using this synthetic dataset in presentations or educational materials, pleas
 
 ```
 Synthetic patient data (PAT002-BC-2026) generated for MCP server demonstration
-Source: github.com/anthropics/spatial-mcp
+Source: github.com/lynnlangit/precision-medicine-mcp
 License: Apache 2.0
 ```
 
@@ -483,10 +483,6 @@ python3 perturbation/generate_PAT002_perturbation.py
 
 ---
 
-## Contact & Support
+---
 
-For questions about this synthetic dataset:
-- GitHub Issues: https://github.com/anthropics/spatial-mcp/issues
-- Documentation: https://github.com/anthropics/spatial-mcp
-
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-05 | **Status:** 100% Synthetic — Research/Demo Only
