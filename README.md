@@ -51,30 +51,33 @@ flowchart LR
 ### Architecture at a glance
 
 ```
-                     ┌──────────────────────────────────┐
-                     │        CLIENT LAYER               │
-                     │  Claude Desktop / Hospital EHR    │
-                     │  Adapter / Research Notebook      │
-                     └────────────┬─────────────────────┘
-                                  │ MCP (FastMCP ≥ 2.13)
-  ┌───────────────────────────────┼───────────────────────────────┐
-  │                               │                               │
-  │  DATA ACQUISITION        ANALYSIS & INFERENCE          REPORTING  │
-  │  ┌──────────────┐   ┌──────────────────────┐   ┌──────────────┐  │
-  │  │ mockepic     │   │ spatialtools (16)    │   │ patient-     │  │
-  │  │ epic         │   │ multiomics  (10)     │   │  report (5)  │  │
-  │  │ geodownload  │   │ perturbation  (8)    │   └──────────────┘  │
-  │  │ mocktcga     │   │ quantum-fidelity (6) │                     │
-  │  │ genomic-     │   │ opentargets   (6)    │                     │
-  │  │  results     │   │ neoantigen    (6)    │                     │
-  │  │ fgbio        │   │ cibersortx    (5)    │                     │
-  │  └──────────────┘   │ openimagedata (5)    │                     │
-  │    7 servers         │ deepcell      (3)    │                     │
-  │                      │ cell-classify (3)    │                     │
-  │                      └──────────────────────┘                     │
-  │                        10 servers                                 │
-  └───────────────────────────────────────────────────────────────────┘
-                        17 custom servers, 99 tools
+          +--------------------------------------+
+          |            CLIENT LAYER              |
+          |  Claude Desktop / Hospital EHR       |
+          |  Adapter / Research Notebook         |
+          +------------------+-------------------+
+                             |
+                   MCP (FastMCP >= 2.13)
+                             |
+  +--------------------------+---------------------------+
+  |                          |                           |
+  |  DATA ACQUISITION   ANALYSIS & INFERENCE   REPORTING |
+  |                                                      |
+  |  +--------------+  +----------------------+  +-----+ |
+  |  | mockepic     |  | spatialtools    (16) |  | pt- | |
+  |  | epic         |  | multiomics     (10) |  | rpt | |
+  |  | geodownload  |  | perturbation    (8) |  | (5) | |
+  |  | mocktcga     |  | quantum-fidelity(6) |  +-----+ |
+  |  | genomic-     |  | opentargets     (6) |           |
+  |  |  results     |  | neoantigen      (6) |           |
+  |  | fgbio        |  | cibersortx      (5) |           |
+  |  +--------------+  | openimagedata   (5) |           |
+  |    7 servers        | deepcell        (3) |           |
+  |                     | cell-classify   (3) |           |
+  |                     +----------------------+           |
+  |                       10 servers                      |
+  +------------------------------------------------------+
+                   17 custom servers, 99 tools
 ```
 
 | | Servers | Tools |
