@@ -30,11 +30,14 @@ is used as the primary risk estimate for PAT003.
 
 1. What is PAT003's 10-year cardiovascular event risk using the Reynolds Risk Score?
 2. Which genetic variants (APOE, LDLR, PCSK9, LPA, 9p21) most elevate her risk?
-3. Is lisinopril the optimal medication given her ACE gene pharmacogenomics?
-4. What is the evidence for statin initiation at LDL = 118 mg/dL in intermediate-risk women?
-5. What lifestyle interventions have the strongest evidence for her specific profile?
-6. Should Lp(a) be measured? (It is not captured by standard lipid panels.)
-7. What is the role of coronary artery calcium (CAC) scoring for reclassification?
+3. A Tier 1 genetic screen was negative for familial hypercholesterolemia — how does this change her risk picture?
+4. Is lisinopril the optimal medication given her ACE gene pharmacogenomics?
+5. What is the evidence for statin initiation at LDL = 118 mg/dL in intermediate-risk women post-negative FH screen?
+6. What lifestyle interventions have the strongest evidence for polygenic cardiovascular risk?
+7. Should serum Lp(a) be measured, and what would an elevated result change?
+8. What is the role of APOE genotyping for a 67-year-old woman with bilateral CVD family history?
+9. What is the role of coronary artery calcium (CAC) scoring for reclassification at intermediate Reynolds risk?
+10. What should she monitor and at what frequency, now that FH is ruled out?
 
 ## Current server coverage
 
@@ -48,6 +51,34 @@ is used as the primary risk estimate for PAT003.
 | Polygenic risk score for CVD | — | **Gap — new server needed** |
 | Longitudinal biomarker tracking | — | **Gap — new server needed** |
 | Lifestyle intervention evidence | — | **Gap — new server needed** |
+
+## Genetic screen findings and their clinical significance
+
+A Tier 1 population genetic screen (11 genes: HBOC, Lynch syndrome, familial
+hypercholesterolemia panels) returned an overall **negative** result. This is
+clinically meaningful in two directions.
+
+**What the negative result clarifies:** Monogenic familial hypercholesterolemia
+(FH) is effectively ruled out. PAT003's LDL of 118 mg/dL and bilateral family
+history are not caused by a single high-impact variant in LDLR, APOB, LDLRAP1,
+or PCSK9. Her risk profile is more likely driven by polygenic burden — many
+small-effect common variants acting together — combined with shared family
+environment. This shifts clinical management from "find the variant, treat
+aggressively" toward "quantify polygenic and biomarker risk, then decide."
+
+**What the negative result does not resolve:** Three high-priority gaps remain
+that this screen does not address:
+
+| Gap | Why it matters | Priority |
+|-----|----------------|----------|
+| APOE genotype | Strongest common genetic risk for CVD and Alzheimer's; not on population screens; highly relevant at 67 | HIGH |
+| Serum Lp(a) | Independent CVD risk factor; genetically fixed; not on standard lipid panels; elevated Lp(a) would reclassify her risk upward | HIGH |
+| Coronary artery calcium (CAC) score | Best single reclassification tool for intermediate-risk patients; CAC=0 would defer statin; CAC>100 would accelerate treatment | HIGH |
+
+**Platform opportunity:** PAT003 demonstrates that the platform's value is not
+only in analyzing what was tested, but in surfacing what was *not* tested and
+why it matters. The three gaps above are the most actionable output of this
+analysis — more useful than confirming a negative result.
 
 ## Scientific rationale for this demographic
 

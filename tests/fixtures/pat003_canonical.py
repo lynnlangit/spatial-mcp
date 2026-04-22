@@ -77,4 +77,35 @@ PAT003 = {
         "What biomarkers should she monitor and at what frequency?",
         "Are there emerging therapies (PCSK9 inhibitors, inclisiran) relevant to her?",
     ],
+
+    # --- Genetic screening results ---
+    # Tier 1 population screen (HBOC, Lynch, Familial Hypercholesterolemia)
+    # Overall result: NEGATIVE — no pathogenic or likely pathogenic variants detected
+    "genetic_screen_performed": True,
+    "genetic_screen_type": "tier1_population_screen",
+    "genetic_screen_overall_result": "negative",
+
+    # Familial hypercholesterolemia panel — all negative
+    # Clinical pivot: monogenic FH ruled out; risk is polygenic + environmental
+    "fh_genes_tested": ["LDLR", "APOB", "LDLRAP1", "PCSK9"],
+    "fh_screen_result": "negative",
+    "fh_ruled_out": True,
+
+    # Cancer panels — negative (context for overall health profile)
+    "brca_screen_result": "negative",   # BRCA1, BRCA2, EPCAM
+    "lynch_screen_result": "negative",  # MLH1, MSH2, MSH6, PMS2 (exons 11-15 excluded)
+
+    # Critical gaps — high-priority tests NOT covered by this screen
+    "apoe_genotype": "unknown",         # NOT tested; highest priority gap at age 67
+    "lpa_serum_measured": False,        # Serum Lp(a) not yet ordered; second priority
+    "cac_score": None,                  # Coronary artery calcium score; not yet measured
+
+    # Clinical reinterpretation after negative FH screen
+    "primary_risk_mechanism": "polygenic_and_environmental",
+    "risk_score_unchanged": True,       # Negative FH screen does not lower Reynolds score
+    "priority_next_tests": [
+        "serum_Lp(a)",                  # Independent CVD risk; genetically fixed; measure once
+        "APOE_genotyping",              # CVD + cognitive risk; not on population screens
+        "coronary_artery_calcium_score",  # Best reclassification tool at intermediate risk
+    ],
 }

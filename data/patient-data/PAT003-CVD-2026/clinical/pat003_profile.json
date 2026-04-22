@@ -82,6 +82,77 @@
     "reynolds_rationale": "Reynolds Risk Score was specifically validated in women and incorporates hsCRP and family history — both elevated in this patient. Use Reynolds as primary estimate."
   },
 
+  "genetic_screening": {
+    "test_name": "Tier 1 Population Genetic Screen",
+    "panel_type": "screening_not_diagnostic",
+    "overall_result": "negative",
+    "interpretation": "No pathogenic or likely pathogenic variants detected in 11 genes analyzed. Does not eliminate polygenic or environmental cardiovascular risk. Diagnostic testing recommended given bilateral first-degree family history.",
+
+    "genes_tested": {
+      "familial_hypercholesterolemia": {
+        "genes": ["LDLR", "APOB", "LDLRAP1", "PCSK9"],
+        "result": "negative",
+        "clinical_pivot": "Monogenic FH effectively ruled out. LDL elevation (118 mg/dL) and bilateral family history are more likely polygenic and environmental in origin. Risk mechanism shifts from single-variant to aggregate polygenic burden."
+      },
+      "hereditary_breast_ovarian_cancer": {
+        "genes": ["BRCA1", "BRCA2", "EPCAM"],
+        "result": "negative"
+      },
+      "lynch_syndrome": {
+        "genes": ["MLH1", "MSH2", "MSH6", "PMS2"],
+        "result": "negative",
+        "caveat": "PMS2 exons 11-15 excluded due to pseudogene overlap with PMS2CL"
+      }
+    },
+
+    "critical_gaps": {
+      "APOE": {
+        "tested": false,
+        "priority": "HIGH",
+        "rationale": "APOE e4 allele is the strongest common genetic risk factor for late-onset cardiovascular disease and Alzheimer's disease. Particularly relevant post-menopause at age 67. Not included in population screening panels — requires separate clinical order.",
+        "recommendation": "Discuss APOE genotyping with physician. Result would inform both cardiovascular and cognitive health monitoring strategy."
+      },
+      "LPA": {
+        "tested": false,
+        "priority": "HIGH",
+        "rationale": "Lipoprotein(a) is genetically determined, does not respond to lifestyle modification or standard lipid-lowering therapy, and is an independent CVD risk factor not captured by standard lipid panels. Elevated Lp(a) would reclassify this patient to higher risk.",
+        "recommendation": "Order serum Lp(a) blood test. Measure once — it does not meaningfully change over time. If elevated (>50 mg/dL or >125 nmol/L), risk reclassification and more aggressive LDL targets are warranted."
+      },
+      "coronary_artery_calcium": {
+        "tested": false,
+        "priority": "HIGH",
+        "rationale": "CAC score is the most powerful reclassifier for intermediate-risk patients like PAT003. CAC=0 would reclassify to low risk and likely defer statin initiation; CAC>100 would accelerate treatment.",
+        "recommendation": "Discuss CAC scoring at next cardiology visit. Low radiation, one-time test, highly informative for this risk profile."
+      },
+      "polygenic_risk_score_cvd": {
+        "tested": false,
+        "priority": "MEDIUM",
+        "rationale": "Tier 1 screens report only high-impact single variants. Aggregate polygenic burden from thousands of small-effect common variants — which likely explains PAT003's family history — is not captured by this test.",
+        "recommendation": "CVD polygenic risk score (PRS) is not yet standard of care but increasingly available through research programs. Would quantify inherited polygenic burden independently of single-gene findings."
+      },
+      "9p21_locus": {
+        "tested": false,
+        "priority": "MEDIUM",
+        "rationale": "Chromosome 9p21 is the strongest GWAS-identified locus for coronary artery disease and is not included in clinical panels.",
+        "recommendation": "Captured by CVD PRS if ordered. Not actionable as a standalone test currently."
+      }
+    },
+
+    "clinical_reinterpretation": {
+      "primary_risk_mechanism": "polygenic_and_environmental",
+      "fh_ruled_out": true,
+      "reynolds_risk_unchanged": true,
+      "reynolds_rationale": "Negative FH screen does not lower the Reynolds Risk Score (14.2%). Bilateral family history remains a risk factor regardless of FH gene status — it may reflect shared polygenic burden, shared environment, or both.",
+      "statin_decision_impact": "More nuanced post-screen. Without FH, borderline LDL (118 mg/dL) at intermediate Reynolds risk is not an automatic statin indication for women. ACC/AHA guidelines suggest CAC scoring as the preferred next step for reclassification in this scenario.",
+      "priority_action_sequence": [
+        "1. Order serum Lp(a) — one-time test, low cost, high impact on risk classification",
+        "2. Discuss APOE genotyping — informs both CVD and cognitive monitoring",
+        "3. Consider CAC scoring — best reclassification tool available for intermediate risk",
+        "4. Reassess statin decision after Lp(a) and CAC results are known"
+      ]
+    }
+  },
+
   "monitoring_plan": {
     "lipid_panel_months": 12,
     "bp_check_weeks": 8,
