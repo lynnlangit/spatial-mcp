@@ -1,0 +1,93 @@
+{
+  "patient_id": "PAT003",
+  "use_case": "preventive_cardiovascular_health",
+  "demographic_category": "65+ female, post-menopausal",
+  "scientific_rationale": "Women are underrepresented in cardiovascular clinical trials. The Framingham Risk Score was derived primarily from male cohorts. This case demonstrates multi-modal AI-assisted preventive health monitoring for a demographic with distinct risk profiles and symptom presentations.",
+
+  "clinical_profile": {
+    "age": 67,
+    "sex": "female",
+    "menopausal_status": "post-menopausal",
+    "bmi": 26.4,
+    "blood_pressure": {
+      "systolic_mmhg": 138,
+      "diastolic_mmhg": 82,
+      "status": "controlled on medication"
+    },
+    "lipid_panel": {
+      "ldl_mg_dl": 118,
+      "hdl_mg_dl": 58,
+      "total_cholesterol_mg_dl": 195,
+      "triglycerides_mg_dl": 142,
+      "ldl_status": "borderline — below statin threshold but above optimal"
+    },
+    "glucose_metabolism": {
+      "fasting_glucose_mg_dl": 98,
+      "hba1c_percent": 5.6,
+      "status": "prediabetes range — monitor"
+    },
+    "inflammation": {
+      "hscrp_mg_l": 1.8,
+      "interpretation": "moderate cardiovascular risk (1-3 mg/L range)"
+    }
+  },
+
+  "family_history": {
+    "paternal": {"event": "myocardial_infarction", "age_at_event": 61, "premature": true},
+    "maternal": {"event": "ischemic_stroke", "age_at_event": 69},
+    "risk_multiplier": "bilateral first-degree history elevates risk above Framingham estimate"
+  },
+
+  "medications": [
+    {
+      "name": "lisinopril",
+      "generic_name": "lisinopril",
+      "dose_mg": 5.0,
+      "frequency": "once daily",
+      "class": "ACE inhibitor",
+      "indication": "hypertension",
+      "primary_gene_target": "ACE",
+      "secondary_targets": ["AGT", "AGTR1"],
+      "notes": "minimum effective dose; cardioprotective beyond BP lowering"
+    }
+  ],
+
+  "lifestyle": {
+    "smoking": "never",
+    "exercise": {"frequency": "3x_per_week", "duration_min": 30, "type": "mixed cardio and walking"},
+    "diet": "low-sodium Mediterranean-adjacent",
+    "alcohol_units_per_week": 3,
+    "sleep_hours_avg": 7.0,
+    "stress_level": "moderate"
+  },
+
+  "genetic_risk_targets": {
+    "primary_query_genes": ["APOE", "LDLR", "ACE", "PCSK9", "LPA"],
+    "locus_queries": ["9p21"],
+    "rationale": {
+      "APOE": "Apolipoprotein E — lipid transport; e4 allele elevates LDL and dementia risk",
+      "LDLR": "LDL receptor — familial hypercholesterolemia spectrum; premature MI in father",
+      "ACE": "Angiotensin-converting enzyme — current lisinopril target; pharmacogenomics",
+      "PCSK9": "Proprotein convertase — emerging therapeutic target for LDL reduction",
+      "LPA": "Lipoprotein(a) — independent CVD risk factor; not captured by standard lipid panel",
+      "9p21": "Chromosome 9p21 locus — strongest genetic risk locus for coronary artery disease"
+    }
+  },
+
+  "risk_scores": {
+    "framingham_10yr_risk_percent": 12.4,
+    "ascvd_10yr_risk_percent": 11.8,
+    "reynolds_risk_score_percent": 14.2,
+    "recommended_primary": "reynolds",
+    "reynolds_rationale": "Reynolds Risk Score was specifically validated in women and incorporates hsCRP and family history — both elevated in this patient. Use Reynolds as primary estimate."
+  },
+
+  "monitoring_plan": {
+    "lipid_panel_months": 12,
+    "bp_check_weeks": 8,
+    "hba1c_months": 12,
+    "hscrp_months": 24,
+    "lpa_test": "once — does not change with lifestyle",
+    "calcium_score_cac": "consider at next cardiology visit — CAC=0 would reclassify to low risk"
+  }
+}
