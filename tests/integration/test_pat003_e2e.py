@@ -112,17 +112,19 @@ print(json.dumps(r))
 
         score = result.get("overall_score", "N/A")
 
+        # Score > 0.40 means gene-specific mock data exists (default is 0.40)
+        has_specific_data = isinstance(score, (int, float)) and score > 0.40
         gap = None
-        if gene not in ("CDKN2A",):  # CDKN2A has HGSOC mock data
+        if not has_specific_data:
             gap = (f"DRY_RUN returns generic mock for {gene}; "
-                   f"no CVD-specific disease ontology entry")
+                   f"no gene-specific disease ontology entry")
 
         record(
             server="opentargets",
             tool="get_target_disease_associations",
             input_summary=f"gene={gene}, disease=EFO_0001071",
             output_summary=f"score={score}, status={result.get('status', 'ok')}",
-            clinically_useful=gap is None,
+            clinically_useful=has_specific_data,
             gap_identified=gap,
         )
 

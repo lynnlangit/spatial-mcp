@@ -15,6 +15,17 @@ DISEASE_IDS = {
     "melanoma": "EFO_0000756",
     "glioblastoma": "EFO_0000519",
     "prostate carcinoma": "EFO_0001663",
+    # --- Cardiovascular diseases (PAT003) ---
+    "coronary artery disease": "EFO_0001645",
+    "hypertension": "EFO_0000537",
+    "familial hypercholesterolemia": "EFO_0004911",
+    "hypercholesterolemia": "EFO_0003119",
+    "heart failure": "EFO_0003144",
+    "myocardial infarction": "EFO_0000612",
+    "ischemic stroke": "EFO_0000712",
+    "aortic valve stenosis": "EFO_0004262",
+    "dyslipidemia": "EFO_0003756",
+    "Alzheimer's disease": "EFO_0000249",
 }
 
 # ---------------------------------------------------------------------------
@@ -82,6 +93,15 @@ HGSOC_GENE_SYMBOL_TO_ENSEMBL = {
     "B2M": "ENSG00000166710",
     "TAP1": "ENSG00000168394",
     "TAP2": "ENSG00000204267",
+    # --- Cardiovascular risk genes (PAT003) ---
+    "APOE": "ENSG00000130203",
+    "LDLR": "ENSG00000130164",
+    "APOB": "ENSG00000084674",
+    "PCSK9": "ENSG00000169174",
+    "ACE": "ENSG00000159640",
+    "LPA": "ENSG00000198670",
+    "CDKN2B": "ENSG00000147883",
+    "LDLRAP1": "ENSG00000157978",
 }
 
 # ---------------------------------------------------------------------------
@@ -139,6 +159,52 @@ MOCK_TARGET_INFO = {
             "antibody": 0.1,
             "otherModalities": 0.5,
         },
+    },
+    # --- Cardiovascular targets (PAT003) ---
+    "APOE": {
+        "id": "ENSG00000130203",
+        "symbol": "APOE",
+        "name": "Apolipoprotein E",
+        "description": "Lipid transport protein; e4 allele increases LDL cholesterol and "
+        "cardiovascular risk; strongest common genetic risk factor for late-onset Alzheimer's.",
+        "biotype": "protein_coding",
+        "tractability": {"smallMolecule": 0.3, "antibody": 0.4, "otherModalities": 0.5},
+    },
+    "LDLR": {
+        "id": "ENSG00000130164",
+        "symbol": "LDLR",
+        "name": "Low density lipoprotein receptor",
+        "description": "Cell surface receptor for LDL clearance; loss-of-function variants "
+        "cause familial hypercholesterolemia.",
+        "biotype": "protein_coding",
+        "tractability": {"smallMolecule": 0.6, "antibody": 0.5, "otherModalities": 0.7},
+    },
+    "PCSK9": {
+        "id": "ENSG00000169174",
+        "symbol": "PCSK9",
+        "name": "Proprotein convertase subtilisin/kexin type 9",
+        "description": "Serine protease that degrades LDL receptors; gain-of-function variants "
+        "raise LDL; inhibitors (evolocumab, alirocumab, inclisiran) are approved therapies.",
+        "biotype": "protein_coding",
+        "tractability": {"smallMolecule": 0.4, "antibody": 0.95, "otherModalities": 0.8},
+    },
+    "ACE": {
+        "id": "ENSG00000159640",
+        "symbol": "ACE",
+        "name": "Angiotensin I converting enzyme",
+        "description": "Converts angiotensin I to angiotensin II; primary target of ACE "
+        "inhibitor class (lisinopril, ramipril); key regulator of blood pressure.",
+        "biotype": "protein_coding",
+        "tractability": {"smallMolecule": 0.95, "antibody": 0.2, "otherModalities": 0.3},
+    },
+    "LPA": {
+        "id": "ENSG00000198670",
+        "symbol": "LPA",
+        "name": "Lipoprotein(a)",
+        "description": "Genetically determined lipoprotein; independent CVD risk factor "
+        "not captured by standard lipid panels; does not respond to lifestyle modification.",
+        "biotype": "protein_coding",
+        "tractability": {"smallMolecule": 0.3, "antibody": 0.5, "otherModalities": 0.6},
     },
 }
 
@@ -261,6 +327,91 @@ MOCK_ASSOCIATION_SCORES = {
             "known_drug": 0.30,
             "animal_model": 0.35,
             "affected_pathway": 0.52,
+        },
+    },
+    # --- Cardiovascular gene associations (PAT003) ---
+    "APOE": {
+        "overall_score": 0.78,
+        "evidence_scores": {
+            "literature": 0.88,
+            "rna_expression": 0.60,
+            "genetic_association": 0.91,
+            "somatic_mutation": 0.05,
+            "known_drug": 0.30,
+            "animal_model": 0.72,
+            "affected_pathway": 0.80,
+        },
+    },
+    "LDLR": {
+        "overall_score": 0.97,
+        "evidence_scores": {
+            "literature": 0.95,
+            "rna_expression": 0.70,
+            "genetic_association": 0.97,
+            "somatic_mutation": 0.10,
+            "known_drug": 0.90,
+            "animal_model": 0.85,
+            "affected_pathway": 0.92,
+        },
+    },
+    "APOB": {
+        "overall_score": 0.88,
+        "evidence_scores": {
+            "literature": 0.85,
+            "rna_expression": 0.55,
+            "genetic_association": 0.92,
+            "somatic_mutation": 0.08,
+            "known_drug": 0.70,
+            "animal_model": 0.75,
+            "affected_pathway": 0.82,
+        },
+    },
+    "PCSK9": {
+        "overall_score": 0.91,
+        "evidence_scores": {
+            "literature": 0.92,
+            "rna_expression": 0.65,
+            "genetic_association": 0.95,
+            "somatic_mutation": 0.12,
+            "known_drug": 0.95,
+            "animal_model": 0.80,
+            "affected_pathway": 0.88,
+        },
+    },
+    "ACE": {
+        "overall_score": 0.88,
+        "evidence_scores": {
+            "literature": 0.90,
+            "rna_expression": 0.72,
+            "genetic_association": 0.78,
+            "somatic_mutation": 0.05,
+            "known_drug": 0.95,
+            "animal_model": 0.82,
+            "affected_pathway": 0.85,
+        },
+    },
+    "LPA": {
+        "overall_score": 0.82,
+        "evidence_scores": {
+            "literature": 0.85,
+            "rna_expression": 0.50,
+            "genetic_association": 0.90,
+            "somatic_mutation": 0.03,
+            "known_drug": 0.40,
+            "animal_model": 0.65,
+            "affected_pathway": 0.78,
+        },
+    },
+    "CDKN2B": {
+        "overall_score": 0.76,
+        "evidence_scores": {
+            "literature": 0.80,
+            "rna_expression": 0.55,
+            "genetic_association": 0.85,
+            "somatic_mutation": 0.40,
+            "known_drug": 0.15,
+            "animal_model": 0.60,
+            "affected_pathway": 0.72,
         },
     },
 }
@@ -418,6 +569,79 @@ MOCK_DRUGS = {
             "clinical_trial_count": 250,
         },
     ],
+    # --- Cardiovascular drugs (PAT003) ---
+    "ACE": [
+        {
+            "name": "Lisinopril",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "Competitive inhibitor of angiotensin-converting enzyme (ACE); "
+            "reduces angiotensin II production; lowers blood pressure and cardiac afterload",
+            "indications": ["hypertension", "heart failure", "post-MI cardioprotection",
+                            "diabetic nephropathy"],
+            "clinical_trial_count": 280,
+        },
+        {
+            "name": "Ramipril",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "ACE inhibitor; HOPE trial demonstrated 22% reduction in "
+            "cardiovascular events in high-risk patients",
+            "indications": ["hypertension", "heart failure", "high CVD risk reduction"],
+            "clinical_trial_count": 190,
+        },
+    ],
+    "PCSK9": [
+        {
+            "name": "Evolocumab",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "PCSK9 inhibitor (monoclonal antibody); prevents PCSK9-mediated "
+            "degradation of LDL receptors; reduces LDL-C by 50-60%",
+            "indications": ["familial hypercholesterolemia", "ASCVD risk reduction",
+                            "statin-intolerant patients"],
+            "clinical_trial_count": 120,
+        },
+        {
+            "name": "Inclisiran",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "siRNA that silences PCSK9 hepatic synthesis; twice-yearly dosing; "
+            "reduces LDL-C by ~50%",
+            "indications": ["hypercholesterolemia", "mixed dyslipidemia"],
+            "clinical_trial_count": 45,
+        },
+        {
+            "name": "Alirocumab",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "PCSK9 inhibitor (monoclonal antibody); prevents LDL receptor degradation",
+            "indications": ["familial hypercholesterolemia", "ASCVD risk reduction"],
+            "clinical_trial_count": 95,
+        },
+    ],
+    "LDLR": [
+        {
+            "name": "Atorvastatin",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "HMG-CoA reductase inhibitor; reduces hepatic cholesterol synthesis; "
+            "upregulates LDL receptor expression; reduces LDL-C 40-60%",
+            "indications": ["hypercholesterolemia", "CVD risk reduction",
+                            "familial hypercholesterolemia"],
+            "clinical_trial_count": 450,
+        },
+        {
+            "name": "Rosuvastatin",
+            "phase": 4,
+            "status": "Approved",
+            "mechanism": "High-potency statin; JUPITER trial showed benefit in patients with "
+            "elevated CRP even with normal LDL",
+            "indications": ["hypercholesterolemia", "CVD risk reduction",
+                            "elevated hsCRP with low-to-normal LDL (JUPITER criteria)"],
+            "clinical_trial_count": 380,
+        },
+    ],
 }
 
 MOCK_SAFETY = {
@@ -485,6 +709,38 @@ MOCK_SAFETY = {
             {"event": "Fatigue", "count": 880, "frequency": "very_common"},
         ],
         "risk_level": "moderate",
+    },
+    # --- Cardiovascular target safety (PAT003) ---
+    "ACE": {
+        "safety_liabilities": [
+            {
+                "event": "Dry cough",
+                "biosamples": ["respiratory system"],
+                "effects": ["persistent dry cough due to bradykinin accumulation"],
+            },
+            {
+                "event": "Angioedema",
+                "biosamples": ["skin", "mucosa"],
+                "effects": ["facial swelling", "airway compromise (rare but serious)"],
+            },
+            {
+                "event": "Hyperkalemia",
+                "biosamples": ["kidney"],
+                "effects": ["potassium retention", "cardiac arrhythmia risk"],
+            },
+            {
+                "event": "First-dose hypotension",
+                "biosamples": ["cardiovascular system"],
+                "effects": ["acute blood pressure reduction"],
+            },
+        ],
+        "adverse_events": [
+            {"event": "Dry cough", "count": 3200, "frequency": "common"},
+            {"event": "Dizziness", "count": 1800, "frequency": "common"},
+            {"event": "Hyperkalemia", "count": 650, "frequency": "uncommon"},
+            {"event": "Angioedema", "count": 180, "frequency": "rare"},
+        ],
+        "risk_level": "low",
     },
 }
 

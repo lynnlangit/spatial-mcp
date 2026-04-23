@@ -54,10 +54,14 @@ class PatientInfo(BaseModel):
 
 
 class DiagnosisSummary(BaseModel):
-    """Summary of the cancer diagnosis."""
-    cancer_type: str = Field(..., description="Cancer type (e.g., 'Ovarian Cancer')")
+    """Summary of the diagnosis or health profile.
+
+    For oncology reports, cancer_type and stage are expected.
+    For preventive health reports (e.g., PAT003), these fields are optional.
+    """
+    cancer_type: Optional[str] = Field(None, description="Cancer type (e.g., 'Ovarian Cancer'). Optional for non-oncology reports.")
     subtype: Optional[str] = Field(None, description="Histological subtype (e.g., 'High-Grade Serous')")
-    stage: str = Field(..., description="Cancer stage (e.g., 'Stage IV')")
+    stage: Optional[str] = Field(None, description="Cancer stage (e.g., 'Stage IV'). Optional for non-oncology reports.")
     grade: Optional[str] = Field(None, description="Tumor grade if applicable")
     plain_language_description: str = Field(
         ...,
@@ -261,6 +265,12 @@ class PatientReportData(BaseModel):
     The LLM constructs this JSON from conversation context, validates it,
     and passes it to the generate_patient_report tool.
     """
+
+    # Report classification
+    report_category: str = Field(
+        default="oncology",
+        description="Report category: 'oncology', 'preventive_health', or 'general'"
+    )
 
     # Required sections
     patient_info: PatientInfo = Field(..., description="Patient demographics")
