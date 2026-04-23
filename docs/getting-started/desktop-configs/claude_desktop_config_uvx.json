@@ -113,6 +113,19 @@
         "PATIENT_REPORT_TEMPLATES_DIR": "/Users/lynnlangit/Documents/GitHub/spatial-mcp/templates/patient_report",
         "PATIENT_REPORT_DRY_RUN": "true"
       }
+    },
+    "cardiometabolic": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-cardiometabolic",
+        "python",
+        "-m",
+        "mcp_cardiometabolic"
+      ],
+      "env": {
+        "CARDIOMETABOLIC_DRY_RUN": "true"
+      }
     }
   }
 }

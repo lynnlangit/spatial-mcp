@@ -139,9 +139,8 @@ query Search($query: String!) {
   search(queryString: $query, entityNames: ["target"], page: {size: 5, index: 0}) {
     hits {
       id
-      ... on Target {
-        approvedSymbol
-      }
+      name
+      entity
     }
   }
 }
@@ -236,8 +235,9 @@ async def resolve_gene_symbol(
         )
         hits = data.get("search", {}).get("hits", [])
         for hit in hits:
-            approved = hit.get("approvedSymbol", "")
-            if approved.upper() == symbol_upper:
+            # Match on name field (search results return name, not approvedSymbol)
+            hit_name = hit.get("name", "")
+            if hit_name.upper() == symbol_upper:
                 ensembl_id = hit["id"]
                 _symbol_cache[symbol_upper] = ensembl_id
                 return ensembl_id

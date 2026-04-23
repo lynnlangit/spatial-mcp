@@ -13,7 +13,8 @@ from pydantic import BaseModel, Field
 
 
 class EvidenceLevel(str, Enum):
-    """ESMO ESCAT evidence levels for treatment options."""
+    """Evidence levels for treatment options (oncology + preventive cardiology)."""
+    # Oncology: ESMO ESCAT
     ESCAT_I = "ESCAT I"      # FDA approved for this indication
     ESCAT_II = "ESCAT II"    # Standard of care based on strong evidence
     ESCAT_III = "ESCAT III"  # Clinical benefit in other tumor types
@@ -24,6 +25,17 @@ class EvidenceLevel(str, Enum):
     NCCN_2A = "NCCN Category 2A"
     NCCN_2B = "NCCN Category 2B"
     CLINICAL_TRIAL = "Clinical Trial Only"
+    # Preventive cardiology: ACC/AHA and ESC guideline classifications
+    ACC_AHA_CLASS_A = "ACC/AHA Class A"
+    ACC_AHA_CLASS_B = "ACC/AHA Class B"
+    ACC_AHA_CLASS_C = "ACC/AHA Class C"
+    ESC_CLASS_I = "ESC Class I"
+    ESC_CLASS_IIA = "ESC Class IIa"
+    ESC_CLASS_IIB = "ESC Class IIb"
+    GUIDELINE_RECOMMENDED = "Guideline Recommended"
+    EVIDENCE_LEVEL_A = "Evidence Level A"
+    EVIDENCE_LEVEL_B = "Evidence Level B"
+    EVIDENCE_LEVEL_C = "Evidence Level C"
 
 
 class ImmuneStatus(str, Enum):

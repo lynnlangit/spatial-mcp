@@ -259,6 +259,20 @@
       "env": {
         "NEOANTIGEN_DRY_RUN": "true"
       }
+    },
+    "cardiometabolic": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-cardiometabolic",
+        "python",
+        "-m",
+        "mcp_cardiometabolic"
+      ],
+      "env": {
+        "CARDIOMETABOLIC_DRY_RUN": "true"
+      }
     }
   }
 }

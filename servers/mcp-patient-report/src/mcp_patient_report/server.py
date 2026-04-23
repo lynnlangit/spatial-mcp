@@ -158,18 +158,22 @@ async def generate_patient_report(
 
         # Completeness guard — catch structurally valid but empty reports
         completeness_errors = []
+        is_preventive = report_data.report_category == "preventive_health"
         if not report_data.patient_info.patient_id.strip():
             completeness_errors.append("patient_info.patient_id is empty")
-        if not report_data.diagnosis_summary.cancer_type.strip():
-            completeness_errors.append("diagnosis_summary.cancer_type is empty")
-        if len(report_data.genomic_findings) == 0:
-            completeness_errors.append(
-                "genomic_findings is empty — at least one finding is required"
-            )
-        if len(report_data.treatment_options) == 0:
-            completeness_errors.append(
-                "treatment_options is empty — at least one option is required"
-            )
+        # cancer_type is required for oncology but optional for preventive_health
+        if not is_preventive:
+            ct = report_data.diagnosis_summary.cancer_type
+            if not ct or not ct.strip():
+                completeness_errors.append("diagnosis_summary.cancer_type is empty")
+            if len(report_data.genomic_findings) == 0:
+                completeness_errors.append(
+                    "genomic_findings is empty — at least one finding is required"
+                )
+            if len(report_data.treatment_options) == 0:
+                completeness_errors.append(
+                    "treatment_options is empty — at least one option is required"
+                )
         if completeness_errors:
             return {
                 "status": "error",
@@ -387,7 +391,7 @@ async def validate_report_data(
             "summary": {
                 "patient_id": report_data.patient_info.patient_id,
                 "patient_name": report_data.patient_info.name,
-                "diagnosis": report_data.diagnosis_summary.cancer_type,
+                "diagnosis": report_data.diagnosis_summary.cancer_type or report_data.report_category,
                 "stage": report_data.diagnosis_summary.stage,
                 "genomic_findings_count": len(report_data.genomic_findings),
                 "treatment_options_count": len(report_data.treatment_options),
