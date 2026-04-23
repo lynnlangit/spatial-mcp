@@ -1,6 +1,6 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 17 (99 tools) | **Production Ready:** 15 (88%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
+**Custom Servers:** 18 (104 tools) | **Production Ready:** 16 (89%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -25,6 +25,7 @@
 | **mcp-opentargets** | 6 | 100% Real | Drug-target associations, disease ontology, GraphQL API | [README](../../../servers/mcp-opentargets/README.md) |
 | **mcp-cibersortx** | 5 | 100% Real | Immune deconvolution, LM22 signatures, job polling | [README](../../../servers/mcp-cibersortx/README.md) |
 | **mcp-neoantigen** | 6 | 100% Real | MHC binding prediction, IEDB API, neoantigen burden scoring | [README](../../../servers/mcp-neoantigen/README.md) |
+| **mcp-cardiometabolic** | 5 | 100% Real | Reynolds/Framingham/ASCVD risk scoring, biomarker panels, Lp(a), preventive reports | [README](../../../servers/mcp-cardiometabolic/README.md) |
 
 ---
 
@@ -64,9 +65,10 @@
 - **Imaging**: mcp-deepcell (cell segmentation + quantification), mcp-cell-classify (phenotype classification), mcp-openimagedata (histology + registration + features)
 - **Immunology**: mcp-cibersortx (immune deconvolution), mcp-neoantigen (neoantigen prediction & HLA binding)
 - **Treatment**: mcp-perturbation (GEARS prediction), mcp-quantum-celltype-fidelity (quantum fidelity)
+- **Cardiovascular**: mcp-cardiometabolic (CVD risk scoring, biomarker panels, preventive health)
 - **Reports**: mcp-patient-report (patient-facing summaries)
 ### By Production Readiness
-- **Ready for Research**: mcp-fgbio, mcp-multiomics, mcp-spatialtools, mcp-perturbation, mcp-quantum-celltype-fidelity, mcp-deepcell, mcp-cell-classify, mcp-epic, mcp-openimagedata, mcp-patient-report, mcp-genomic-results, mcp-geodownload, mcp-opentargets, mcp-cibersortx, mcp-neoantigen
+- **Ready for Research**: mcp-fgbio, mcp-multiomics, mcp-spatialtools, mcp-perturbation, mcp-quantum-celltype-fidelity, mcp-deepcell, mcp-cell-classify, mcp-epic, mcp-openimagedata, mcp-patient-report, mcp-genomic-results, mcp-geodownload, mcp-opentargets, mcp-cibersortx, mcp-neoantigen, mcp-cardiometabolic
 - **Not Ready**: mcp-mocktcga (synthetic data)
 - **Mock by Design**: mcp-mockepic (testing only)
 
@@ -91,7 +93,7 @@ Six external servers complement the custom servers above. These are either Anthr
 
 ## Framework Version
 
-All 17 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
+All 18 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
 as of 2026-04-08 (HOSPITAL1 migration — see `docs/HOSPITAL1_DEPLOYMENT_PLAN.md`).
 Resolved versions in `uv.lock` span 2.14.1 through 3.1.0; every server has
 been verified by `scripts/phase6_signature_audit.sh` to import cleanly,
@@ -100,7 +102,7 @@ enumerate the expected tool count, and use only public FastMCP APIs
 
 | Build backend | Count | Servers |
 |---|---|---|
-| `hatchling.build` | 10 | server-boilerplate, patient-report, genomic-results, cibersortx, geodownload, neoantigen, opentargets, multiomics, quantum-celltype-fidelity, perturbation |
+| `hatchling.build` | 11 | server-boilerplate, patient-report, genomic-results, cibersortx, geodownload, neoantigen, opentargets, multiomics, quantum-celltype-fidelity, perturbation, cardiometabolic |
 | `setuptools.build_meta` | 8 | epic, fgbio, mockepic, cell-classify, openimagedata, mocktcga, spatialtools, deepcell |
 
 Both backends are PEP 517-compliant and work with `uv build` and
@@ -108,5 +110,5 @@ Both backends are PEP 517-compliant and work with `uv build` and
 
 ---
 
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-21
 **Maintained By:** Precision Medicine MCP Team

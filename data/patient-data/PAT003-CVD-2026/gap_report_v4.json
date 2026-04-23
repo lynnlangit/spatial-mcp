@@ -1,0 +1,112 @@
+[
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "APOE",
+    "useful": true,
+    "score": 0.78
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "LDLR",
+    "useful": true,
+    "score": 0.97
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "ACE",
+    "useful": true,
+    "score": 0.88
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "PCSK9",
+    "useful": true,
+    "score": 0.91
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "CDKN2A",
+    "useful": true,
+    "score": 0.74
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "CDKN2B",
+    "useful": true,
+    "score": 0.76
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_disease_associations",
+    "gene": "LPA",
+    "useful": true,
+    "score": 0.82
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_drugs",
+    "gene": "ACE",
+    "useful": true,
+    "drugs": ["Lisinopril", "Ramipril"]
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_drugs",
+    "gene": "PCSK9",
+    "useful": true,
+    "drugs": ["Evolocumab", "Inclisiran", "Alirocumab"]
+  },
+  {
+    "server": "opentargets",
+    "tool": "get_target_safety",
+    "gene": "ACE",
+    "useful": true,
+    "risk_level": "low"
+  },
+  {
+    "server": "patient-report",
+    "tool": "check_pdf_capability",
+    "useful": true
+  },
+  {
+    "server": "patient-report",
+    "tool": "validate_report_data",
+    "useful": true,
+    "report_category": "preventive_health"
+  },
+  {
+    "server": "cardiometabolic",
+    "tool": "assess_biomarker_panel",
+    "useful": true,
+    "biomarkers": 8,
+    "note": "Full PAT003 lipid/metabolic/inflammatory panel classified against clinical ranges"
+  },
+  {
+    "server": "cardiometabolic",
+    "tool": "calculate_cvd_risk_scores",
+    "useful": true,
+    "reynolds_percent": 14.3,
+    "framingham_percent": 10.0,
+    "ascvd_percent": 10.3,
+    "all_intermediate": true
+  },
+  {
+    "server": "cardiometabolic",
+    "tool": "assess_lpa_status",
+    "useful": true,
+    "lpa_measured": false,
+    "recommendation": "Order serum Lp(a) blood test"
+  },
+  {
+    "server": "cardiometabolic",
+    "tool": "generate_preventive_report",
+    "useful": true,
+    "sections": ["executive_summary", "risk_scores", "priority_actions", "monitoring_schedule", "lifestyle_recommendations", "disclaimer"]
+  }
+]

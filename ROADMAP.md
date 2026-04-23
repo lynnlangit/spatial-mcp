@@ -20,7 +20,7 @@
 | PAT002 breast cancer validation dataset | Medium | M | Synthetic data generation | Planned |
 | Automated CI regression test against PAT001 canonical values | Medium | S | CI infrastructure | Planned |
 | Multi-language patient report (Spanish, Mandarin) | Low | M | Translation resources | Planned |
-| Cardiometabolic server (lipid panel + CVD risk scoring + Lp(a) + biomarker tracking) | High | M | PAT003 gap report v3 | Planned |
+| Cardiometabolic server (lipid panel + CVD risk scoring + Lp(a) + biomarker tracking) | High | M | PAT003 gap report v3 | **Done** |
 | Cardiovascular polygenic risk score server | High | M | PAT003 data design | Planned |
 | Longitudinal biomarker tracking server | Medium | M | PAT003 use case | Planned |
 | Lifestyle intervention evidence server (literature-based) | Medium | L | PAT003 use case | Planned |
@@ -29,7 +29,7 @@
 
 | Version | Date | Summary |
 |---------|------|---------|
-| v17 (draft) | April 2026 | PAT003 preventive cardiovascular use case: gap report v3 — 12/13 useful calls; multiomics architectural gap confirmed as cardiometabolic server requirement |
+| v17 | April 2026 | Server #19 cardiometabolic added — Reynolds/Framingham/ASCVD risk scoring for women, biomarker panels, Lp(a) assessment, preventive reports; PAT003 e2e 16/16 useful calls; 19 custom servers (104 tools); platform paper needs v17 update |
 | v16 | April 17, 2026 | FastMCP 2.x upgrade complete; all 18 servers pass live PAT001 e2e (no DRY\_RUN); GEARS perturbation pipeline fully validated; quantum CPU fallback fixed; MHC1 multi-peptide stale variable fixed |
 | v15 | March 27, 2026 | Initial quantum + GEARS integration; spatial and deconvolution servers added |
 

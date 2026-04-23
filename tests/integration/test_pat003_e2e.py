@@ -33,7 +33,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 OPENTARGETS_DIR = REPO_ROOT / "servers" / "mcp-opentargets"
 PATIENT_REPORT_DIR = REPO_ROOT / "servers" / "mcp-patient-report"
-MULTIOMICS_DIR = REPO_ROOT / "servers" / "mcp-multiomics"
+CARDIOMETABOLIC_DIR = REPO_ROOT / "servers" / "mcp-cardiometabolic"
 
 # Import PAT003 canonical data
 sys.path.insert(0, str(REPO_ROOT))
@@ -76,7 +76,7 @@ def _run_in_server(server_dir: Path, script: str,
             **dict(subprocess.os.environ),
             "OPENTARGETS_DRY_RUN": "true",
             "PATIENT_REPORT_DRY_RUN": "true",
-            "MULTIOMICS_DRY_RUN": "true",
+            "CARDIOMETABOLIC_DRY_RUN": "true",
         },
     )
     if result.returncode != 0:
@@ -348,41 +348,127 @@ print(json.dumps(r))
 
 
 # ===================================================================
-# 4-F: multiomics — biomarker panel integration
+# 4-F: cardiometabolic — biomarker panel + risk scoring + Lp(a) + report
 # ===================================================================
 
 
-class TestMultiomics:
-    """Attempt to use multiomics server with PAT003 biomarker data."""
+class TestCardiometabolicBiomarkers:
+    """Cardiometabolic server: biomarker panel interpretation."""
 
-    def test_validate_multiomics_data(self) -> None:
+    def test_assess_biomarker_panel(self) -> None:
         script = """
-import json
-from mcp_multiomics.server import validate_multiomics_data
-fn = getattr(validate_multiomics_data, "__wrapped__", validate_multiomics_data)
-try:
-    r = fn(rna_path="/nonexistent/pat003_biomarkers.csv")
-except Exception as e:
-    r = {"status": "error", "message": str(e)}
+import asyncio, json
+from mcp_cardiometabolic.server import _assess_biomarker_panel_impl
+r = asyncio.run(_assess_biomarker_panel_impl(
+    ldl_mg_dl=118, hdl_mg_dl=58, total_cholesterol_mg_dl=195,
+    triglycerides_mg_dl=142, fasting_glucose_mg_dl=98,
+    hba1c_percent=5.6, hscrp_mg_l=1.8, bp_systolic_mmhg=138))
 print(json.dumps(r))
 """
-        result = _run_in_server(MULTIOMICS_DIR, script)
+        result = _run_in_server(CARDIOMETABOLIC_DIR, script)
+        useful = result.get("status") == "success"
+        record(
+            server="cardiometabolic",
+            tool="assess_biomarker_panel",
+            input_summary="PAT003 full panel (8 biomarkers)",
+            output_summary=f"status={result.get('status')}, "
+                           f"flags={len(result.get('flags', []))}",
+            clinically_useful=useful,
+            gap_identified=None if useful else
+                           f"Biomarker panel failed: {result.get('message', '')[:100]}",
+        )
 
-        accepted = result.get("status") != "error"
 
-        gap = None
-        if not accepted:
-            gap = ("Multiomics server expects omics matrix file paths (RNA/protein/phospho); "
-                   "simple biomarker panels (lipid, glucose, CRP) need a new server "
-                   "or adapter for preventive health use cases")
+class TestCardiometabolicRiskScores:
+    """Cardiometabolic server: CVD risk score calculation."""
+
+    def test_calculate_cvd_risk_scores(self) -> None:
+        script = """
+import asyncio, json
+from mcp_cardiometabolic.server import _calculate_cvd_risk_scores_impl
+r = asyncio.run(_calculate_cvd_risk_scores_impl(
+    age=67, systolic_bp=138, total_cholesterol=195, hdl=58, hscrp=1.8,
+    patient_sex="female", bp_treated=True, current_smoker=False,
+    diabetes=False, family_history_premature_mi=True))
+print(json.dumps(r))
+"""
+        result = _run_in_server(CARDIOMETABOLIC_DIR, script)
+        reynolds_cat = result.get("reynolds", {}).get("risk_category", "")
+        framingham_cat = result.get("framingham", {}).get("risk_category", "")
+        ascvd_cat = result.get("ascvd", {}).get("risk_category", "")
+        all_intermediate = all(c == "intermediate" for c in [reynolds_cat, framingham_cat, ascvd_cat])
+        useful = result.get("status") == "success" and all_intermediate
 
         record(
-            server="multiomics",
-            tool="validate_multiomics_data",
-            input_summary="rna_path=/nonexistent/pat003_biomarkers.csv",
-            output_summary=f"status={result.get('status', 'unknown')}",
-            clinically_useful=accepted,
-            gap_identified=gap,
+            server="cardiometabolic",
+            tool="calculate_cvd_risk_scores",
+            input_summary="PAT003 vitals (age=67, SBP=138, TC=195, HDL=58, hsCRP=1.8)",
+            output_summary=(
+                f"Reynolds={result.get('reynolds', {}).get('risk_10yr_percent', 'N/A')}%, "
+                f"Framingham={result.get('framingham', {}).get('risk_10yr_percent', 'N/A')}%, "
+                f"ASCVD={result.get('ascvd', {}).get('risk_10yr_percent', 'N/A')}%"
+            ),
+            clinically_useful=useful,
+            gap_identified=None if useful else "Risk scores not all intermediate",
+        )
+
+
+class TestCardiometabolicLpa:
+    """Cardiometabolic server: Lp(a) status assessment."""
+
+    def test_assess_lpa_status(self) -> None:
+        script = """
+import asyncio, json
+from mcp_cardiometabolic.server import _assess_lpa_status_impl
+r = asyncio.run(_assess_lpa_status_impl(lpa_mg_dl=None))
+print(json.dumps(r))
+"""
+        result = _run_in_server(CARDIOMETABOLIC_DIR, script)
+        useful = (
+            result.get("status") == "success"
+            and result.get("lpa_measured") is False
+        )
+        record(
+            server="cardiometabolic",
+            tool="assess_lpa_status",
+            input_summary="lpa_mg_dl=None (not yet measured)",
+            output_summary=f"measured={result.get('lpa_measured')}, "
+                           f"urgency={result.get('clinical_urgency', 'N/A')}",
+            clinically_useful=useful,
+            gap_identified=None if useful else
+                           f"Lp(a) assessment failed: {result.get('message', '')[:100]}",
+        )
+
+
+class TestCardiometabolicReport:
+    """Cardiometabolic server: preventive health report."""
+
+    def test_generate_preventive_report(self) -> None:
+        script = """
+import asyncio, json
+from mcp_cardiometabolic.server import _generate_preventive_report_impl
+r = asyncio.run(_generate_preventive_report_impl(
+    patient_id="PAT003", fh_ruled_out=True))
+print(json.dumps(r))
+"""
+        result = _run_in_server(CARDIOMETABOLIC_DIR, script)
+        has_keys = all(
+            k in result for k in (
+                "executive_summary", "risk_scores", "priority_actions",
+                "monitoring_schedule", "lifestyle_recommendations", "disclaimer",
+            )
+        )
+        useful = result.get("status") == "success" and has_keys
+
+        record(
+            server="cardiometabolic",
+            tool="generate_preventive_report",
+            input_summary="PAT003, fh_ruled_out=True",
+            output_summary=f"status={result.get('status')}, "
+                           f"keys={'all present' if has_keys else 'MISSING'}",
+            clinically_useful=useful,
+            gap_identified=None if useful else
+                           f"Report missing keys or failed: {result.get('message', '')[:100]}",
         )
 
 
@@ -415,8 +501,13 @@ class TestZGapReport:
               f"{sum(1 for r in RESULTS if r['clinically_useful'])}, "
               f"Gaps identified: {len(gaps)}")
 
-        print("\n--- Remaining gaps / new servers needed for PAT003 ---")
-        print("1. Cardiometabolic server (biomarker panels, CVD risk scoring, Lp(a), longitudinal tracking)")
-        print("2. Polygenic risk score server (CVD-specific)")
-        print("3. Lifestyle intervention evidence server")
+        print("\n--- Status ---")
+        useful_count = sum(1 for r in RESULTS if r["clinically_useful"])
+        if useful_count == len(RESULTS):
+            print("ALL CALLS CLINICALLY USEFUL -- no remaining gaps for PAT003 core workflow")
+        else:
+            print("Remaining gaps / new servers needed for PAT003:")
+            for r in RESULTS:
+                if r["gap_identified"]:
+                    print(f"  - [{r['server']}] {r['gap_identified']}")
         print("=" * 90)
