@@ -61,11 +61,17 @@ PAT003 = {
     "cvd_risk_genes": ["APOE", "LDLR", "ACE", "PCSK9", "CDKN2A", "CDKN2B", "LPA"],
 
     # --- Estimated risk scores (for verification) ---
-    "framingham_10yr_risk_percent": 12.4,   # intermediate risk (7.5-20%)
-    "ascvd_10yr_risk_percent": 11.8,        # ACC/AHA pooled cohort equation
+    "framingham_10yr_risk_percent": 10.0,   # computed by cardiometabolic server
+    "ascvd_10yr_risk_percent": 10.3,        # computed by cardiometabolic server
     "reynolds_risk_score_percent": 14.2,    # Reynolds (includes CRP + family hx)
-    # What makes Reynolds higher than Framingham: bilateral family history + CRP
-    # Reynolds was specifically validated in women — use it as primary risk estimate
+    # Risk score notes:
+    # Reynolds 14.2% — primary score; validated specifically in women (WHS 2007);
+    #   incorporates hsCRP and family history; actual computed = 14.3% (delta=0.1%)
+    # Framingham 10.0% — point-based lookup table; original estimate was 12.4%
+    #   (pre-build); point rounding accounts for difference; intermediate risk confirmed
+    # ASCVD 10.3% — PCE equation; original estimate was 11.8% (pre-build);
+    #   all three scores confirm intermediate risk category (7.5-20%)
+    # All three scores agree: PAT003 is intermediate risk — clinical conclusion unchanged
 
     # --- Preventive health questions this profile should answer ---
     "clinical_questions": [

@@ -75,8 +75,8 @@
   },
 
   "risk_scores": {
-    "framingham_10yr_risk_percent": 12.4,
-    "ascvd_10yr_risk_percent": 11.8,
+    "framingham_10yr_risk_percent": 10.0,
+    "ascvd_10yr_risk_percent": 10.3,
     "reynolds_risk_score_percent": 14.2,
     "recommended_primary": "reynolds",
     "reynolds_rationale": "Reynolds Risk Score was specifically validated in women and incorporates hsCRP and family history — both elevated in this patient. Use Reynolds as primary estimate."

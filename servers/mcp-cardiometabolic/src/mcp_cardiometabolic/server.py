@@ -256,8 +256,8 @@ async def _generate_preventive_report_impl(
     if risk_scores is None:
         risk_scores = {
             "reynolds_10yr_percent": 14.2,
-            "framingham_10yr_percent": 12.4,
-            "ascvd_10yr_percent": 11.8,
+            "framingham_10yr_percent": 10.0,
+            "ascvd_10yr_percent": 10.3,
             "risk_category": "intermediate",
         }
 

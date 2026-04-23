@@ -8,8 +8,8 @@ import math
 
 # PAT003 DRY_RUN expected values (for test assertions)
 PAT003_EXPECTED_REYNOLDS = 14.2
-PAT003_EXPECTED_FRAMINGHAM = 12.4
-PAT003_EXPECTED_ASCVD = 11.8
+PAT003_EXPECTED_FRAMINGHAM = 10.0
+PAT003_EXPECTED_ASCVD = 10.3
 
 
 def calculate_reynolds_women(

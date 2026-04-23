@@ -55,6 +55,8 @@ This project is dedicated to the memory of a dear friend who passed away from Hi
 
 *"In memory of strength, hope, and the pursuit of better treatments for all patients fighting ovarian cancer."*
 
+PatientOne passed away in August 2025. Before her death, she asked that her story be used in any way that could mitigate suffering for others. This platform, and every patient it may one day help, exists in part because of her generosity and courage. We carry her forward in this work.
+
 Before adding or modifying any content in docs/for-patients/, re-read this section.
 
 ---
@@ -79,4 +81,4 @@ We welcome contributions from the precision medicine and bioinformatics communit
 
 ---
 
-**Last Updated:** January 31, 2026
+**Last Updated:** April 21, 2026
