@@ -237,41 +237,63 @@ async def _get_target_drugs_impl(
 
     data = await execute_query(
         TARGET_DRUGS_QUERY,
-        {"ensemblId": eid, "size": 100},
+        {"ensemblId": eid},
         OPENTARGETS_API_URL,
     )
     target = data.get("target")
     if not target:
         return {"status": "error", "message": f"Target not found: {symbol}"}
 
-    rows = target.get("knownDrugs", {}).get("rows", [])
+    rows = target.get("drugAndClinicalCandidates", {}).get("rows", [])
+
+    # Map maxClinicalStage strings to numeric phase
+    stage_to_phase = {
+        "DISCOVERY": 0, "PRECLINICAL": 0,
+        "PHASE_0": 0, "PHASE_1": 1, "PHASE_1_2": 1,
+        "PHASE_2": 2, "PHASE_2_3": 2,
+        "PHASE_3": 3, "PHASE_3_4": 3,
+        "PHASE_4": 4, "APPROVAL": 4,
+    }
 
     # Deduplicate drugs by name and collect indications
     drugs_by_name: Dict[str, Dict[str, Any]] = {}
     for row in rows:
-        phase = row.get("phase", 0)
+        stage = row.get("maxClinicalStage", "")
+        phase = stage_to_phase.get(stage, 0)
         if phase < phase_min:
             continue
 
-        drug_name = row.get("drug", {}).get("name", "Unknown")
+        drug_info = row.get("drug") or {}
+        drug_name = drug_info.get("name", "Unknown")
+
+        # Extract mechanism from drug.mechanismsOfAction
+        mechanism = ""
+        moa_rows = (drug_info.get("mechanismsOfAction") or {}).get("rows", [])
+        if moa_rows:
+            mechanism = moa_rows[0].get("mechanismOfAction", "")
+
         if drug_name not in drugs_by_name:
             drugs_by_name[drug_name] = {
                 "name": drug_name,
                 "phase": phase,
-                "status": row.get("status", ""),
-                "mechanism": row.get("mechanismOfAction", ""),
+                "status": stage,
+                "mechanism": mechanism,
                 "indications": [],
                 "clinical_trial_count": 0,
             }
 
-        disease_name = row.get("disease", {}).get("name", "")
-        if disease_name and disease_name not in drugs_by_name[drug_name]["indications"]:
-            drugs_by_name[drug_name]["indications"].append(disease_name)
+        # Collect disease indications
+        for disease_entry in row.get("diseases", []):
+            disease = disease_entry.get("disease") or {}
+            disease_name = disease.get("name", "")
+            if disease_name and disease_name not in drugs_by_name[drug_name]["indications"]:
+                drugs_by_name[drug_name]["indications"].append(disease_name)
         drugs_by_name[drug_name]["clinical_trial_count"] += 1
 
         # Keep highest phase
         if phase > drugs_by_name[drug_name]["phase"]:
             drugs_by_name[drug_name]["phase"] = phase
+            drugs_by_name[drug_name]["status"] = stage
 
     drugs = sorted(drugs_by_name.values(), key=lambda d: d["phase"], reverse=True)
 
@@ -387,30 +409,11 @@ async def _get_target_safety_impl(
             "datasource": liability.get("datasource", ""),
         })
 
-    # Transform adverse events
-    adverse_events = []
-    for ae in target.get("adverseEvents", {}).get("rows", []):
-        count = ae.get("count", 0)
-        if count >= 1000:
-            frequency = "very_common"
-        elif count >= 100:
-            frequency = "common"
-        else:
-            frequency = "uncommon"
-
-        adverse_events.append({
-            "event": ae.get("name", ""),
-            "count": count,
-            "frequency": frequency,
-        })
-
-    # Determine overall risk level
+    # Determine overall risk level (adverseEvents removed from API v24+)
     if len(safety_liabilities) >= 3:
         risk_level = "high"
     elif len(safety_liabilities) >= 1:
         risk_level = "moderate"
-    elif adverse_events:
-        risk_level = "low"
     else:
         risk_level = "unknown"
 
@@ -418,7 +421,7 @@ async def _get_target_safety_impl(
         "status": "success",
         "target": symbol,
         "safety_liabilities": safety_liabilities,
-        "adverse_events": adverse_events,
+        "adverse_events": [],
         "risk_level": risk_level,
     }
 

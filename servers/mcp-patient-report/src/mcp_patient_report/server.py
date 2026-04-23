@@ -405,7 +405,10 @@ async def validate_report_data(
     except ValidationError as e:
         return {
             "valid": False,
-            "errors": [err["msg"] for err in e.errors()],
+            "errors": [
+                f"{'.'.join(str(loc) for loc in err.get('loc', []))}: {err['msg']}"
+                for err in e.errors()
+            ],
             "warnings": [],
             "summary": None,
         }

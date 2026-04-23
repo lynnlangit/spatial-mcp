@@ -59,24 +59,27 @@ query TargetDiseaseAssociation($ensemblId: String!, $size: Int!) {
 """
 
 TARGET_DRUGS_QUERY = """
-query TargetDrugs($ensemblId: String!, $size: Int!) {
+query TargetDrugs($ensemblId: String!) {
   target(ensemblId: $ensemblId) {
-    knownDrugs(size: $size) {
+    drugAndClinicalCandidates {
+      count
       rows {
         drug {
           id
           name
+          mechanismsOfAction {
+            rows {
+              mechanismOfAction
+              actionType
+            }
+          }
         }
-        phase
-        status
-        mechanismOfAction
-        disease {
-          id
-          name
-        }
-        urls {
-          url
-          name
+        maxClinicalStage
+        diseases {
+          disease {
+            id
+            name
+          }
         }
       }
     }
@@ -121,14 +124,6 @@ query TargetSafety($ensemblId: String!) {
         dosing
       }
       datasource
-    }
-    adverseEvents(page: {size: 20, index: 0}) {
-      rows {
-        name
-        count
-        logLR
-        meddraCode
-      }
     }
   }
 }
