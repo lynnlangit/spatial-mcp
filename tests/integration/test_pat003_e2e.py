@@ -265,7 +265,7 @@ class TestPatientReport:
         script = """
 import asyncio, json
 from mcp_patient_report.server import check_pdf_capability
-fn = getattr(check_pdf_capability, "__wrapped__", check_pdf_capability)
+fn = getattr(check_pdf_capability, "fn", check_pdf_capability)
 r = asyncio.run(fn())
 print(json.dumps(r))
 """
@@ -284,6 +284,7 @@ print(json.dumps(r))
 
     def test_validate_report_data(self) -> None:
         report_data = {
+            "report_category": "preventive_health",
             "metadata": {
                 "patient_id": "PAT003",
                 "generated_date": "2026-04-21",
@@ -297,17 +298,33 @@ print(json.dumps(r))
                 "diagnosis": "Preventive cardiovascular monitoring",
             },
             "diagnosis_summary": {
-                "cancer_type": "N/A — preventive health",
-                "stage": "N/A",
                 "plain_language_description":
                     "This is a preventive health profile, not an active cancer case.",
+            },
+            "monitoring_plan": {
+                "schedule": [
+                    {"test_name": "Lipid panel", "frequency": "Every 12 months",
+                     "purpose": "Track LDL, HDL, triglycerides"},
+                    {"test_name": "Blood pressure", "frequency": "Every 8 weeks",
+                     "purpose": "Monitor hypertension control"},
+                    {"test_name": "HbA1c", "frequency": "Every 12 months",
+                     "purpose": "Monitor prediabetes progression"},
+                    {"test_name": "hsCRP", "frequency": "Every 24 months",
+                     "purpose": "Track cardiovascular inflammation"},
+                ],
+                "warning_signs": [
+                    "Chest pain or pressure",
+                    "Sudden shortness of breath",
+                    "Unexplained fatigue or dizziness",
+                ],
+                "who_to_contact": "Your primary care physician or cardiologist",
             },
         }
         data_json = json.dumps(report_data).replace("'", "\\'").replace('"', '\\"')
         script = f"""
 import asyncio, json
 from mcp_patient_report.server import validate_report_data
-fn = getattr(validate_report_data, "__wrapped__", validate_report_data)
+fn = getattr(validate_report_data, "fn", validate_report_data)
 r = asyncio.run(fn(report_data_json='{data_json}'))
 print(json.dumps(r))
 """
@@ -398,12 +415,8 @@ class TestZGapReport:
               f"{sum(1 for r in RESULTS if r['clinically_useful'])}, "
               f"Gaps identified: {len(gaps)}")
 
-        print("\n--- New servers / extensions needed for PAT003 ---")
-        print("1. Cardiovascular disease ontology in opentargets mock data")
-        print("2. CVD drug mock data (ACE inhibitors, PCSK9 inhibitors, statins)")
-        print("3. Preventive health report template (non-oncology schema)")
-        print("4. Biomarker panel server (lipid, glucose, CRP tracking)")
-        print("5. Polygenic risk score server (CVD-specific)")
-        print("6. Longitudinal biomarker tracking server")
-        print("7. Lifestyle intervention evidence server")
+        print("\n--- Remaining gaps / new servers needed for PAT003 ---")
+        print("1. Cardiometabolic server (biomarker panels, CVD risk scoring, Lp(a), longitudinal tracking)")
+        print("2. Polygenic risk score server (CVD-specific)")
+        print("3. Lifestyle intervention evidence server")
         print("=" * 90)

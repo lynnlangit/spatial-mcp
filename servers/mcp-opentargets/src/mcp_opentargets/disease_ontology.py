@@ -414,6 +414,22 @@ MOCK_ASSOCIATION_SCORES = {
             "affected_pathway": 0.72,
         },
     },
+    "CDKN2A": {
+        "overall_score": 0.74,
+        "evidence_scores": {
+            "literature": 0.82,
+            "rna_expression": 0.50,
+            "genetic_association": 0.88,
+            "somatic_mutation": 0.45,
+            "known_drug": 0.10,
+            "animal_model": 0.55,
+            "affected_pathway": 0.70,
+        },
+        "_note": "9p21 locus (CDKN2A/CDKN2B) is the strongest GWAS-identified risk locus "
+        "for coronary artery disease. The mechanism is not via CDKN2A's tumor suppressor "
+        "function but via regulatory effects on nearby vascular smooth muscle cell "
+        "proliferation genes. NOT tested in PAT003 Tier 1 screen.",
+    },
 }
 
 MOCK_DRUGS = {
