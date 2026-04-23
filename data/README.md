@@ -8,10 +8,11 @@ This directory contains sample data for testing and demonstrating the Precision 
 
 ## 🏥 Synthetic Patient Datasets
 
-| Patient ID | Cancer Type | Stage | Key Features | Documentation |
-|------------|-------------|-------|--------------|---------------|
-| **PAT001-OVC-2025** | Ovarian Cancer | Stage IV | BRCA1+, platinum-resistant | [📖 Details →](patient-data/PAT001-OVC-2025/README.md) |
-| **PAT002-BC-2026** | Breast Cancer | Stage IIA | BRCA2+, ER+/PR+/HER2- | [📖 Details →](patient-data/PAT002-BC-2026/README.md) |
+| Patient ID | Use Case | Key Features | Documentation |
+|------------|----------|--------------|---------------|
+| **PAT001-OVC-2025** | Stage IV Ovarian Cancer | BRCA1+, platinum-resistant | [📖 Details →](patient-data/PAT001-OVC-2025/README.md) |
+| **PAT002-BC-2026** | Stage IIA Breast Cancer | BRCA2+, ER+/PR+/HER2- | [📖 Details →](patient-data/PAT002-BC-2026/README.md) |
+| **PAT003-CVD-2026** | Preventive Cardiovascular Health | 65+ female, bilateral CVD family history, controlled hypertension | [📖 Details →](patient-data/PAT003-CVD-2026/README.md) |
 
 ---
 
@@ -39,6 +40,19 @@ This directory contains sample data for testing and demonstrating the Precision 
 - Spatial transcriptomics (10x Visium, 900 spots, 35 genes)
 - Imaging data (H&E, ER/PR/HER2/Ki67 immunofluorescence)
 - Perturbation data (PD-1 knockout CRISPR screen)
+
+---
+
+## PAT003: Preventive Cardiovascular Health (Patient Three)
+
+**Profile:** 67-year-old post-menopausal woman with controlled hypertension and bilateral family history of CVD
+
+**Data modalities:**
+- Clinical data (lipid panel, glucose metabolism, hsCRP, blood pressure)
+- CVD risk genes (APOE, LDLR, ACE, PCSK9, LPA, 9p21 locus)
+- Risk scores (Reynolds 14.2%, Framingham 12.4%, ASCVD 11.8%)
+- Tier 1 genetic screen (negative for FH, HBOC, Lynch — shifts risk model to polygenic)
+- Lifestyle and medication data (lisinopril, Mediterranean diet, exercise)
 
 ---
 
