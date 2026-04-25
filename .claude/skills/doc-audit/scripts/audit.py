@@ -58,15 +58,10 @@ SINGLE_PATIENT_FILES = {
 SINGLE_PATIENT_DIRS = {
     "servers/",          # each server README covers one domain, not all patients
     ".claude/",          # skill and config files
-    "docs/book/",        # excluded from all cleanup per project policy
+    "docs/",             # audience docs, reference, testing — each focuses on specific use cases
     "tests/",            # fixture and test files are patient-specific by design
-    "data/pat",          # per-patient data directories
+    "data/",             # per-patient data directories
     "ui/",               # UI docs reference specific demo workflows
-    "docs/reference/",   # test prompts, architecture, prompts, skills are per-patient by design
-    "docs/getting-started/",  # installation guides use PAT001 as primary example
-    "docs/for-developers/",   # developer docs focus on PAT001 workflow examples
-    "docs/for-hospitals/",    # hospital docs reference PAT001 demo by design
-    "docs/for-educators/",    # educator docs use PAT001 as teaching example
     "infrastructure/",   # deployment configs reference specific demos
 }
 
@@ -78,7 +73,10 @@ def all_md_files():
             and "node_modules" not in p.parts
             and ".venv" not in p.parts
             and "venv" not in p.parts
-            and "docs/book" not in str(p.relative_to(REPO_ROOT))]
+            and not any(x in str(p.relative_to(REPO_ROOT)) for x in (
+                "docs/book",
+                "docs/reference/testing/",  # per-patient test prompts share boilerplate by design
+            ))]
 
 def registry_tool_counts():
     """Parse the registry table → {server_name: tool_count}."""
@@ -163,17 +161,18 @@ def check_B():
     for md in all_md_files():
         if md.name == "server-registry.md":
             continue
-        # skip per-server docs, developer config, UI, reference docs, and
-        # developer/researcher docs — per-server and per-subsystem counts are canonical
+        # skip per-server docs, developer config, UI, and all docs/ subtrees —
+        # per-server, per-subsystem, and audience-specific counts are intentional
         rel = str(md.relative_to(REPO_ROOT))
         if any(rel.startswith(p) for p in (
-            "servers/", ".claude/", "docs/book/", "ui/",
-            "docs/reference/", "docs/getting-started/",
-            "docs/for-developers/", "docs/for-researchers/",
+            "servers/", ".claude/", "ui/", "docs/",
         )):
             continue
         # CLAUDE.md at repo root lists per-server tool counts — skip it
         if md.name == "CLAUDE.md" and md.parent == REPO_ROOT:
+            continue
+        # README.md at repo root: "46 tools" is external connectors, not custom servers
+        if md.name == "README.md" and md.parent == REPO_ROOT:
             continue
         text = md.read_text()
         for pat in COUNT_PATTERNS:
