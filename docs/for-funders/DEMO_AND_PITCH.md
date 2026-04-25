@@ -90,7 +90,7 @@ Servers: `mcp-spatialtools`
 
 ### Pathway 4: Full Platform E2E (45-60 min)
 
-Uses all 18 servers including GEO, Open Targets, CIBERSORTx, neoantigen prediction.
+Uses all 19 servers including GEO, Open Targets, CIBERSORTx, neoantigen prediction.
 See [Full E2E test prompt](../reference/testing/patient-one/test-prompts/DRY_RUN/test-10-e2e-full-platform.md).
 
 ---

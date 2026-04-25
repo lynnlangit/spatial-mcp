@@ -50,7 +50,7 @@ This directory contains sample data for testing and demonstrating the Precision 
 **Data modalities:**
 - Clinical data (lipid panel, glucose metabolism, hsCRP, blood pressure)
 - CVD risk genes (APOE, LDLR, ACE, PCSK9, LPA, 9p21 locus)
-- Risk scores (Reynolds 14.2%, Framingham 12.4%, ASCVD 11.8%)
+- Risk scores (Reynolds 14.3%, Framingham 12.0%, ASCVD 10.3%)
 - Tier 1 genetic screen (negative for FH, HBOC, Lynch — shifts risk model to polygenic)
 - Lifestyle and medication data (lisinopril, Mediterranean diet, exercise)
 

@@ -32,7 +32,7 @@
 |----------|------------------|-------------------|----------------------|
 | Genomic + neoantigen only | 5,000 | 2,000 | ~$0.23 (Sonnet) |
 | Full 5-server MVP pipeline | 15,000 | 6,000 | ~$0.68 (Sonnet) |
-| All 18 servers | 40,000 | 15,000 | ~$1.73 (Sonnet) |
+| All 19 servers | 40,000 | 15,000 | ~$1.73 (Sonnet) |
 
 *Pricing as of April 2026. Verify current pricing at https://www.anthropic.com/pricing before budgeting.*
 
@@ -47,6 +47,6 @@
 
 ## Cost reduction options
 
-- **DRY_RUN mode**: All 18 servers return synthetic PAT001 data at zero API cost. Use for development, training, and classroom demos.
+- **DRY_RUN mode**: All 19 servers return synthetic PAT001 data at zero API cost. Use for development, training, and classroom demos.
 - **Batch processing**: Queue cases overnight rather than real-time to reduce peak compute demand.
 - **Result caching**: Spatial and deconvolution outputs are deterministic for the same h5ad input. Cache at the de-identification layer to avoid recomputation.
