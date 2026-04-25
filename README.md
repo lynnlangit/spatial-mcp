@@ -17,7 +17,7 @@ Standard HGSOC workup (BRCA1/2, HRD panel, CT imaging) generates **no immunother
 
 ## The Platform
 
-An 18-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
+A 19-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
 
 ```mermaid
 flowchart LR
@@ -73,30 +73,33 @@ flowchart LR
    |  [7 servers]           openimagedata   (5)       [1 server]   |
    |                        deepcell        (3)                    |
    |                        cell-classify   (3)                    |
+   |                        cardiometabolic (5)                    |
    |                                                               |
-   |                        [10 servers]                           |
+   |                        [11 servers]                           |
    +---------------------------------------------------------------+
-                     17 custom servers, 99 tools
+                     19 custom servers, 104 tools
 ```
 
 | | Servers | Tools |
 |-|---------|-------|
-| **Custom** | 17 servers | 99 tools |
+| **Custom** | 19 servers | 104 tools |
 | **External** | 6 connectors (PubMed, bioRxiv, ClinicalTrials.gov, Seqera, cBioPortal, HuggingFace) | 46 tools |
 
 All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant. See [Server Registry](docs/reference/shared/server-registry.md).
 
 ## The Results
 
-Three treatment hypotheses unreachable by standard workup (validated on synthetic PatientOne):
+The platform surfaces clinically actionable findings that standard workup cannot reach — validated across three independent use cases:
 
-1. **Personalized neoantigen vaccine** -- TP53 R175H -> RMPEAAPPV peptide (IC50 7.8 nM, strong HLA-A*02:01 binding)
-2. **NNMT/CAF inhibition** -- 18.2% CAF fraction; GEARS GNN predicts NNMT knockdown recovers immune markers
-3. **Convergent checkpoint blockade** -- POLE-corrected TMB 47.3 mut/Mb + spatial CD8 exclusion -> anti-PD-1/CTLA-4
+| Use Case | Patient | Key Finding Missed by Standard Workup |
+|---|---|---|
+| **HGSOC (Stage IV)** | PAT001 | 3 investigational paths: neoantigen vaccine (RMPEAAPPV IC50 7.8 nM), NNMT/CAF inhibition, convergent checkpoint blockade |
+| **ER+ Breast Cancer** | PAT002 | HRD 35 below myChoice threshold but PARP-eligible via BRCA2 germline — clinically significant nuance, zero code changes |
+| **Preventive Cardiovascular** | PAT003 | Intermediate CVD risk (Reynolds 14.3%) with 3 high-priority gaps missed by standard lipid panel AND population genetic screen: Lp(a), APOE genotype, CAC score |
 
-Plus: cross-cancer validation on PAT002 (ER+ breast cancer) with zero code changes.
+The same 19-server architecture runs all three. No disease-specific code changes between use cases.
 
-### Validated results (PAT001)
+### Validated results — PAT001 (HGSOC)
 
 | Metric | Value | Source server |
 |--------|-------|---------------|

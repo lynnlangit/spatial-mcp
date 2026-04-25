@@ -10,9 +10,12 @@ When rate limits or usage limits are hit mid-task, save progress notes in a scra
 
 ## What This Project Is
 
-Precision Medicine MCP Platform — an AI-orchestrated system for precision oncology analysis. It provides specialized MCP (Model Context Protocol) servers that expose bioinformatics tools via natural language through Claude or Gemini.
+Precision Medicine MCP Platform — an AI-orchestrated system for precision medicine analysis across oncology and preventive health. It provides 19 specialized MCP (Model Context Protocol) servers (104 tools) that expose bioinformatics and clinical risk tools via natural language through Claude or Gemini.
 
-**Primary use case:** Stage IV Ovarian Cancer analysis using synthetic patient data (PatientOne: PAT001-OVC-2025).
+**Validated use cases (three synthetic patients, all live e2e tested):**
+- **PAT001** (PAT001-OVC-2025) — Stage IV HGSOC; 3 investigational treatment hypotheses surfaced
+- **PAT002** (PAT002-BC-2026) — ER+/HER2− breast cancer; cross-cancer architecture validation
+- **PAT003** (PAT003-CVD-2026) — Preventive cardiovascular health, 67F post-menopausal; 3 evidence gaps identified (Lp(a), APOE, CAC score) missed by standard lipid panel and Helix Tier 1 genetic screen
 
 ## Repository Structure
 
@@ -39,7 +42,9 @@ precision-medicine-mcp/
 │   ├── mcp-cardiometabolic/   # CVD risk scoring & preventive health (5 tools)
 │   └── mcp-server-boilerplate/# Template for new servers
 ├── data/                       # Patient data and reference files
-│   ├── patient-data/PAT001-OVC-2025/  # Synthetic PatientOne data
+│   ├── patient-data/PAT001-OVC-2025/  # Synthetic PatientOne data (HGSOC)
+│   ├── pat002/                        # Synthetic PAT002 data (ER+ breast cancer)
+│   ├── pat003/                        # Synthetic PAT003 data (preventive CVD)
 │   ├── reference/             # Reference genomes
 │   └── cache/                 # Runtime caches
 ├── docs/                       # Documentation (by audience)

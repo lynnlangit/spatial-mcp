@@ -1,6 +1,6 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 18 (104 tools) | **Production Ready:** 16 (89%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
+**Custom Servers:** 19 (104 tools) | **Production Ready:** 17 (89%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -93,7 +93,7 @@ Six external servers complement the custom servers above. These are either Anthr
 
 ## Framework Version
 
-All 18 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
+All 19 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
 as of 2026-04-08 (HOSPITAL1 migration — see `docs/HOSPITAL1_DEPLOYMENT_PLAN.md`).
 Resolved versions in `uv.lock` span 2.14.1 through 3.1.0; every server has
 been verified by `scripts/phase6_signature_audit.sh` to import cleanly,
@@ -110,5 +110,5 @@ Both backends are PEP 517-compliant and work with `uv build` and
 
 ---
 
-**Last Updated:** 2026-04-21
+**Last Updated:** 2026-04-23
 **Maintained By:** Precision Medicine MCP Team
