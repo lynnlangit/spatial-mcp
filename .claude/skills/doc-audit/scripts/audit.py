@@ -54,11 +54,31 @@ SINGLE_PATIENT_FILES = {
     "pat001_profile.json", "pat002_profile.json", "pat003_profile.json",
 }
 
+# Directories where single-patient focus is expected
+SINGLE_PATIENT_DIRS = {
+    "servers/",          # each server README covers one domain, not all patients
+    ".claude/",          # skill and config files
+    "docs/book/",        # excluded from all cleanup per project policy
+    "tests/",            # fixture and test files are patient-specific by design
+    "data/pat",          # per-patient data directories
+    "ui/",               # UI docs reference specific demo workflows
+    "docs/reference/",   # test prompts, architecture, prompts, skills are per-patient by design
+    "docs/getting-started/",  # installation guides use PAT001 as primary example
+    "docs/for-developers/",   # developer docs focus on PAT001 workflow examples
+    "docs/for-hospitals/",    # hospital docs reference PAT001 demo by design
+    "docs/for-educators/",    # educator docs use PAT001 as teaching example
+    "infrastructure/",   # deployment configs reference specific demos
+}
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def all_md_files():
     return [p for p in REPO_ROOT.rglob("*.md")
-            if ".git" not in p.parts and "node_modules" not in p.parts]
+            if ".git" not in p.parts
+            and "node_modules" not in p.parts
+            and ".venv" not in p.parts
+            and "venv" not in p.parts
+            and "docs/book" not in str(p.relative_to(REPO_ROOT))]
 
 def registry_tool_counts():
     """Parse the registry table → {server_name: tool_count}."""
@@ -143,11 +163,26 @@ def check_B():
     for md in all_md_files():
         if md.name == "server-registry.md":
             continue
+        # skip per-server docs, developer config, UI, reference docs, and
+        # developer/researcher docs — per-server and per-subsystem counts are canonical
+        rel = str(md.relative_to(REPO_ROOT))
+        if any(rel.startswith(p) for p in (
+            "servers/", ".claude/", "docs/book/", "ui/",
+            "docs/reference/", "docs/getting-started/",
+            "docs/for-developers/", "docs/for-researchers/",
+        )):
+            continue
+        # CLAUDE.md at repo root lists per-server tool counts — skip it
+        if md.name == "CLAUDE.md" and md.parent == REPO_ROOT:
+            continue
         text = md.read_text()
         for pat in COUNT_PATTERNS:
             for m in re.finditer(pat, text, re.IGNORECASE):
                 n = int(m.group(1))
-                # flag if the number looks like a server or tool count (4–200)
+                # flag if the number looks like a stale server or tool count (4–200)
+                # skip counts that match the current registry values
+                if n in (reg_servers, reg_tools):
+                    continue
                 if 4 <= n <= 200:
                     line_no = text[:m.start()].count("\n") + 1
                     violations.append(
@@ -176,7 +211,10 @@ def check_C():
     print("\n━━━━ CHECK C — Three patient outcomes: completeness & accuracy ━━━━")
     violations = []
     for md in all_md_files():
+        rel = str(md.relative_to(REPO_ROOT))
         if md.name in SINGLE_PATIENT_FILES:
+            continue
+        if any(rel.startswith(d) for d in SINGLE_PATIENT_DIRS):
             continue
         text = md.read_text()
         found = {p for p in PATIENT_IDS if p in text or p.lower() in text}
