@@ -1,6 +1,6 @@
 # For Patients & Families
 
-**This section is for:** Patients, family members, and caregivers who want to understand what precision medicine means for cancer treatment and how advanced analysis tools might help.
+**This section is for:** Patients, family members, and caregivers who want to understand what precision medicine means for cancer treatment and preventive health — and how advanced analysis tools might surface findings that standard tests miss.
 
 ---
 
@@ -8,9 +8,11 @@
 
 ### The Challenge
 
-Traditional cancer treatment uses a "one-size-fits-all" approach. But every person's cancer is unique - with different genetic changes, different tumor environments, and different responses to drugs.
+Traditional cancer treatment uses a "one-size-fits-all" approach. But every person's cancer is unique — with different genetic changes, different tumor environments, and different responses to drugs.
 
-**The problem:** Analyzing all this information manually takes 40+ hours and costs thousands of dollars. This limits who can access precision medicine.
+The same integration problem exists in preventive health. Standard lipid panels and even population-level genetic screening can leave significant gaps: Lp(a) (a genetically determined independent cardiovascular risk factor), APOE genotype (the strongest common genetic driver of both heart disease and Alzheimer's risk), and coronary artery calcium (CAC) score (the best reclassification tool at intermediate CVD risk) are all routinely missed.
+
+**The problem:** Analyzing all this information manually takes 40+ hours and costs thousands of dollars for cancer — and preventive health gaps go undetected simply because no single workflow connects standard labs, genetic screens, and evidence-based risk algorithms.
 
 ### Our Solution
 
@@ -110,6 +112,50 @@ We've built a platform that analyzes all your cancer data together - medical rec
    - **Expected benefit:** Uncertain, but worth discussing with oncologist
 
 **Doctor's Decision:** After reviewing this analysis, PatientOne's oncologist recommended starting olaparib (strong evidence for BRCA carriers) with consideration of adding everolimus if cancer progresses.
+
+---
+
+## Example: Preventive Health Story (Fictional but Realistic)
+
+### Background
+
+**A fictional 67-year-old post-menopausal woman** — called PAT003 — recently completed a standard annual physical and a Helix Tier 1 population genetic screen. All results appeared "normal." Her doctor ordered a standard lipid panel. She wanted to understand her actual cardiovascular risk before deciding about statins.
+
+### What Standard Tests Found (and Missed)
+
+| Test | Result | What it said | What it missed |
+|---|---|---|---|
+| Standard lipid panel | LDL 118, HDL 58, Total 195 | "Borderline normal" | Lp(a) not measured |
+| Helix Tier 1 genetic screen | Negative | Monogenic familial hypercholesterolaemia ruled out | APOE genotype not tested; no polygenic risk |
+| Blood pressure | 138/84 mmHg | Stage 1 hypertension noted | No risk integration |
+
+### What the Platform Found
+
+The platform integrated all values through three validated risk algorithms:
+
+- **Reynolds Risk Score** (validated specifically in women): **14.3%** 10-year risk — intermediate
+- **Framingham Risk Score**: **12.0%** 10-year risk — intermediate
+- **ACC/AHA Pooled Cohort Equation**: **10.3%** 10-year risk — above the 7.5% statin-consideration threshold
+
+All three independently placed PAT003 in the intermediate risk category. But the more important output was the gap analysis:
+
+**Three high-priority gaps the platform identified — all missed by standard tests:**
+
+1. **Serum Lp(a) not measured** — Lp(a) is genetically determined, does not respond to standard statins, and is an independent CVD risk factor. The 2023 ESC/EAS guidelines recommend measuring it once in every adult's lifetime. A single blood test.
+
+2. **APOE genotype unknown** — APOE is the strongest common genetic determinant of both cardiovascular disease AND Alzheimer's risk. It is not included in any population-level screening panel.
+
+3. **Coronary artery calcium (CAC) score not obtained** — At intermediate CVD risk (7.5–20%), CAC is the best-validated reclassification tool and the preferred risk enhancer per 2018 ACC/AHA guidelines. A CAC of 0 would justify deferring statins; a high CAC would make the case for starting them.
+
+### What the Doctor Received
+
+A structured preventive report with:
+- Three risk scores side by side with clinical interpretation
+- The three high-priority gaps with specific next-test recommendations and evidence levels
+- JUPITER trial context: hsCRP 1.8 mg/L is just below the 2.0 mg/L threshold at which rosuvastatin benefit was demonstrated — a clinically meaningful margin to track
+- Lifestyle evidence table with six evidence-based interventions (PREDIMED, DASH, AHA physical activity, REDUCE-IT, and others) with effect sizes
+
+**The negative genetic screen result was not "nothing" — it shifted the clinical frame.** Monogenic FH ruled out means the primary risk driver is polygenic and environmental, making Lp(a), APOE, and CAC the three tests most likely to change clinical management.
 
 ---
 
@@ -460,4 +506,4 @@ Precision medicine is rapidly evolving:
 
 ---
 
-**Last Updated:** 2026-01-14
+**Last Updated:** 2026-04-23

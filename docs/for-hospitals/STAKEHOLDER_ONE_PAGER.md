@@ -1,10 +1,8 @@
 # HGSOC Precision Oncology Platform -- Stakeholder Summary
 
 ## The problem
-High-Grade Serous Ovarian Cancer (HGSOC) is the deadliest gynecologic cancer, with
-five-year survival below 50%. Treatment decisions today rely on limited genomic panels
-and clinical intuition. No integrated AI platform exists to synthesize genomic, spatial,
-immune, and drug response data at the point of care.
+
+Standard clinical workup — whether for advanced cancer or preventive health — leaves actionable findings on the table. For High-Grade Serous Ovarian Cancer (HGSOC), no integrated platform exists to synthesize genomic, spatial, immune, and drug response data at the point of care. For preventive cardiovascular health, standard lipid panels and population genetic screens routinely miss the three tests (Lp(a), APOE genotype, CAC score) most likely to change statin management decisions.
 
 ## What this platform does
 - Analyzes tumor genomics, spatial architecture, immune infiltration, and drug response prediction in a single automated workflow
@@ -12,10 +10,16 @@ immune, and drug response data at the point of care.
 - Operates on de-identified data with HIPAA-aligned audit logging and a fully open-source codebase
 
 ## What we demonstrated
-Using a synthetic patient (PAT001), the platform correctly identified high DNA repair
-deficiency (HRD = 72), strong immune recognition potential (IC50 = 7.8 nM), and immune
-cell infiltration (30 CD8+ T cells), generating a therapeutic hypothesis consistent with
-published HGSOC treatment guidelines -- fully automated, under five minutes.
+
+Three synthetic patients, three independent live end-to-end validations — no dry_run:
+
+| Patient | Condition | Key finding missed by standard workup |
+|---|---|---|
+| **PAT001** | HGSOC Stage IV | 3 investigational hypotheses: neoantigen vaccine (RMPEAAPPV IC50 7.8 nM), NNMT/CAF inhibition, convergent checkpoint blockade |
+| **PAT002** | ER+/HER2− breast cancer | HRD 35 below myChoice threshold but PARP-eligible via BRCA2 germline — handled without code changes |
+| **PAT003** | Preventive cardiovascular | 3 evidence gaps missed by standard lipid panel + Helix Tier 1 genetic screen: Lp(a), APOE genotype, CAC score; intermediate 10-yr CVD risk confirmed (Reynolds 14.3%) |
+
+Each analysis completed in under five minutes per patient, fully automated, with a structured clinician-ready report.
 
 ## What a 90-day POC looks like
 - Days 1-30: Infrastructure setup and smoke testing with synthetic data
@@ -26,14 +30,14 @@ Full runbook: docs/for-hospitals/POC_RUNBOOK.md
 
 ## What it costs
 Compute: approximately 97 GB RAM, 52 CPU cores (on-premise).
-API: approximately $1-2 per full 18-server analysis (Claude API).
+API: approximately $1-2 per full 19-server analysis (Claude API).
 Personnel: approximately 78 hours setup, 25 hours per month ongoing.
 Full estimates: docs/for-hospitals/RESOURCE_ESTIMATES.md
 
 ## What we need from you
 - Compute infrastructure meeting minimum specs (see RESOURCE_ESTIMATES.md)
 - One bioinformatician and three oncologist champions available for 90 days
-- Access to 10 de-identified retrospective HGSOC cases from the tumor board
+- Access to 10 de-identified retrospective cases from the tumor board (HGSOC preferred for initial POC; ER+ breast cancer and preventive CVD use cases available for parallel tracks)
 
 ## Contact
 {{CONTACT_NAME}}
