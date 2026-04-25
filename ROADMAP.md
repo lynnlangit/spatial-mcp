@@ -29,7 +29,7 @@
 
 | Version | Date | Summary |
 |---------|------|---------|
-| v17 | April 2026 | Server #19 cardiometabolic added — Reynolds/Framingham/ASCVD risk scoring for women, biomarker panels, Lp(a) assessment, preventive reports; PAT003 e2e 16/16 useful calls; 19 custom servers (104 tools); platform paper needs v17 update |
+| v17 | April 2026 | Server #19 cardiometabolic added — Reynolds/Framingham/ASCVD risk scoring for women, biomarker panels, Lp(a) assessment, preventive reports; PAT003 e2e 16/16 useful calls; PAT003 live validation April 23, 2026 (no dry\_run): Reynolds 14.3% / Framingham 12.0% / ASCVD 10.3%; 19 custom servers (104 tools); platform paper needs v17 update |
 | v16 | April 17, 2026 | FastMCP 2.x upgrade complete; all servers (see `docs/reference/shared/server-registry.md` for current count) pass live PAT001 e2e (no DRY\_RUN); GEARS perturbation pipeline fully validated; quantum CPU fallback fixed; MHC1 multi-peptide stale variable fixed |
 | v15 | March 27, 2026 | Initial quantum + GEARS integration; spatial and deconvolution servers added |
 
