@@ -21,6 +21,11 @@ graph LR
 
 ---
 
+> **v17 update (April 2026):** Server #19 (`mcp-cardiometabolic`) added.
+> Introduces non-oncology server pattern: no omics matrices, biomarker dict inputs,
+> three CVD risk equations, ACC/AHA statin decision logic.
+> Good reference implementation for preventive health use cases.
+
 ## Quick Start (3 Paths)
 
 > **First step for all paths:** Before building anything new, check if an existing server (internal or external) already does what you need. Read [SEARCH_VS_BUILD.md](SEARCH_VS_BUILD.md) (10 min).
@@ -84,14 +89,14 @@ graph TB
     end
 
     subgraph "AI Orchestration Layer"
-        API[🤖 Claude API<br/>Anthropic Sonnet 4.5<br/>MCP Client Support]
+        API[🤖 Claude API<br/>Anthropic Sonnet 4.6<br/>MCP Client Support]
     end
 
     subgraph "Local-Only Servers"
         REALEPIC[mcp-epic<br/>Real Epic FHIR<br/>✅ Production<br/>🏥 HIPAA-compliant]
     end
 
-    subgraph "GCP Cloud Run - 22 Deployed MCP Servers"
+    subgraph "GCP Cloud Run - 19 Custom MCP Servers"
         subgraph "Clinical & Genomic"
             MOCKEPIC[mcp-mockepic<br/>Mock FHIR<br/>🎭 Demo Only]
             FGBIO[mcp-fgbio<br/>FASTQ/VCF<br/>✅ Production]
@@ -258,7 +263,7 @@ See [Server Registry](../reference/shared/server-registry.md) for current counts
 - **Deployment:** `./infrastructure/deployment/deploy_to_gcp.sh`
 
 ### Claude API
-- **What:** Anthropic's Sonnet 4.5 model with MCP client support
+- **What:** Anthropic's Sonnet 4.6 model with MCP client support
 - **Why:** Orchestrates multi-server workflows via natural language
 - **Integration:** Claude Desktop (local) or Claude API (production)
 

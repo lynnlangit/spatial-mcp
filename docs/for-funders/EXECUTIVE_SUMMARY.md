@@ -1,20 +1,22 @@
 # Executive Summary
 
+> **v17 update (April 2026):** Platform expanded from oncology to preventive health.
+> 19 custom servers (104 tools). PAT003 (preventive CVD) validated April 23, 2026.
+> See [ROADMAP.md](../../ROADMAP.md) for full version history.
+
 ## The Problem
 
 Standard HGSOC workup (BRCA1/2, HRD panel, CT imaging) generates no immunotherapy hypotheses. Manual multi-modal analysis across genomics, spatial transcriptomics, imaging, and clinical data takes an estimated 40 hours and $6,000-9,000 per patient -- making integrated analysis clinically impractical.
 
 ## The Platform
 
-An 18-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline automatically:
-
-**Data Acquisition -> Spatial Deconvolution -> Target Profiling -> Causal Inference -> Report**
+A 19-server MCP architecture orchestrated by AI (Claude + Gemini) executes automated multi-modal analysis pipelines: oncology patients follow a 5-stage workflow (Data Acquisition → Spatial Deconvolution → Target Profiling → Causal Inference → Report); preventive health patients use a parallel cardiometabolic risk-stratification workflow.
 
 All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant architecture with Safe Harbor de-identification and 10-year audit trails.
 
 **Metrics:** 40 hours -> 2-5 hours (production), ~$324-702/patient vs $6,000-9,000 traditional. See [Value Proposition](../reference/shared/value-proposition.md) for details.
 
-**Servers:** 17 custom (99 tools) + 6 external connectors. See [Server Registry](../reference/shared/server-registry.md).
+**Servers:** 19 custom (104 tools) + 6 external connectors — see [Server Registry](../reference/shared/server-registry.md) for current counts.
 
 ---
 
@@ -37,7 +39,7 @@ Clinical details: [PatientOne Profile](../reference/shared/patientone-profile.md
 | Tier | Investment | Deliverable | Timeline |
 |------|-----------|-------------|----------|
 | **Pilot** | $50,000 | 3 production servers, 100 patients, training | 6 months |
-| **Production** | $75,000/year | Full 17-server deployment, Epic FHIR, 500 patients | 12 months |
+| **Production** | $75,000/year | Full 19-server deployment, Epic FHIR, 500 patients | 12 months |
 | **Multi-Site** | $150,000 | 3-5 hospitals, IRB protocol, publication support | 18 months |
 
 Projected annual savings: ~$313K (100 patients) to ~$1.6M (500 patients). Modeled, pending clinical validation.
@@ -56,9 +58,15 @@ Projected annual savings: ~$313K (100 patients) to ~$1.6M (500 patients). Modele
 
 ## Validation Status
 
-**Validated:** End-to-end workflow on synthetic data, 223+ automated tests, Cloud Run deployment, dual-provider orchestration (Claude + Gemini), DRY_RUN mode.
+Three synthetic patients validated end-to-end (no dry_run), April 2026:
 
-**Not yet validated:** Real patient data, cost savings estimates, clinical concordance. The clinical pilot is the proposed next step.
+| Patient | Use Case | Key Finding |
+|---|---|---|
+| PAT001 | HGSOC Stage IV | 3 investigational hypotheses (neoantigen vaccine, NNMT/CAF inhibition, convergent checkpoint blockade) |
+| PAT002 | ER+ breast cancer | PARP eligibility via germline BRCA2 despite HRD 35 < myChoice threshold |
+| PAT003 | Preventive CVD | 3 evidence gaps missed by standard lipid panel + Helix Tier 1 genetic screen: Lp(a), APOE, CAC score |
+
+Real patient data validation (30–50 patients, matched clinical outcomes) is the proposed next step.
 
 ---
 

@@ -69,12 +69,13 @@ graph LR
 
 ### Synthetic Patient Datasets
 
-**Two synthetic patient datasets are available:**
+**Three synthetic patient datasets are available:**
 
-| Patient | Cancer Type | Stage | Key Mutations | Use Case |
-|---------|-------------|-------|---------------|----------|
-| **PAT001-OVC-2025** | Ovarian (HGSOC) | IV | BRCA1, TP53, PIK3CA | Advanced refractory cancer |
-| **PAT002-BC-2026** | Breast (IDC) | IIA | BRCA2, PIK3CA, ER+/PR+ | Adjuvant therapy surveillance |
+| Patient | Condition | Key Data | Use Case |
+|---------|-----------|----------|----------|
+| **PAT001-OVC-2025** | Ovarian (HGSOC) Stage IV | BRCA1, TP53, PIK3CA; 900 Visium spots, 7 tissue regions | Advanced refractory cancer |
+| **PAT002-BC-2026** | Breast (IDC) Stage IIA | BRCA2, PIK3CA, ER+/PR+; ESR1/PGR spatially clustered (Moran's I = 0.42–0.45) | Adjuvant therapy surveillance |
+| **PAT003-CVD-2026** | Preventive cardiovascular | 67F post-menopausal; cardiometabolic biomarker panel; Helix Tier 1 (negative); Reynolds 14.3%, Framingham 12.0%, ASCVD 10.3% | Risk reclassification, gap analysis |
 
 **PatientOne (PAT001) Example Datasets:**
 
@@ -92,6 +93,11 @@ graph LR
 
 ---
 
+
+> **v17 update (April 2026):** PAT003 (preventive CVD) added as a third synthetic dataset.
+> New server: `mcp-cardiometabolic` — Reynolds/Framingham/ASCVD risk scoring,
+> biomarker panels, Lp(a) assessment, ACC/AHA statin decision logic.
+> Three open research questions added (OPEN_QUESTIONS.md #11–13).
 
 ## Quick Start (3 Paths)
 
@@ -321,6 +327,8 @@ Per-patient cost ranges from minimal (DRY_RUN demo) to low per-analysis compute 
 ---
 
 ## Research Use Cases
+
+The platform enables tumor microenvironment characterization, drug resistance mechanism discovery, biomarker validation, patient stratification workflows, and — via the cardiometabolic server — CVD risk reclassification research and gap-test prioritisation studies. All workflows use reproducible methods with automated tracking of tool versions, parameters, and data provenance. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) for 13 specific research questions the platform is positioned to help answer (questions 11–13 address preventive cardiovascular use cases added in v17).
 
 ### 1. Tumor Microenvironment Characterization
 

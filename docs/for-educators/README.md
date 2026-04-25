@@ -26,13 +26,20 @@ graph LR
 - **No patient privacy concerns** - Safe for classroom use, public demos, publications
 - **No IRB approval needed** - Freely shareable with students
 - **Realistic but synthetic** - Clinically plausible scenarios without real PHI
-- **Two patient datasets available:** (see [PatientOne Profile](../reference/shared/patientone-profile.md) for full details)
-  - **PAT001-OVC-2025** - Stage IV ovarian cancer (BRCA1+, platinum-resistant)
-  - **PAT002-BC-2026** - Stage IIA breast cancer (BRCA2+, ER+/PR+/HER2-)
+- **Three patient datasets available:** (see [PatientOne Profile](../reference/shared/patientone-profile.md) for full details)
+  - **PAT001-OVC-2025:** 58-year-old with Stage IV ovarian cancer (BRCA1+, platinum-resistant) — oncology pipeline, all 5 stages
+  - **PAT002-BC-2026:** Stage IIA breast cancer (BRCA2+, ER+/PR+/HER2−) — cross-cancer validation; tests architecture generalizability
+  - **PAT003-CVD-2026:** 67-year-old post-menopausal female, preventive cardiovascular health — cardiometabolic pipeline; teaches risk algorithm comparison, gap analysis, and the clinical value of a negative genetic screening result
+
+> **Teaching note (v17):** PAT003 is particularly effective for introducing students
+> to the concept of *evidence gaps* — the negative Helix Tier 1 genetic screen result
+> is not "nothing"; it shifts the clinical question from variant discovery to
+> polygenic risk quantification. Pairs well with a discussion of why Lp(a), APOE,
+> and CAC score are absent from standard screening panels.
 
 ### Low Cost for Education
-- **DRY_RUN mode:** ~$0.32 per complete analysis (synthetic data, no API costs)
-- **Classroom pricing:** 20 students × $0.32 = **$6.40 per class session**
+- **DRY_RUN mode:** ~$0.32 per student per case (synthetic data, no API costs)
+- **Classroom pricing:** 20 students × $0.32 = **$6.40 per class session** (single case). Running all three cases (PAT001 + PAT002 + PAT003) for 20 students costs ~$19.20
 - **Semester course:** 15 sessions × 20 students = **$96 total**
 - **Compare to:** Commercial platforms ($500-2,000 per student)
 - See [Cost Analysis](../reference/shared/cost-analysis.md) and [DRY_RUN Mode Guide](../reference/shared/dry-run-mode.md) for details
