@@ -103,6 +103,18 @@ When `*_DRY_RUN=true`, servers return synthetic/simulated data without requiring
 - **Async:** All MCP tool functions are async
 - **AI Skills:** `docs/reference/skills/` contains project-specific instruction sets (e.g., compliance, testing, data ops) that AI coding assistants can reference by name
 
+## Pydantic / FastMCP Conventions
+
+When fixing bugs in Pydantic models, always use `field_validator` or `model_validator` on the model class—never place coercion/guard logic inside function bodies. Validate fixes by calling `.run()` (not `.fn()`) so Pydantic validation is actually exercised.
+
+## Cross-Server Fix Strategy
+
+When applying a fix pattern (e.g., DRY_RUN guard, coercion logic) across multiple servers, first confirm the correct placement on ONE server with a passing test, then replicate that exact pattern to all other servers. Do not improvise per-server variations.
+
+## Post-Change Verification
+
+After any multi-file refactor or file-move operation, verify all relative paths and internal links still resolve correctly before committing. Run `grep -r` for old paths to catch stale references.
+
 ## Common Tasks
 
 ### Run all tests for a specific server
