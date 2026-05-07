@@ -1,4 +1,4 @@
-sample_id,timepoint,treatment_response,batch,patient_id,tissue_type
+Sample,timepoint,treatment_response,batch,patient_id,tissue_type
 Pre_Sample_01,pre_treatment,responsive,1,PAT002,primary_tumor
 Pre_Sample_02,pre_treatment,responsive,1,PAT002,primary_tumor
 Pre_Sample_03,pre_treatment,responsive,2,PAT002,primary_tumor
