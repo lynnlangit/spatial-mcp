@@ -1,0 +1,87 @@
+{
+  "patient_id": "PAT002-BC-2026",
+  "model": "GEARS",
+  "perturbations": [
+    {
+      "gene": "ESR1",
+      "type": "knockout",
+      "predicted_effect": "loss_of_luminal_identity",
+      "top_affected_genes": [
+        "PGR",
+        "GATA3",
+        "FOXA1",
+        "TFF1",
+        "XBP1"
+      ],
+      "mean_expression_change": -2.8,
+      "confidence": 0.91,
+      "clinical_relevance": "Models tamoxifen resistance via ESR1 loss"
+    },
+    {
+      "gene": "PIK3CA",
+      "type": "inhibition",
+      "predicted_effect": "reduced_proliferation",
+      "top_affected_genes": [
+        "AKT1",
+        "MTOR",
+        "CCND1",
+        "MKI67",
+        "RPS6"
+      ],
+      "mean_expression_change": -1.6,
+      "confidence": 0.87,
+      "clinical_relevance": "Alpelisib sensitivity prediction (PIK3CA H1047R)"
+    },
+    {
+      "gene": "CDK4",
+      "type": "inhibition",
+      "predicted_effect": "G1_arrest",
+      "top_affected_genes": [
+        "RB1",
+        "E2F1",
+        "CCND1",
+        "MKI67",
+        "PCNA"
+      ],
+      "mean_expression_change": -1.9,
+      "confidence": 0.93,
+      "clinical_relevance": "Palbociclib response prediction (CDK4/6i)"
+    },
+    {
+      "gene": "BRCA2",
+      "type": "knockout",
+      "predicted_effect": "homologous_recombination_deficiency",
+      "top_affected_genes": [
+        "RAD51",
+        "PALB2",
+        "FANCD2",
+        "CHEK2",
+        "ATM"
+      ],
+      "mean_expression_change": -2.1,
+      "confidence": 0.89,
+      "clinical_relevance": "PARP inhibitor sensitivity (germline BRCA2 c.5946delT)"
+    },
+    {
+      "gene": "FOXP3",
+      "type": "overexpression",
+      "predicted_effect": "immune_suppression",
+      "top_affected_genes": [
+        "IL2",
+        "CD8A",
+        "GZMB",
+        "IFNG",
+        "TNF"
+      ],
+      "mean_expression_change": -1.3,
+      "confidence": 0.82,
+      "clinical_relevance": "Treg expansion limiting immunotherapy response"
+    }
+  ],
+  "summary": {
+    "most_actionable_target": "CDK4",
+    "hrd_score": 35,
+    "immune_evasion_score": 0.41,
+    "luminal_stability_score": 0.78
+  }
+}

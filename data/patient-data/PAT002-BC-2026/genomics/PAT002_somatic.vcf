@@ -1,0 +1,24 @@
+##fileformat=VCFv4.2
+##fileDate=20260115
+##source=Mutect2
+##reference=hg38
+##patient=PAT002-BC-2026
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr16,length=170805979>
+##contig=<ID=chr17,length=83257441>
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=GENE,Number=1,Type=String,Description="Gene Symbol">
+##INFO=<ID=EFFECT,Number=1,Type=String,Description="Variant Effect">
+##INFO=<ID=COSMIC,Number=1,Type=String,Description="COSMIC ID">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles">
+##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele fractions">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	TUMOR	NORMAL
+chr3	179234297	PIK3CA_H1047R	A	G	1245.6	PASS	DP=238;AF=0.42;GENE=PIK3CA;EFFECT=missense_variant;COSMIC=COSM775	GT:AD:AF	0/1:138,100:0.42	0/0:210,0:0.00
+chr10	8095656	GATA3_fs	GCTT	G	934.2	PASS	DP=203;AF=0.31;GENE=GATA3;EFFECT=frameshift_variant;COSMIC=COSV104733902	GT:AD:AF	0/1:140,63:0.31	0/0:195,0:0.00
+chr16	68771967	CDH1_splice	G	A	678.4	PASS	DP=186;AF=0.28;GENE=CDH1;EFFECT=splice_donor_variant;COSMIC=COSV58014213	GT:AD:AF	0/1:134,52:0.28	0/0:201,0:0.00
+chr5	56798505	MAP3K1_p.Q761X	C	T	856.8	PASS	DP=197;AF=0.35;GENE=MAP3K1;EFFECT=stop_gained;COSMIC=COSV99009601	GT:AD:AF	0/1:128,69:0.35	0/0:189,0:0.00
+chr17	7675088	TP53_R248W	G	A	312.4	PASS	DP=220;AF=0.15;GENE=TP53;EFFECT=missense_variant;COSMIC=COSM10662	GT:AD:AF	0/1:187,33:0.15	0/0:245,0:0.00
