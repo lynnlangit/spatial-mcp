@@ -35,11 +35,12 @@ This directory contains sample data for testing and demonstrating the Precision 
 
 **Data modalities:**
 - Clinical data (FHIR resources, CEA/CA 15-3 markers)
-- Genomic variants (VCF with BRCA2, PIK3CA mutations)
+- Genomic variants (VCF with BRCA2, PIK3CA, GATA3, CDH1, MAP3K1, TP53 mutations)
+- CNV profile (CNVkit segmentation — BRCA2 loss, MYC/CCND1/PIK3CA gain, HER2 neutral)
 - Multi-omics data (RNA-seq, proteomics, phosphoproteomics - pre/post treatment)
-- Spatial transcriptomics (10x Visium, 900 spots, 35 genes)
+- Spatial transcriptomics (10x Visium, 900 spots, 35 genes + patient-prefixed expression/coordinates/regions)
 - Imaging data (H&E, ER/PR/HER2/Ki67 immunofluorescence)
-- Perturbation data (PD-1 knockout CRISPR screen)
+- Perturbation data (PD-1 knockout CRISPR screen + GEARS predictions for ESR1/PIK3CA/CDK4/BRCA2/FOXP3)
 
 ---
 
