@@ -16,20 +16,37 @@
 |------------|---------|
 | All `*_DRY_RUN` env vars | `false` |
 | Python deps | pandas, numpy, scipy (for CSV/VCF/JSON parsing) |
-| Data files | Full `data/patient-data/PAT002-BC-2026/` directory |
+| `SPATIAL_DATA_DIR` | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data` |
+| Data files | Full `data/patient-data/PAT002-BC-2026/` directory (see table below) |
 
-Servers that parse real files in this mode:
-- **mockepic** — reads `clinical/patient_demographics.json`, `clinical/lab_results.json`
-- **genomic-results** — reads `genomics/PAT002_somatic.vcf`, `genomics/PAT002_cnv.cns`
-- **spatialtools** — reads `spatial/PAT002_expression.csv`, `PAT002_coordinates.csv`, `PAT002_regions.csv`
-- **multiomics** — reads `multiomics/tumor_rna_seq.csv`, `tumor_proteomics.csv`, `tumor_phosphoproteomics.csv`, `sample_metadata.csv`
+### Required Data Files (absolute paths)
+
+All paths below use repo root `/Users/lynnlangit/Documents/GitHub/spatial-mcp`.
+
+| Stage | Server | File | Absolute Path |
+|-------|--------|------|---------------|
+| 1 | mockepic | patient_demographics.json | `.../data/patient-data/PAT002-BC-2026/clinical/patient_demographics.json` |
+| 1 | mockepic | lab_results.json | `.../data/patient-data/PAT002-BC-2026/clinical/lab_results.json` |
+| 2 | fgbio | PAT002_tumor_R1.fastq.gz | `.../data/patient-data/PAT002-BC-2026/genomics/PAT002_tumor_R1.fastq.gz` (may not exist) |
+| 3 | genomic-results | PAT002_somatic.vcf | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/genomics/PAT002_somatic.vcf` |
+| 3 | genomic-results | PAT002_cnv.cns | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/genomics/PAT002_cnv.cns` |
+| 4 | spatialtools | PAT002_expression.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_expression.csv` |
+| 4 | spatialtools | PAT002_coordinates.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_coordinates.csv` |
+| 4 | spatialtools | PAT002_regions.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_regions.csv` |
+| 4 | spatialtools | PAT002_minimal_spatial.h5ad | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_minimal_spatial.h5ad` |
+| 5 | multiomics | tumor_rna_seq.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/tumor_rna_seq.csv` |
+| 5 | multiomics | tumor_proteomics.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/tumor_proteomics.csv` |
+| 5 | multiomics | tumor_phosphoproteomics.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/tumor_phosphoproteomics.csv` |
+| 5 | multiomics | sample_metadata.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/sample_metadata.csv` |
+| 5 | multiomics | stouffer_results.csv | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/stouffer_results.csv` |
+| 5 | multiomics | top_omics_genes.json | `/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/top_omics_genes.json` |
 
 ## Prompt
 
 Copy and paste the following into Claude Desktop:
 
 ```
-Run a PatientTwo (PAT002-BC-2026) end-to-end precision oncology analysis across 6 servers. All servers are in SYNTHETIC_DATA mode (DRY_RUN=false) — they parse real files from data/patient-data/PAT002-BC-2026/.
+Run a PatientTwo (PAT002-BC-2026) end-to-end precision oncology analysis across 6 servers. All servers are in SYNTHETIC_DATA mode (DRY_RUN=false) — they parse real files from /Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/.
 
 ## Stage 1 — Clinical History (mockepic)
 Retrieve patient clinical data by parsing the actual JSON files:
@@ -39,35 +56,35 @@ Retrieve patient clinical data by parsing the actual JSON files:
 
 ## Stage 2 — FASTQ Quality (fgbio)
 Validate FASTQ quality for a tumor sample:
-- validate_fastq with path "data/patient-data/PAT002-BC-2026/genomics/PAT002_tumor_R1.fastq.gz"
+- validate_fastq with path "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/genomics/PAT002_tumor_R1.fastq.gz"
 - Report read count, average quality, read length
 
 ## Stage 3 — Somatic Variants & HRD (genomic-results)
 Parse genomic results from the actual patient-prefixed VCF and CNS files:
-- parse_somatic_variants from "data/patient-data/PAT002-BC-2026/genomics/PAT002_somatic.vcf"
+- parse_somatic_variants from "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/genomics/PAT002_somatic.vcf"
   - Expect: PIK3CA H1047R (VAF 0.42), GATA3 fs (0.31), CDH1 splice (0.28), MAP3K1 Q761X (0.35), TP53 R248W (0.15)
-- parse_cnv_calls from "data/patient-data/PAT002-BC-2026/genomics/PAT002_cnv.cns"
+- parse_cnv_calls from "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/genomics/PAT002_cnv.cns"
   - Expect: BRCA2 loss (cn=1), MYC/CCND1/PIK3CA gain (cn=3), ERBB2 neutral (cn=2)
-- calculate_hr_deficiency_score using both files
+- calculate_hr_deficiency_score using both files above
 - Summarize: PIK3CA H1047R actionable (alpelisib), BRCA2 germline (PARPi eligible), HER2-negative confirmed
 
 ## Stage 4 — Spatial Transcriptomics (spatialtools)
-Run spatial analysis by parsing the actual patient-prefixed CSV files:
-- Load from data/patient-data/PAT002-BC-2026/spatial/:
-  - PAT002_expression.csv (900 spots, 36 genes, luminal A profile)
-  - PAT002_coordinates.csv (patient-prefixed spot coordinates)
-  - PAT002_regions.csv (5 regions: tumor_core, adipose, stroma, immune_infiltrate, normal_epithelium)
+Run spatial analysis by parsing the actual patient-prefixed files (absolute paths):
+- Expression: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_expression.csv" (900 spots, 36 genes, luminal A profile)
+- Coordinates: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_coordinates.csv" (patient-prefixed spot coordinates)
+- Regions: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_regions.csv" (5 regions: tumor_core, adipose, stroma, immune_infiltrate, normal_epithelium)
+- H5AD: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/spatial/PAT002_minimal_spatial.h5ad"
 - Differential expression between tumor_core vs stroma regions
 - Spatial autocorrelation (Moran's I) for ESR1 and MKI67
 - Confirm: ESR1/PGR/GATA3/FOXA1 elevated, ERBB2 low (HER2-negative spatial validation)
 
 ## Stage 5 — Multi-Omics Integration (multiomics)
-Integrate omics layers by parsing the actual CSV files:
+Integrate omics layers by parsing the actual CSV files (absolute paths):
 - integrate_omics_data with:
-  - rna_path: "data/patient-data/PAT002-BC-2026/multiomics/tumor_rna_seq.csv"
-  - protein_path: "data/patient-data/PAT002-BC-2026/multiomics/tumor_proteomics.csv"
-  - phospho_path: "data/patient-data/PAT002-BC-2026/multiomics/tumor_phosphoproteomics.csv"
-  - metadata_path: "data/patient-data/PAT002-BC-2026/multiomics/sample_metadata.csv"
+  - rna_path: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/tumor_rna_seq.csv"
+  - protein_path: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/tumor_proteomics.csv"
+  - phospho_path: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/tumor_phosphoproteomics.csv"
+  - metadata_path: "/Users/lynnlangit/Documents/GitHub/spatial-mcp/data/patient-data/PAT002-BC-2026/multiomics/sample_metadata.csv"
 - calculate_stouffer_meta for breast cancer genes (ESR1, PGR, PIK3CA, CCND1, MKI67)
 
 ## Stage 6 — Patient Report (patient-report)
