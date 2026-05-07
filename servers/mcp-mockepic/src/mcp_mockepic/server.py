@@ -68,6 +68,27 @@ _PATIENT_PROFILES = {
             {"name": "Tamoxifen", "dose": "20 mg", "frequency": "daily"},
         ],
     },
+    "PAT003": {
+        "demographics": {"age": 67, "sex": "F", "ethnicity": "Caucasian", "name": "Patricia Wells"},
+        "diagnoses": [
+            {"icd10": "I10", "description": "Stage 1 Hypertension, controlled", "date": "2023-03-15"},
+            {"icd10": "E78.5", "description": "Hyperlipidemia, unspecified", "date": "2023-03-15"},
+        ],
+        "labs": {
+            "hsCRP": {"value": 1.8, "unit": "mg/L", "ref_range": "0-3"},
+            "LDL": {"value": 118, "unit": "mg/dL", "ref_range": "0-130"},
+            "HDL": {"value": 58, "unit": "mg/dL", "ref_range": "40-80"},
+            "total_cholesterol": {"value": 195, "unit": "mg/dL", "ref_range": "0-200"},
+            "triglycerides": {"value": 142, "unit": "mg/dL", "ref_range": "0-150"},
+            "fasting_glucose": {"value": 98, "unit": "mg/dL", "ref_range": "70-100"},
+            "HbA1c": {"value": 5.6, "unit": "%", "ref_range": "4.0-5.7"},
+            "hemoglobin": {"value": 13.1, "unit": "g/dL", "ref_range": "12-16"},
+            "wbc": {"value": 6.9, "unit": "K/uL", "ref_range": "4-11"},
+        },
+        "medications": [
+            {"name": "Lisinopril", "dose": "5 mg", "frequency": "daily"},
+        ],
+    },
 }
 
 # Fallback for unrecognised patient IDs
