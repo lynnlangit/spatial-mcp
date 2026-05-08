@@ -128,6 +128,19 @@ def _build_mock_embedding(
                 "mode": "mock",
             }
 
+        def compute_pairwise_fidelity(self, features_dict, **kwargs):
+            rng = np.random.RandomState(42)
+            return {k: float(rng.uniform(0.4, 0.9)) for k in features_dict}
+
+        def compute_fidelity_matrix(self, features_dict, **kwargs):
+            rng = np.random.RandomState(42)
+            n = len(features_dict)
+            mat = rng.uniform(0.3, 0.95, size=(n, n))
+            for i in range(n):
+                mat[i, i] = 1.0
+            keys = list(features_dict.keys())
+            return {keys[i]: mat[i].tolist() for i in range(n)}
+
     _EMBEDDINGS_CACHE[embedding_id] = _MockEmbedding(
         cell_types, feature_dim, mock_vectors
     )
