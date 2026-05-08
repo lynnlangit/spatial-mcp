@@ -1,0 +1,15 @@
+{
+  "patient_id": "PAT002-BC-2026",
+  "method": "inferred_from_ancestry",
+  "note": "Synthetic HLA assignment for Caucasian female; representative common alleles for NW European ancestry",
+  "hla_class_I": {
+    "HLA-A": ["HLA-A*02:01", "HLA-A*03:01"],
+    "HLA-B": ["HLA-B*07:02", "HLA-B*44:02"],
+    "HLA-C": ["HLA-C*07:02", "HLA-C*05:01"]
+  },
+  "hla_class_II": {
+    "HLA-DRB1": ["HLA-DRB1*15:01", "HLA-DRB1*07:01"],
+    "HLA-DQB1": ["HLA-DQB1*06:02", "HLA-DQB1*02:02"]
+  },
+  "clinical_note": "HLA-A*02:01 present — highest-frequency MHC-I allele in Caucasian populations (~50%). Relevant for neoantigen vaccine candidate prioritisation."
+}
