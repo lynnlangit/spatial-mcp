@@ -135,8 +135,11 @@ def _build_mock_embedding(
 
         def compute_fidelity_matrix(self, features_dict, **kwargs):
             rng = np.random.RandomState(42)
-            n = len(features_dict)
+            # n_cells = total feature vectors, not number of cell types
+            n = sum(len(v) for v in features_dict.values())
             mat = rng.uniform(0.3, 0.95, size=(n, n))
+            # Make symmetric and set diagonal to 1.0
+            mat = (mat + mat.T) / 2
             for i in range(n):
                 mat[i, i] = 1.0
             return mat
