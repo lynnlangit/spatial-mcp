@@ -13,7 +13,7 @@
 
 ## The Problem
 
-Standard HGSOC workup (BRCA1/2, HRD panel, CT imaging) generates **no immunotherapy hypotheses**. Manual multi-modal analysis across genomics, spatial transcriptomics, imaging, and clinical data takes an estimated 40 hours and $6,000-9,000 per patient -- making integrated analysis clinically impractical.
+Standard oncology workup (BRCA1/2, HRD panel, tumor genomic panel) generates **no immunotherapy or investigational hypotheses**. For preventive health, standard lipid panels and population genetic screens miss key risk factors. Manual multi-modal analysis across genomics, spatial transcriptomics, and clinical data is clinically impractical -- the platform automates it.
 
 ## The Platform
 
@@ -89,12 +89,12 @@ All tools accessible via natural language. Every AI result requires **clinician 
 
 ## The Results
 
-The platform surfaces clinically actionable findings that standard workup cannot reach — validated across three independent use cases:
+The platform surfaces clinically actionable findings that standard workup cannot reach — **6 investigational hypotheses across 2 cancer types** plus 3 preventive health evidence gaps, validated across three independent use cases:
 
 | Use Case | Patient | Key Finding Missed by Standard Workup |
 |---|---|---|
 | **HGSOC (Stage IV)** | PAT001 | 3 investigational paths: neoantigen vaccine (RMPEAAPPV IC50 7.8 nM), NNMT/CAF inhibition, convergent checkpoint blockade |
-| **ER+ Breast Cancer** | PAT002 | HRD 35 below myChoice threshold but PARP-eligible via BRCA2 germline — clinically significant nuance, zero code changes |
+| **ER+ Breast Cancer** | PAT002 | 3 investigational hypotheses: inavolisib over alpelisib (PIK3CA H1047R, 2024 FDA approval), MYC-driven triple therapy, YSAPLSSSL neoepitope vaccine + CAF depletion + anti-PD-1 — zero disease-specific code changes |
 | **Preventive Cardiovascular** | PAT003 | Intermediate CVD risk (Reynolds 14.3%) with 3 high-priority gaps missed by standard lipid panel AND population genetic screen: Lp(a), APOE genotype, CAC score |
 
 The same 19-server architecture runs all three. No disease-specific code changes between use cases.
@@ -103,10 +103,10 @@ The same 19-server architecture runs all three. No disease-specific code changes
 
 | Metric | Value | Source server |
 |--------|-------|---------------|
-| HRD score | 72 | mcp-genomic-results |
-| TMB | 4.2 mut/Mb | mcp-genomic-results |
+| HRD score | 54 | mcp-genomic-results |
+| TMB (POLE-corrected) | 47.3 mut/Mb | mcp-genomic-results |
 | Top neoantigen IC50 (RMPEAAPPV) | 7.8 nM | mcp-neoantigen |
-| Spatial spot count | 300 | mcp-spatialtools |
+| Spatial spot count | 900 | mcp-spatialtools |
 | Moran's I (global) | -0.0033 | mcp-spatialtools |
 | Deconvolution: tumor | 56 cells | mcp-cibersortx |
 | Deconvolution: endothelial | 44 cells | mcp-cibersortx |
