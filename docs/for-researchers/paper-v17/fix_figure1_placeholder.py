@@ -1,10 +1,10 @@
 import fitz  # PyMuPDF
 import os
 
-PDF_IN  = "docs/HGSOC_Platform_Paper_v17.pdf"
-PDF_TMP = "docs/HGSOC_Platform_Paper_v17_tmp.pdf"
-PDF_OUT = "docs/HGSOC_Platform_Paper_v17.pdf"
-FIG_PNG = "docs/figures/figure1_pipeline.png"
+PDF_IN  = "docs/for-researchers/paper-v17/HGSOC_Platform_Paper_v17.pdf"
+PDF_TMP = "docs/for-researchers/paper-v17/HGSOC_Platform_Paper_v17_tmp.pdf"
+PDF_OUT = "docs/for-researchers/paper-v17/HGSOC_Platform_Paper_v17.pdf"
+FIG_PNG = "docs/for-researchers/paper-v17/figures/figure1_pipeline.png"
 
 # Page layout (US Letter 612x792)
 # Body text column: 73.7 - 525.0

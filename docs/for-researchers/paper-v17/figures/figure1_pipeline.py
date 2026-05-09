@@ -108,6 +108,6 @@ ax.text(0.3, 6.85, "PAT001 (HGSOC) \u00b7 PAT002 (ER+ BC) \u00b7 PAT003 (CVD)",
         fontsize=8, color='#333333', fontweight='bold')
 
 plt.tight_layout(pad=0.3)
-plt.savefig('docs/figures/figure1_pipeline.pdf', bbox_inches='tight', dpi=300)
-plt.savefig('docs/figures/figure1_pipeline.png', bbox_inches='tight', dpi=300)
-print("Figure 1 saved: docs/figures/figure1_pipeline.pdf + .png")
+plt.savefig('docs/for-researchers/paper-v17/figures/figure1_pipeline.pdf', bbox_inches='tight', dpi=300)
+plt.savefig('docs/for-researchers/paper-v17/figures/figure1_pipeline.png', bbox_inches='tight', dpi=300)
+print("Figure 1 saved: docs/for-researchers/paper-v17/figures/figure1_pipeline.pdf + .png")
