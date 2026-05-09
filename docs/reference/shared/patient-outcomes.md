@@ -5,7 +5,7 @@
 > link to the relevant anchor rather than restating these findings.
 >
 > Source of truth for numeric values: `tests/fixtures/pat00X_canonical.py`
-> Last updated: 2026-04-23 (v17 — PAT003 added)
+> Last updated: 2026-05-09 (v17 — PAT002 deep-stage hypotheses added)
 
 ---
 
@@ -49,23 +49,39 @@ therapy (aromatase inhibitor). BRCA2 germline result was returned but HRD score 
 fell below the myChoice CDx 42-point PARP-eligibility threshold, so olaparib was not
 offered.
 
-**What standard workup missed:** PARP inhibitor eligibility reclassification.
+**What standard workup missed:** Three investigational hypotheses and PARP reclassification.
 
-The platform cross-referenced the HRD 35 result with the germline BRCA2 variant
-using the same server stack as PAT001 — zero architecture changes. Current FDA labeling
-for olaparib (SOLO-1 and OlympiA trials) supports germline BRCA1/2-positive status as
-an independent PARP eligibility criterion regardless of HRD score. PAT002 is
-PARP-eligible on germline grounds alone.
+- **Inavolisib over alpelisib** — PIK3CA H1047R somatic mutation makes PAT002 eligible
+  for PI3K inhibition. The platform ranked inavolisib over alpelisib based on the 2024
+  FDA approval for PIK3CA-mutant ER+/HER2− breast cancer, a distinction not surfaced by
+  standard genomic panel reporting.
 
-This case validates the platform's architecture generalizability: the same 19-server
-stack handles a second cancer type with different biology and a different key finding.
+- **MYC-driven triple therapy** — MYC amplification detected alongside PIK3CA and BRCA2
+  suggests a CDK4/6 inhibitor + PI3K inhibitor + endocrine therapy combination. Standard
+  workup initiated single-agent endocrine therapy only.
+
+- **YSAPLSSSL neoepitope vaccine + CAF depletion + anti-PD-1** — The YSAPLSSSL peptide
+  binds HLA-A\*02:01. Quantum immune evasion scoring (0.41) indicates partial immune
+  engagement despite ER+ BC being conventionally classified as immunologically cold.
+  Combined with CAF depletion, this suggests a vaccine + checkpoint strategy.
+
+Additionally, the platform reclassified PARP eligibility: HRD 35 falls below the
+myChoice CDx 42-point threshold, but current FDA labeling for olaparib (OlympiA trial)
+supports germline BRCA2-positive status as an independent eligibility criterion
+regardless of HRD score.
+
+The same 19-server stack handled this second cancer type with zero disease-specific
+code changes — validating architecture generalizability.
 
 **Canonical numeric outcomes** (source: `tests/fixtures/pat002_canonical.py`):
 
 | Metric | Value | Unit |
 |---|---|---|
 | HRD score | 35 | — |
-| ESR1/PGR Moran's I | 0.42–0.45 | — |
+| TMB | 2.8 | mut/Mb |
+| Immune evasion score | 0.41 | — |
+| Top neoantigen peptide | YSAPLSSSL | — |
+| Luminal stability score | 0.78 | — |
 
 ---
 
@@ -144,7 +160,7 @@ criteria.
 | Patient | Use case | Key finding missed by standard workup | Anchor |
 |---|---|---|---|
 | PAT001 | HGSOC Stage IV | 3 investigational paths (neoantigen vaccine, NNMT/CAF, checkpoint) | [#pat001](#pat001) |
-| PAT002 | ER+ breast cancer | PARP eligibility via BRCA2 germline despite HRD 35 < myChoice threshold | [#pat002](#pat002) |
+| PAT002 | ER+ breast cancer | 3 investigational hypotheses (inavolisib, MYC triple therapy, neoepitope vaccine) + PARP reclassification | [#pat002](#pat002) |
 | PAT003 | Preventive CVD | 3 evidence gaps (Lp(a), APOE, CAC) missed by lipid panel + Helix Tier 1 | [#pat003](#pat003) |
 
 ---
