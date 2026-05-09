@@ -16,8 +16,8 @@ Usage::
 PAT001 = {
     # --- Genomic results (mcp-genomic-results) ---
     "patient_id": "PAT001-OVC-2025",
-    "hrd_score": 72,
-    "tmb_mut_per_mb": 4.2,
+    "hrd_score": 54,
+    "tmb_mut_per_mb": 47.3,  # POLE-corrected
 
     # --- Neoantigen prediction (mcp-neoantigen) ---
     "top_neoantigen_peptide": "RMPEAAPPV",
@@ -25,7 +25,7 @@ PAT001 = {
     "hla_allele": "HLA-A*02:01",
 
     # --- Spatial transcriptomics (mcp-spatialtools) ---
-    "spatial_spot_count": 300,
+    "spatial_spot_count": 900,
     "morans_i_global": -0.0033,
 
     # --- Immune deconvolution (mcp-cibersortx) ---
