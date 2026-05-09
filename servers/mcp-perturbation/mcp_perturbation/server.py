@@ -573,6 +573,16 @@ async def perturbation_predict_response(params: str) -> str:
     trained model is present, the canonical PAT001 dry-run payload is
     returned automatically.
 
+    Returns:
+        JSON object with keys:
+          - "treatment" (str): perturbation applied (e.g. "NNMT+STAT3")
+          - "cell_type" (str): cell type predicted
+          - "top_upregulated" (list[str]): genes with increased expression
+          - "top_downregulated" (list[str]): genes with decreased expression
+          - "interpretation" (str): plain-language summary of predicted effect
+          - "mode" (str): "dry_run" or "live"
+          - "model" (str): "GEARS"
+
     Example (live inference):
         {"model_name": "my_model", "patient_data_path": "./data/patient_001.h5ad",
          "cell_type_to_predict": "T_cells", "treatment_key": "CD4,CD8A"}

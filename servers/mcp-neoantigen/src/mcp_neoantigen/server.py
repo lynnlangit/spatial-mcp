@@ -712,7 +712,13 @@ async def predict_mhc1_binding(
         length: Peptide length for prediction (default 9).
 
     Returns:
-        Dictionary with binding predictions, binder counts, and classifications.
+        JSON object with keys:
+          - "predictions" (list[dict]): [{"peptide": str, "hla_allele": str,
+                "ic50_nm": float, "binding_strength": "strong"|"weak"|"none",
+                "percentile_rank": float}]
+          - "strong_binders" (list[dict]): subset where ic50_nm < 50
+          - "vaccine_candidates" (list[str]): peptides recommended for follow-up
+          - "method" (str): prediction method used (e.g. "NetMHCpan 4.1 via IEDB REST")
     """
     return await _predict_mhc1_binding_impl(peptides, hla_alleles, method, length)
 
@@ -789,7 +795,12 @@ async def estimate_neoantigen_burden(
             NSCLC, colorectal, breast, pancreatic, glioblastoma.
 
     Returns:
-        Dictionary with estimated neoantigen count and interpretation.
+        JSON object with keys:
+          - "tmb_mut_per_mb" (float): tumour mutational burden
+          - "estimated_neoantigens" (int): predicted neoantigen count
+          - "strong_binder_count" (int): IC50 < 50 nM predicted binders
+          - "antigen_presentation_score" (float 0-1): pathway activity score
+          - "immunotherapy_prediction" (str): "responsive"|"non-responsive"|"uncertain"
     """
     return await _estimate_neoantigen_burden_impl(
         tmb_mutations_per_mb, hla_alleles, cancer_type,

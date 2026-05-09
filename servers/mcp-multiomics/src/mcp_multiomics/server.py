@@ -946,13 +946,16 @@ def predict_upstream_regulators(
                                      (default: 2.0, ~p < 0.05)
 
     Returns:
-        Dictionary with:
-        - kinases: List of predicted kinases with activation state
-        - transcription_factors: List of predicted TFs with activation state
-        - drugs: List of predicted drug responses
-        - statistics: Summary statistics (counts, methods)
-        - method: Enrichment method details
-        - recommendation: Top therapeutic recommendation
+        JSON object with keys:
+          - "kinases" (list[dict]): predicted kinases, each
+                {"name": str, "activation_state": str, "z_score": float,
+                 "q_value": float, "targets_in_dataset": int}
+          - "transcription_factors" (list[dict]): predicted TFs, same schema
+          - "drugs" (list[dict]): predicted drug responses, each
+                {"name": str, "prediction": str, "z_score": float,
+                 "q_value": float, "mechanism": str}
+          - "statistics" (dict): {"total_genes_analyzed": int, "method": str}
+          - "recommendation" (str): top therapeutic recommendation
 
     Example:
         ```

@@ -580,7 +580,12 @@ async def get_target_drugs(
         phase_min: Minimum clinical trial phase to include (0-4). 0 = all phases.
 
     Returns:
-        Dictionary with list of drugs sorted by phase (highest first).
+        JSON object with keys:
+          - "drugs" (list[dict]): each {"name": str, "phase": int,
+                "mechanism": str, "indications": list[str], "status": str}
+                sorted by phase (highest first)
+          - "total_drugs" (int): number of drugs returned
+          - "target" (str): gene symbol queried
     """
     return await _get_target_drugs_impl(gene_symbol, phase_min)
 
@@ -643,7 +648,13 @@ async def batch_score_targets(
         disease_id: EFO disease ID. Default is ovarian carcinoma (EFO_0001071).
 
     Returns:
-        Dictionary with per-gene scores, druggable_targets, and novel_targets.
+        JSON object with keys:
+          - "scores" (dict): per-gene association scores {gene_symbol: float (0-1)}
+          - "druggable_targets" (list[str]): genes with existing drugs
+          - "novel_targets" (list[str]): high-scoring genes lacking drugs
+          - "disease_id" (str): EFO ID queried
+          - "total_queried" (int): number of input genes
+          - "metadata" (dict): {"tool": "batch_score_targets", "n_genes": int}
     """
     return await _batch_score_targets_impl(gene_symbols, disease_id)
 

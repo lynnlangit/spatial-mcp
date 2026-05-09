@@ -406,7 +406,13 @@ def compute_cell_type_fidelity(
         n_uncertainty_samples: Monte Carlo samples for UQ (default: 100)
 
     Returns:
-        Fidelity scores with optional uncertainty estimates
+        JSON object with keys:
+          - "fidelity_scores" (list[dict]): [{"cell_type_a": str,
+                "cell_type_b": str, "fidelity": float (0-1)}]
+          - "low_fidelity_pairs" (list[dict]): subset where fidelity < 0.5
+          - "summary" (dict): {"mean_fidelity": float, "n_cells": int,
+                "n_types": int}
+          - "uncertainty" (dict | None): confidence intervals if with_uncertainty
     """
     if not ANNDATA_AVAILABLE:
         return {"error": "anndata not installed", "success": False}
@@ -566,7 +572,13 @@ def identify_immune_evasion_states(
         with_confidence: Include classification confidence
 
     Returns:
-        Evasion scores with optional confidence estimates
+        JSON object with keys:
+          - "evasion_summary" (dict): {"n_evading": int, "mean_score": float,
+                "max_score": float, "threshold": float}
+          - "evasion_by_cell_type" (list[dict]): [{"cell_type": str, "n": int,
+                "mean_evasion": float, "min": float, "max": float}]
+          - "high_evasion_cells" (list[dict]): cells with score > 0.8
+          - "mechanism_inference" (str): plain-language evasion mechanism
     """
     if not ANNDATA_AVAILABLE:
         return {"error": "anndata not installed", "success": False}
