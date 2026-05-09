@@ -76,7 +76,7 @@ cd servers/mcp-genomic-results && uv sync && uv run pytest -v
 **Outline:**
 
 1. **Setup and notebook orientation** (10 min)
-   - Open `notebooks/PAT001_walkthrough.ipynb`
+   - Open `docs/for-educators/PAT001_walkthrough.ipynb`
    - Import canonical fixture; verify values load
    - Explain DRY_RUN vs. live MCP connections
 
@@ -111,7 +111,7 @@ cd servers/mcp-genomic-results && uv sync && uv run pytest -v
    - Class discussion: which hypothesis is strongest and why?
 
 **Suggested reading:**
-- [PAT001 walkthrough notebook](../../notebooks/PAT001_walkthrough.ipynb)
+- [PAT001 walkthrough notebook](PAT001_walkthrough.ipynb)
 
 **Hands-on exercise:**
 Modify one PAT001 parameter (e.g., set HRD = 35 instead of 72) and discuss how the therapeutic hypothesis changes. Does PARP inhibitor candidacy still hold? Write a 1-paragraph argument.

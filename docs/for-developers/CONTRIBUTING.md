@@ -567,7 +567,7 @@ PatientOne integration example
 
 ## Contributing educational content
 
-New notebooks must follow the cell order in `notebooks/PAT001_walkthrough.ipynb`:
+New notebooks must follow the cell order in `docs/for-educators/PAT001_walkthrough.ipynb`:
 explain (markdown) → code call → assert against canonical values from `tests/fixtures/pat001_canonical.py`.
 
 To update the glossary, edit `docs/for-educators/GLOSSARY.md` and increment the
