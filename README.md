@@ -17,7 +17,7 @@ Standard oncology workup (BRCA1/2, HRD panel, tumor genomic panel) generates **n
 
 ## The Platform
 
-A 19-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
+A multi-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
 
 ```mermaid
 flowchart LR
@@ -63,29 +63,21 @@ flowchart LR
    |                                                               |
    |  DATA ACQUISITION      ANALYSIS & INFERENCE      REPORTING   |
    |                                                               |
-   |  mockepic              spatialtools    (16)      patient-     |
-   |  epic                  multiomics     (10)       report (5)   |
-   |  geodownload           perturbation    (8)                    |
-   |  mocktcga              quantum-fidelity(6)                    |
-   |  genomic-results       opentargets     (6)                    |
-   |  fgbio                 neoantigen      (6)                    |
-   |                        cibersortx      (5)                    |
-   |  [7 servers]           openimagedata   (5)       [1 server]   |
-   |                        deepcell        (3)                    |
-   |                        cell-classify   (3)                    |
-   |                        cardiometabolic (5)                    |
-   |                                                               |
-   |                        [11 servers]                           |
+   |  mockepic              spatialtools              patient-     |
+   |  epic                  multiomics                report       |
+   |  geodownload           perturbation                           |
+   |  mocktcga              quantum-fidelity                       |
+   |  genomic-results       opentargets                            |
+   |  fgbio                 neoantigen                             |
+   |                        cibersortx                             |
+   |                        openimagedata                          |
+   |                        deepcell                               |
+   |                        cell-classify                          |
+   |                        cardiometabolic                        |
    +---------------------------------------------------------------+
-                     19 custom servers, 104 tools
 ```
 
-| | Servers | Tools |
-|-|---------|-------|
-| **Custom** | 19 servers | 104 tools |
-| **External** | 6 connectors (PubMed, bioRxiv, ClinicalTrials.gov, Seqera, cBioPortal, HuggingFace) | 46 tools |
-
-All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant. See [Server Registry](docs/reference/shared/server-registry.md).
+All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant. Current server and tool counts: **[Server Registry](docs/reference/shared/server-registry.md)**.
 
 ## The Results
 

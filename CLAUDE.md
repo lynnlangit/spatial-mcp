@@ -10,7 +10,7 @@ When rate limits or usage limits are hit mid-task, save progress notes in a scra
 
 ## What This Project Is
 
-Precision Medicine MCP Platform — an AI-orchestrated system for precision medicine analysis across oncology and preventive health. It provides 19 specialized MCP (Model Context Protocol) servers (104 tools) that expose bioinformatics and clinical risk tools via natural language through Claude or Gemini.
+Precision Medicine MCP Platform — an AI-orchestrated system for precision medicine analysis across oncology and preventive health. It provides specialized MCP (Model Context Protocol) servers that expose bioinformatics and clinical risk tools via natural language through Claude or Gemini. See [Server Registry](docs/reference/shared/server-registry.md) for current server and tool counts.
 
 **Validated use cases (three synthetic patients, all live e2e tested):**
 - **PAT001** (PAT001-OVC-2025) — Stage IV HGSOC; 3 investigational treatment hypotheses surfaced
@@ -21,25 +21,25 @@ Precision Medicine MCP Platform — an AI-orchestrated system for precision medi
 
 ```
 precision-medicine-mcp/
-├── servers/                    # MCP servers (Python, FastMCP)
-│   ├── mcp-fgbio/             # Genomic reference data (4 tools)
-│   ├── mcp-multiomics/        # RNA/Protein/Phospho integration (10 tools)
-│   ├── mcp-spatialtools/      # Spatial transcriptomics (14 tools)
-│   ├── mcp-epic/              # Epic FHIR integration (4 tools, local-only)
-│   ├── mcp-mockepic/          # Synthetic EHR for demos (3 tools)
-│   ├── mcp-perturbation/      # Perturbation prediction (8 tools)
-│   ├── mcp-quantum-celltype-fidelity/  # Quantum cell type fidelity (6 tools)
-│   ├── mcp-openimagedata/     # Histology image processing (5 tools)
-│   ├── mcp-deepcell/          # Cell segmentation (3 tools)
-│   ├── mcp-cell-classify/     # Cell phenotype classification (3 tools)
-│   ├── mcp-mocktcga/           # Mock TCGA cohort comparison (5 tools)
-│   ├── mcp-patient-report/    # PDF report generation (5 tools)
-│   ├── mcp-genomic-results/   # Somatic variant/CNV parsing (4 tools)
-│   ├── mcp-geodownload/       # GEO/SRA dataset download (6 tools)
-│   ├── mcp-opentargets/       # Open Targets drug-target associations (6 tools)
-│   ├── mcp-cibersortx/        # CIBERSORTx immune deconvolution (5 tools)
-│   ├── mcp-neoantigen/        # Neoantigen prediction & HLA binding (6 tools)
-│   ├── mcp-cardiometabolic/   # CVD risk scoring & preventive health (5 tools)
+├── servers/                    # MCP servers (Python, FastMCP) — see server-registry.md for tool counts
+│   ├── mcp-fgbio/             # Genomic reference data
+│   ├── mcp-multiomics/        # RNA/Protein/Phospho integration
+│   ├── mcp-spatialtools/      # Spatial transcriptomics
+│   ├── mcp-epic/              # Epic FHIR integration (local-only)
+│   ├── mcp-mockepic/          # Synthetic EHR for demos
+│   ├── mcp-perturbation/      # Perturbation prediction
+│   ├── mcp-quantum-celltype-fidelity/  # Quantum cell type fidelity
+│   ├── mcp-openimagedata/     # Histology image processing
+│   ├── mcp-deepcell/          # Cell segmentation
+│   ├── mcp-cell-classify/     # Cell phenotype classification
+│   ├── mcp-mocktcga/          # Mock TCGA cohort comparison
+│   ├── mcp-patient-report/    # PDF report generation
+│   ├── mcp-genomic-results/   # Somatic variant/CNV parsing
+│   ├── mcp-geodownload/       # GEO/SRA dataset download
+│   ├── mcp-opentargets/       # Open Targets drug-target associations
+│   ├── mcp-cibersortx/        # CIBERSORTx immune deconvolution
+│   ├── mcp-neoantigen/        # Neoantigen prediction & HLA binding
+│   ├── mcp-cardiometabolic/   # CVD risk scoring & preventive health
 │   └── mcp-server-boilerplate/# Template for new servers
 ├── data/                       # Patient data and reference files
 │   ├── patient-data/PAT001-OVC-2025/  # Synthetic PatientOne data (HGSOC)
