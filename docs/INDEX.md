@@ -11,8 +11,8 @@ Central navigation for all documentation. Canonical references are in `reference
 | [Server Registry](reference/shared/server-registry.md) | 19 custom servers (104 tools) + 6 external |
 | [Value Proposition](reference/shared/value-proposition.md) | Time savings, cost savings, ROI |
 | [PatientOne Profile (PAT001)](reference/shared/patientone-profile.md) | HGSOC Stage IV — clinical profile, genomic findings, 3 investigational findings |
-| PAT002 Profile | ER+ breast cancer — BRCA2 germline, PIK3CA H1047R, cross-cancer validation |
-| PAT003 Profile | Preventive CVD — cardiometabolic risk, Helix Tier 1 negative screen, 3 evidence gaps |
+| [PAT002 Outcomes](reference/shared/patient-outcomes.md#pat002) | ER+ breast cancer — BRCA2 germline, PIK3CA H1047R, 3 investigational hypotheses |
+| [PAT003 Outcomes](reference/shared/patient-outcomes.md#pat003) | Preventive CVD — cardiometabolic risk, Helix Tier 1 negative screen, 3 evidence gaps |
 | [Cost Analysis](reference/shared/cost-analysis.md) | Per-patient costs, infrastructure |
 | [HIPAA Summary](reference/shared/hipaa-summary.md) | Compliance checklist |
 | [DRY_RUN Mode](reference/shared/dry-run-mode.md) | Mock mode explanation |
@@ -51,8 +51,10 @@ Central navigation for all documentation. Canonical references are in `reference
 
 ## Testing
 
-- [PatientOne Scenario](reference/testing/patient-one/README.md) -- End-to-end test case
-- [Test Prompts](reference/testing/patient-one/test-prompts/) -- DRY_RUN and synthetic data prompts
+- [PAT001 Scenario (HGSOC)](reference/testing/patient-one/README.md) -- End-to-end HGSOC test case
+- [PAT001 Test Prompts](reference/testing/patient-one/test-prompts/) -- DRY_RUN and synthetic data prompts
+- [PAT002 Scenario (ER+ BC)](reference/testing/patient-two/README.md) -- End-to-end breast cancer test case
+- [PAT002 Test Prompts](reference/testing/patient-two/test-prompts/) -- 10 DRY_RUN + 6 SYNTHETIC_DATA prompts
 - [GCP Integration Testing](reference/testing/gcp-integration.md) -- Cloud Run verification
 
 ---
@@ -70,7 +72,7 @@ Central navigation for all documentation. Canonical references are in `reference
 | I want to... | Go to |
 |--------------|-------|
 | Install the system | [Installation Guide](getting-started/installation.md) |
-| Run my first analysis | [PatientOne test prompts](reference/testing/patient-one/test-prompts/) |
+| Run my first analysis | [PAT001 prompts](reference/testing/patient-one/test-prompts/) or [PAT002 prompts](reference/testing/patient-two/test-prompts/) |
 | Deploy to GCP | [GCP Integration](reference/testing/gcp-integration.md) |
 | Ensure HIPAA compliance | [HIPAA docs](for-hospitals/compliance/hipaa.md) |
 | Add a new server | [Add New Modality Server](for-developers/ADD_NEW_MODALITY_SERVER.md) |
