@@ -7,31 +7,53 @@ Cheat sheet for common development tasks in the precision-medicine-mcp platform.
 ## Project Structure
 
 ```
-spatial-mcp/
-├── servers/                      # MCP servers
-│   ├── mcp-fgbio/               # Reference genomes, VCF/FASTQ
-│   ├── mcp-multiomics/          # RNA/Protein/Phospho (best reference, 91 tests)
-│   ├── mcp-spatialtools/        # Spatial transcriptomics
-│   ├── mcp-epic/                # Real Epic FHIR (local-only)
-│   ├── mcp-mockepic/            # Synthetic FHIR (demo)
-│   ├── mcp-mocktcga/             # Cancer cohorts (mocked)
-│   ├── mcp-perturbation/        # Perturbation prediction (production)
-│   ├── mcp-quantum-celltype-fidelity/ # Quantum cell type fidelity (production)
-│   ├── mcp-openimagedata/       # Imaging (production)
-│   ├── mcp-deepcell/            # Segmentation (production)
-│   ├── mcp-cell-classify/       # Cell phenotype classification (production)
-│   ├── mcp-patient-report/      # PDF report generation (production)
-│   └── mcp-genomic-results/     # Somatic variant/CNV parsing (production)
+precision-medicine-mcp/
+├── servers/                      # 19 MCP servers (104 tools)
+│   ├── mcp-fgbio/               # Reference genomes, VCF/FASTQ (4 tools)
+│   ├── mcp-genomic-results/     # Somatic variant/CNV parsing (4 tools)
+│   ├── mcp-multiomics/          # RNA/Protein/Phospho (10 tools, best reference)
+│   ├── mcp-spatialtools/        # Spatial transcriptomics (14 tools)
+│   ├── mcp-cibersortx/          # Immune deconvolution (5 tools)
+│   ├── mcp-neoantigen/          # Neoantigen prediction & HLA binding (6 tools)
+│   ├── mcp-opentargets/         # Drug-target associations (6 tools)
+│   ├── mcp-perturbation/        # GEARS perturbation prediction (8 tools)
+│   ├── mcp-quantum-celltype-fidelity/ # Quantum cell type fidelity (6 tools)
+│   ├── mcp-openimagedata/       # Histology image processing (5 tools)
+│   ├── mcp-deepcell/            # Cell segmentation (3 tools)
+│   ├── mcp-cell-classify/       # Cell phenotype classification (3 tools)
+│   ├── mcp-geodownload/         # GEO/SRA dataset download (6 tools)
+│   ├── mcp-cardiometabolic/     # CVD risk scoring & preventive health (5 tools)
+│   ├── mcp-epic/                # Real Epic FHIR (local-only, 4 tools)
+│   ├── mcp-mockepic/            # Synthetic FHIR for demos (3 tools)
+│   ├── mcp-mocktcga/            # Mock TCGA cohort comparison (5 tools)
+│   ├── mcp-patient-report/      # PDF report generation (5 tools)
+│   └── mcp-server-boilerplate/  # Template for new servers
 ├── tests/
 │   ├── unit/                    # Unit tests by server
-│   └── integration/             # Multi-server tests
+│   ├── integration/             # Multi-server tests
+│   ├── fixtures/                # Canonical values (pat001, pat002, pat003)
+│   ├── manual_testing/          # Manual test scripts
+│   └── verification/            # Verification checks
 ├── docs/
-│   ├── for-developers/          # This section
+│   ├── INDEX.md                 # Central navigation
+│   ├── for-developers/          # Developer guides (this section)
+│   ├── for-educators/           # Teaching materials, walkthrough notebook
 │   ├── for-funders/             # ROI, grants
-│   ├── for-hospitals/           # Deployment, security
-│   └── architecture/            # Technical architecture
-├── data/                        # Patient data, test fixtures
-└── infrastructure/              # GCP deployment scripts
+│   ├── for-hospitals/           # Deployment, security, HIPAA
+│   ├── for-patients/            # Patient-facing overviews
+│   ├── for-researchers/         # Research guides, paper v17, open questions
+│   ├── getting-started/         # Installation, desktop configs
+│   └── reference/               # Architecture, testing, shared canonical docs
+├── data/                        # Patient data and reference files
+│   ├── patient-data/PAT001-OVC-2025/  # Synthetic HGSOC data
+│   ├── pat002/                        # Synthetic ER+ breast cancer data
+│   └── pat003/                        # Synthetic preventive CVD data
+├── ui/                          # User interfaces
+│   ├── streamlit-app/           # Main Streamlit web app
+│   ├── streamlit-app-students/  # Simplified student version
+│   ├── dashboard/               # Monitoring dashboard
+│   └── jupyter-notebook/        # Jupyter integration
+└── infrastructure/              # GCP deployment configs (Docker, Cloud Run)
 ```
 
 ---
@@ -605,4 +627,4 @@ print(result)
 
 ---
 
-**Last Updated:** 2026-01-14
+**Last Updated:** 2026-05-09
