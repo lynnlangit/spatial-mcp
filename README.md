@@ -142,12 +142,4 @@ All servers default to **DRY_RUN mode** (mock responses, no API keys needed) for
 
 ---
 
-## Known limitations
-
-- **DRY_RUN mode returns synthetic data** — not for clinical decisions. Set `*_DRY_RUN=false` with real data for validated results.
-- **GEARS model trained on synthetic GSE184880 subset** — retrain on real TCGA data before clinical use.
-- **Quantum server falls back to CPU** on non-CUDA hardware (Apple Silicon, cloud VMs without GPU). Results are identical; training is slower.
-
----
-
 **Apache 2.0** | **Python 3.11+** | **FastMCP >= 2.13** | **uv** for package management
