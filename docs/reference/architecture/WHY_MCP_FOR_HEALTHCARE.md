@@ -49,7 +49,7 @@ User: "Identify actionable drug targets for PatientOne based on
        pathway enrichment across genomic, transcriptomic, and
        spatial data."
 
-Claude: [Automatically orchestrates 5 MCP servers:]
+Claude: [Automatically orchestrates multiple MCP servers:]
   → mcp-epic: Fetch clinical context
   → mcp-fgbio: Load genomic variants
   → mcp-multiomics: Run pathway enrichment
@@ -176,32 +176,35 @@ graph LR
 | **Cost per patient** | $3,200 (40 hrs × $80/hr) | $640 (8 hrs × $80/hr) | **Significant reduction** ([Cost Analysis](../shared/cost-analysis.md)) |
 | **Accessibility** | Academic centers only | Medium (requires engineers) | **Any hospital** |
 | **Multi-modal integration** | Very difficult | Difficult | **Built-in** |
+| **Cross-disease portability** | Start from scratch | Rewrite scripts | **Zero code changes** (validated: HGSOC, ER+ BC, preventive CVD) |
 
 ---
 
-## Why SSE Transport for Healthcare?
+## Transport: STDIO vs Remote (Streamable HTTP)
 
-**STDIO vs SSE (Server-Sent Events):**
+**Choosing the right MCP transport for your deployment:**
 
-### STDIO (Standard Input/Output)
+### STDIO (Local Development)
+- ✅ Simple for local development and demos
 - ❌ Requires MCP server running on same machine as Claude Desktop
 - ❌ Cannot share servers across users
 - ❌ Difficult to deploy to cloud infrastructure
-- ✅ Simple for local development
 
-### SSE (Recommended for Production)
-- ✅ **Servers run on cloud infrastructure** (GCP Cloud Run, AWS Lambda)
+### Remote Transport (Recommended for Production)
+- ✅ **Servers run on cloud infrastructure** (GCP Cloud Run)
 - ✅ **Centralized deployment** - One server instance serves multiple users
-- ✅ **HIPAA-compliant** - Data never leaves hospital infrastructure
-- ✅ **Scalable** - Auto-scales to 1,000+ concurrent users
+- ✅ **HIPAA-compliant** - Data never leaves hospital VPC
+- ✅ **Scalable** - Cloud Run auto-scales with demand
 - ✅ **Auditable** - All requests logged for compliance
-- ✅ **Secure** - Azure AD SSO, VPC isolation, encrypted transit
+- ✅ **Secure** - Hospital SSO integration, VPC isolation, encrypted transit
 
-**For hospital deployment, SSE is required for:**
+**For hospital deployment, remote transport is required for:**
 - Centralized data governance (data stays in hospital VPC)
 - Audit logging (10-year retention for HIPAA)
 - User management (SSO integration)
 - Cost efficiency (shared infrastructure)
+
+> **Note:** MCP originally used SSE (Server-Sent Events) for remote transport. The protocol now supports Streamable HTTP as the preferred remote transport. This platform's GCP Cloud Run deployment supports both.
 
 ---
 
@@ -240,12 +243,17 @@ MCP standardizes:
 
 ## Success Metrics
 
-**Pilot deployment targets (6 months, 100 patients — projections pending clinical validation):**
+**Validated on synthetic data (3 patients, 3 disease domains):**
+- **6 investigational hypotheses** surfaced across HGSOC and ER+ breast cancer that standard workup missed
+- **3 preventive health evidence gaps** identified (Lp(a), APOE, CAC) missed by standard lipid panel + population genetic screen
+- **Zero disease-specific code changes** between cancer types — same server architecture handles all three
+- **Reproducibility:** Consistent results on repeat analysis (canonical fixtures for PAT001 and PAT002)
+- **Multi-modal integration:** Genomics, spatial transcriptomics, imaging, clinical, and perturbation data integrated per patient
+
+**Pilot deployment targets (projections pending clinical validation):**
 - **Time reduction:** Estimated 40 hours → 2-5 hours production (8-20x faster)
-- **Cost savings:** Significant modeled savings for 100-patient cohort ([Value Proposition](../shared/value-proposition.md))
-- **Accessibility:** 5 clinicians trained (previously required 2 PhD bioinformaticians)
-- **Reproducibility:** Consistent results on repeat analysis (validated on synthetic data)
-- **Multi-modal integration:** 5 data types integrated (previously siloed)
+- **Cost savings:** Significant modeled savings per patient ([Value Proposition](../shared/value-proposition.md))
+- **Accessibility:** Clinician-operable with basic training (previously required PhD bioinformaticians)
 
 ---
 
@@ -258,4 +266,4 @@ MCP standardizes:
 
 ---
 
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-05-09
