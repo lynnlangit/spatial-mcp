@@ -9,6 +9,8 @@
 
 > **Dedicated to PatientOne** -- a dear friend who passed from High-Grade Serous Ovarian Carcinoma in 2025.
 
+*This platform automates multi-modal data processing for clinical decision **support** — all results require clinician review before any clinical action.*
+
 ---
 
 ## The Problem
