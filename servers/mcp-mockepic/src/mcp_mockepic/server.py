@@ -69,11 +69,19 @@ _PATIENT_PROFILES = {
         ],
     },
     "PAT003": {
-        "demographics": {"age": 67, "sex": "F", "ethnicity": "Caucasian", "name": "Patricia Wells"},
+        "demographics": {
+            "age": 67, "sex": "F", "ethnicity": "Caucasian", "name": "Patricia Wells",
+            "bmi": 26.4, "menopausal_status": "post-menopausal",
+        },
         "diagnoses": [
             {"icd10": "I10", "description": "Stage 1 Hypertension, controlled", "date": "2023-03-15"},
             {"icd10": "E78.5", "description": "Hyperlipidemia, unspecified", "date": "2023-03-15"},
         ],
+        "vitals": {
+            "bp_systolic_mmhg": 138,
+            "bp_diastolic_mmhg": 82,
+            "bp_status": "controlled on medication",
+        },
         "labs": {
             "hsCRP": {"value": 1.8, "unit": "mg/L", "ref_range": "0-3"},
             "LDL": {"value": 118, "unit": "mg/dL", "ref_range": "0-130"},
@@ -85,8 +93,19 @@ _PATIENT_PROFILES = {
             "hemoglobin": {"value": 13.1, "unit": "g/dL", "ref_range": "12-16"},
             "wbc": {"value": 6.9, "unit": "K/uL", "ref_range": "4-11"},
         },
+        "family_history": [
+            {"relation": "father", "event": "myocardial_infarction", "age_at_event": 61},
+            {"relation": "mother", "event": "ischemic_stroke", "age_at_event": 69},
+        ],
+        "lifestyle": {
+            "smoking": "never",
+            "exercise": "moderate (3x/week, 30 min)",
+            "diet": "low-sodium",
+            "alcohol_units_per_week": 3,
+        },
         "medications": [
-            {"name": "Lisinopril", "dose": "5 mg", "frequency": "daily"},
+            {"name": "Lisinopril", "dose": "5 mg", "frequency": "daily",
+             "class": "ACE inhibitor", "indication": "hypertension"},
         ],
     },
 }
@@ -122,6 +141,10 @@ def _get_mock_patient_profile(
         "labs": profile["labs"] if include_labs else {},
         "medications": profile["medications"] if include_meds else [],
     }
+    # Pass through extra keys (vitals, family_history, lifestyle, etc.)
+    for key in profile:
+        if key not in ("demographics", "diagnoses", "labs", "medications"):
+            result[key] = profile[key]
     return result
 
 
