@@ -13,7 +13,7 @@ Overview of test coverage, test structure, and testing guidelines for the projec
 Testing deployed servers via Claude API.
 
 ### Manual Testing
-- [Quick Test Prompts](./quick-test-prompts.md) - 10 copy-paste prompts for Claude Desktop
+- [Quick Test Prompts](./quick-test-prompts.md) - 14 copy-paste prompts for Claude Desktop
 - [Claude Desktop Setup](./claude-desktop-setup.md) - File access configuration
 
 ### [PatientOne Scenario](./patient-one/)
@@ -37,6 +37,7 @@ Ready-to-use test prompts for the complete PatientOne workflow, organized by dat
 7. [Test 7: E2E Claude Desktop](./patient-one/test-prompts/DRY_RUN/test-7-e2e-claude-desktop.md)
 8. [Test 8: E2E + Connectors](./patient-one/test-prompts/DRY_RUN/test-8-e2e-claude-desktop-with-connectors.md)
 9. [Test 9: E2E Seqera Connector](./patient-one/test-prompts/DRY_RUN/test-9-e2e-seqera-connector.md)
+10. [Test 10: E2E Full Platform](./patient-one/test-prompts/DRY_RUN/test-10-e2e-full-platform.md)
 
 **[SYNTHETIC_DATA](./patient-one/test-prompts/SYNTHETIC_DATA/)** — Real file parsing (`*_DRY_RUN=false`):
 1. [Test 1: Clinical Genomic](./patient-one/test-prompts/SYNTHETIC_DATA/test-1-clinical-genomic.md)
@@ -46,6 +47,21 @@ Ready-to-use test prompts for the complete PatientOne workflow, organized by dat
 
 See [test-prompts README](./patient-one/test-prompts/README.md) for details on both modes.
 
+### [PatientTwo Scenario](./patient-two/)
+Cross-cancer validation using synthetic ER+/HER2- breast cancer patient data. Demonstrates that the same platform handles a completely different cancer type with zero disease-specific code changes.
+
+- [Overview](./patient-two/README.md) - PatientTwo workflow, key results, reference values
+- [Test Prompts](./patient-two/test-prompts/README.md) - 10 DRY_RUN + 6 SYNTHETIC_DATA tests
+
+### [PatientThree Scenario](./patient-three/) (PAT003 — Preventive Cardiovascular)
+Preventive cardiovascular health workflow for a 67F post-menopausal patient. Validates the cardiometabolic server and surfaces evidence gaps (Lp(a), APOE, CAC score) missed by standard lipid panel.
+
+- [Overview](./patient-three/README.md) - PatientThree workflow, key results, evidence gaps
+- [Test 1: CVD Risk Assessment](./patient-three/test-prompts/DRY_RUN/test-1-cvd-risk-assessment.md) - DRY_RUN test prompt
+- PAT003 data: `data/patient-data/PAT003-CVD-2026/`
+
+### [Developer Testing Prompts](../prompts/developer-testing.md)
+11 prompts for server validation, load testing, HIPAA audit, error handling, and cost monitoring. Complements the patient scenario tests above.
 
 ---
 
@@ -55,7 +71,7 @@ See [test-prompts README](./patient-one/test-prompts/README.md) for details on b
 
 **For manual testing:**
 1. Start with [Quick Test Prompts](./quick-test-prompts.md) for rapid verification
-2. Run [PatientOne scenario](./patient-one/README.md) for comprehensive end-to-end testing
+2. Run [PatientOne scenario](./patient-one/README.md) (HGSOC) or [PatientTwo scenario](./patient-two/README.md) (ER+ breast cancer) for end-to-end testing
 3. Follow [CitL Quick Test](./patient-one/citl-quick-test.md) to validate clinical review workflow
 
 ---
@@ -65,6 +81,8 @@ See [test-prompts README](./patient-one/test-prompts/README.md) for details on b
 This section covers scripts and documentation for manually testing the Precision Medicine MCP servers.
 
 ### Scripts (Executable)
+
+Located in `tests/manual_testing/Solution-Testing/`:
 
 | File | Purpose | Usage |
 |------|---------|-------|
@@ -76,6 +94,7 @@ This section covers scripts and documentation for manually testing the Precision
 ### Install All Server Dependencies
 
 ```bash
+cd tests/manual_testing/Solution-Testing
 ./install_dependencies.sh
 ```
 
@@ -89,6 +108,7 @@ This will:
 ### Verify All Servers
 
 ```bash
+cd tests/manual_testing/Solution-Testing
 ./verify_servers.sh
 ```
 
@@ -120,4 +140,4 @@ See [Server Registry](../shared/server-registry.md) for current server names, to
 
 ---
 
-**Last Updated:** 2026-01-13
+**Last Updated:** 2026-05-12

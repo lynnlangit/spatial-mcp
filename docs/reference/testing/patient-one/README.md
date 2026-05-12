@@ -167,42 +167,9 @@ Run **Test 1** to see clinical + genomic integration:
 
 ### Option 2: Complete Analysis (All Tests)
 
-Run all modular tests sequentially for comprehensive precision medicine analysis.
+Run all modular tests sequentially. See **[test-prompts/README.md](./test-prompts/README.md)** for the full test index (10 DRY_RUN + 4 SYNTHETIC_DATA tests) and prerequisites.
 
-**See [test-prompts/README.md](./test-prompts/README.md) for the full test index.**
-
-#### DRY_RUN Tests (9 tests)
-
-| Test | Focus | Servers | Time |
-|------|-------|---------|------|
-| **[Test 1](./test-prompts/DRY_RUN/test-1-clinical-genomic.md)** | Clinical + Genomic | mockepic, fgbio, mocktcga | 5-10 min |
-| **[Test 2](./test-prompts/DRY_RUN/test-2-multiomics-enhanced.md)** | Multi-Omics Resistance | multiomics | 5-10 min |
-| **[Test 3](./test-prompts/DRY_RUN/test-3-spatial.md)** | Spatial Transcriptomics | spatialtools | 5-10 min |
-| **[Test 4](./test-prompts/DRY_RUN/test-4-imaging.md)** | Histology & Imaging | openimagedata, deepcell, cell-classify | 5-10 min |
-| **[Test 5](./test-prompts/DRY_RUN/test-5-integration.md)** | Integration & Recommendations | all (synthesis) | 5-10 min |
-| **[Test 6](./test-prompts/DRY_RUN/test-6-citl-review.md)** | CitL Review & Approval | patient-report | 20-30 min |
-| **[Test 7](./test-prompts/DRY_RUN/test-7-e2e-claude-desktop.md)** | E2E Claude Desktop | 6 servers, single prompt | 5-10 min |
-| **[Test 8](./test-prompts/DRY_RUN/test-8-e2e-claude-desktop-with-connectors.md)** | E2E + Connectors | 6 servers + PubMed, ClinicalTrials, bioRxiv | 10-15 min |
-| **[Test 9](./test-prompts/DRY_RUN/test-9-e2e-seqera-connector.md)** | E2E Seqera Connector | mockepic, genomic-results, patient-report + Seqera | 5-10 min |
-
-#### Cost Estimates
-
-| Data Mode | Time | Cost |
-|-----------|------|------|
-| **DRY_RUN** (all 9 tests) | ~45-65 min | ~$1 (tokens only) |
-| **Actual Data** (small synthetic files) | 2-4 hours | $15-45 |
-| **Production Data** (hospital volumes) | 4-8 hours | $24-104 |
-
-**Cost Breakdown:**
-- **DRY_RUN:** Claude token usage only (~30K tokens) — ~$1
-- **Real Data:** See [Cost Analysis](../../shared/cost-analysis.md) for detailed per-mode cost breakdowns
-  - Token costs stay low because MCP servers return summaries, not raw 3-8 GB files!
-
-**Instructions:**
-1. Open each test prompt file from [test-prompts/DRY_RUN/](./test-prompts/DRY_RUN/)
-2. Copy/paste the prompt into Claude Desktop
-3. Review results before proceeding to next test
-4. Tests build on each other but are independently runnable
+**Cost:** ~$1 for all DRY_RUN tests (tokens only). See [Cost Analysis](../../shared/cost-analysis.md) for real-data costs.
 
 ---
 
@@ -453,74 +420,6 @@ The PatientOne workflow has undergone comprehensive bias auditing. Key findings:
 
 ---
 
-## Why PatientOne Matters
-
-### Paradigm Shift in Precision Medicine
-
-**From:** Siloed tools requiring weeks of glue code
-**To:** AI-assisted clinical decision support for Molecular Tumor Boards
-
-PatientOne demonstrates that with MCP servers, Claude can seamlessly coordinate across:
-- EHR systems (clinical context)
-- Genomic databases (molecular foundation)
-- Multi-omics platforms (functional landscape)
-- Spatial biology (tissue microenvironment)
-- Medical imaging (cellular morphology)
-- Reference cohorts (comparative context)
-
-**All in one conversational interface** — replacing weeks of glue code with natural language prompts.
-
-### Real-World Impact
-
-While PatientOne uses synthetic data, the workflow represents a **real clinical decision-making process:**
-
-1. **Tumor Board Preparation:** Integrate all available molecular data before multidisciplinary review
-2. **Clinical Trial Matching:** Identify actionable targets and match to available trials
-3. **Treatment Selection:** Evidence-based therapy recommendations accounting for resistance mechanisms
-4. **Biomarker Monitoring:** Track CA-125 and other markers to assess response
-
----
-
-## Technical Architecture
-
-### Data Flow
-
-```
-User Prompt -> Claude Desktop -> MCP Protocol -> Server Selection
-                                    |
-                    +-------------------------------+
-                    |  All MCP Servers              |
-                    |  Each with specialized tools  |
-                    +-------------------------------+
-                                    |
-            +---------------------------------------+
-            |  Data Sources (Local Files)           |
-            |  /data/patient-data/PAT001-OVC-2025/  |
-            +---------------------------------------+
-                                    |
-            +---------------------------------------+
-            |  Tool Execution & Results             |
-            |  JSON responses with data             |
-            +---------------------------------------+
-                                    |
-            +---------------------------------------+
-            |  Claude Synthesis & Interpretation    |
-            |  Integrated insights, recommendations |
-            +---------------------------------------+
-                                    |
-                        User-friendly output
-```
-
-### Reproducibility
-
-All PatientOne analyses are:
-- **Logged:** Complete MCP server call history
-- **Versioned:** Git-tracked data and configurations
-- **Repeatable:** Deterministic tool execution (DRY_RUN mode available)
-- **Auditable:** Full trace from raw data to recommendations
-
----
-
 ## Troubleshooting
 
 ### Issue: "MCP servers not found"
@@ -642,6 +541,6 @@ Comprehensive report including:
 
 ---
 
-**Last Updated:** February 23, 2026
-**Testing Status:** 9 DRY_RUN tests + 4 SYNTHETIC_DATA tests validated
+**Last Updated:** 2026-05-12
+**Testing Status:** 10 DRY_RUN tests + 4 SYNTHETIC_DATA tests validated
 **Data:** 100% synthetic for demonstration purposes
