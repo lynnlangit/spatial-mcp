@@ -23,7 +23,7 @@
 ## Synthetic Data Fixture Files
 
 All synthetic fixture files are SHA-256 hashed and archived in the repository
-at `data/patient-data/`. Hashes are recorded in `docs/for-researchers/paper-v17/MANIFEST.sha256`.
+at `data/patient-data/`. Hashes are recorded in `docs/for-researchers/paper-draft/MANIFEST.sha256`.
 
 To regenerate fixture files from scratch:
 ```
