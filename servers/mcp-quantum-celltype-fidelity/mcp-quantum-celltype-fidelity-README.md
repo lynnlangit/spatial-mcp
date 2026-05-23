@@ -2,6 +2,21 @@
 
 Quantum computing-based analysis of cell type fidelity in spatial transcriptomics data using Qiskit parameterized quantum circuits (PQCs).
 
+## What This Server Does
+
+`mcp-quantum-celltype-fidelity` encodes per-spot spatial transcriptomics profiles as quantum state vectors using variational quantum circuits, then computes fidelity scores to identify immune evasion states.
+
+**It is a convergent validation layer, not a primary discovery tool.** It is designed to run *after* conventional spatial analysis (Moran's I autocorrelation, NNLS deconvolution) is complete. Agreement between the quantum layer and conventional spatial findings strengthens confidence in immune phenotype assignments. Disagreement between layers is itself clinically informative — it flags spatial heterogeneity that warrants further investigation.
+
+The intended workflow is:
+
+1. Run Moran's I autocorrelation (`mcp-spatialtools`) to identify spatial clustering patterns
+2. Run NNLS deconvolution (`mcp-spatialtools`) to quantify cell-type composition
+3. Run `mcp-quantum-celltype-fidelity` as an independent cross-check
+4. Report concordance or discordance between layers in the findings
+
+The server should not be the sole basis for any clinical classification.
+
 ## Overview
 
 This MCP server implements **QuCoWE-style** (Quantum Contrastive Word Embeddings) quantum circuits to embed cell types from spatial transcriptomics data into Hilbert space. Quantum fidelity between states is used to measure cell type similarity, enabling:
@@ -13,13 +28,39 @@ This MCP server implements **QuCoWE-style** (Quantum Contrastive Word Embeddings
 
 ### Key Features
 
-- **Parameterized Quantum Circuits (PQCs)** with 8-10 qubits for 256-1024 dimensional Hilbert space
+- **Parameterized Quantum Circuits (PQCs)** with 4–10 qubits (4-qubit proof-of-concept; 8–10 for production runs)
 - **Parameter-shift rule** for gradient estimation (works on real quantum hardware)
 - **Contrastive learning** with InfoNCE loss for training embeddings
 - **Bayesian uncertainty quantification** for confidence intervals on fidelity predictions
 - **CPU/GPU/IBM Quantum** backend support
 - **Spatial neighborhood** integration from AnnData objects
 - **6 MCP tools** for complete quantum cell type analysis workflow
+
+## Circuit Architecture
+
+The platform validation runs used a 4-qubit proof-of-concept configuration. Full production runs support 8–10 qubits.
+
+### Proof-of-concept configuration (platform validation)
+
+| Parameter | Value |
+|---|---|
+| Qubits | 4 |
+| Gate types | Rx, Ry, Rz (parameterised rotation gates) |
+| Circuit depth | 3 layers |
+| Fidelity metric | Squared inner product between spot embedding and reference immune-state vector |
+| Evasion threshold | Fidelity < 0.30 → classified as immune evasion state |
+| Reference vector | Derived from CD8+ effector and evasion signatures |
+
+The reference immune-state vector is constructed from CD8+ T-cell effector markers (CD8A, GZMB, PRF1, IFNG) and immune evasion signatures (PDCD1, CTLA4, LAG3, TIGIT). A spot scoring below the 0.30 threshold indicates that its transcriptional profile has low fidelity to the reference effector state — consistent with an immune exclusion or suppressed phenotype.
+
+### Production configuration
+
+| Parameter | Value |
+|---|---|
+| Qubits | 8–10 |
+| Hilbert space dimension | 256–1024 |
+| Entanglement | Ring entanglement |
+| Training | Contrastive learning (InfoNCE loss) |
 
 ## Scientific Background
 
@@ -54,6 +95,21 @@ Fidelity predictions include confidence intervals via Monte Carlo sampling from 
 - **95%/90% credible intervals**: Quantify prediction uncertainty
 - **Classification confidence**: Probability that binary decisions (e.g., immune evasion detected) are correct
 - **Clinical impact**: Enables oncologists to assess confidence in treatment recommendations
+
+## Interpreting Results
+
+**Fidelity score range:** 0.0 (no similarity to reference state) → 1.0 (identical to reference state).
+
+| Score range | Interpretation |
+|---|---|
+| ≥ 0.30 | Spot consistent with CD8+ effector / immune-infiltrated state |
+| < 0.30 | Spot classified as immune evasion state (excluded, suppressed, or desert) |
+
+**Always cross-reference with conventional spatial analysis.** The quantum layer is a convergent validation tool. Its findings should be interpreted alongside Moran's I and NNLS deconvolution results, not in isolation.
+
+**Example (PAT001 — HGSOC validation):** Conventional spatial analysis identified a CD8 gradient (5.5× core-to-edge; Moran's I = 0.092) consistent with immune exclusion. Quantum fidelity analysis independently flagged 78% of sampled spots (234/300) as evasion states (fidelity < 0.30). Both layers converging on the same conclusion strengthened confidence in the immune exclusion phenotype and supported the therapeutic recommendation (NNMT inhibition + anti-PD-1 + neoepitope vaccine strategy). If the two layers had disagreed, that disagreement would itself be flagged as a finding warranting further investigation.
+
+**Example (PAT002 — ER+/HER2− IDC cross-patient validation):** PAT002 showed a hormone-receptor-inflamed spatial pattern (ESR1/PGR Moran's I = 0.42–0.45) with limited but detectable CD8A. Quantum fidelity correctly assigned a distinct immune phenotype from PAT001, demonstrating that the fidelity scores are sensitive to real biological differences between patients and not merely an artefact of circuit parameterisation.
 
 ## Architecture
 
@@ -168,6 +224,21 @@ Export embeddings for downstream analysis.
 
 **Output:**
 - `exported_files`: List of exported file paths
+
+## Server Availability and Graceful Degradation
+
+The quantum simulation backend requires a running server process. If the server is unavailable at pipeline execution time:
+
+- The orchestrator records a `QUANTUM_PENDING_SERVER_RESTART` deferral in the session provenance log
+- Pipeline execution continues using conventional spatial analysis (Moran's I) as the primary immune phenotype classification
+- The quantum result is noted as pending in the patient report
+- The report clearly distinguishes findings that have received quantum cross-validation from those that have not
+
+**This is expected behaviour, not a pipeline failure.** The platform is designed so that the absence of the quantum validation layer degrades output quality gracefully rather than blocking the entire run. The conventional spatial analysis is the primary analytical layer; the quantum layer provides independent confirmation.
+
+When the server is restarted, re-run `identify_immune_evasion_states` on the same patient data to obtain the quantum result and append it to the session log.
+
+**Example (PAT002):** The quantum cell-type fidelity server was initially deferred for PAT002 due to server unavailability (`QUANTUM_PENDING_SERVER_RESTART`). The oncology pipeline proceeded with Moran's I and NNLS results as primary classification. When the server was restarted, `identify_immune_evasion_states` was re-run and its output was appended to the PAT002 session log. The deferred run and its timestamp are recorded in Supplementary Table S1.
 
 ## Installation
 
@@ -288,6 +359,7 @@ mypy src/
 
 | Backend | n_qubits | Statevector Time | Fidelity Computation |
 |---------|----------|------------------|---------------------|
+| CPU     | 4        | ~2 ms           | ~5 ms               |
 | CPU     | 8        | ~10 ms          | ~20 ms              |
 | CPU     | 10       | ~50 ms          | ~100 ms             |
 | GPU     | 8        | ~2 ms           | ~5 ms               |
@@ -300,6 +372,7 @@ mypy src/
 
 ### Memory
 
+- **4 qubits**: ~0.5 MB per statevector
 - **8 qubits**: ~2 MB per statevector
 - **10 qubits**: ~8 MB per statevector
 - **Training**: ~100-500 MB depending on dataset size
@@ -328,8 +401,9 @@ python -m quantum_celltype_fidelity.server
 
 1. **QuCoWE**: Quantum Contrastive Word Embeddings approach adapted for cell types
 2. **Parameter-shift rule**: Mitarai et al., Physical Review A 98, 032309 (2018)
-3. **Variational quantum algorithms**: Cerezo et al., Nature Reviews Physics 3, 625-644 (2021)
-4. **Spatial transcriptomics**: Moses & Pachter, Nature Methods 19, 534-546 (2022)
+3. **Variational quantum algorithms**: Cerezo et al., Nature Reviews Physics 3, 625–644 (2021)
+4. **Spatial transcriptomics**: Moses & Pachter, Nature Methods 19, 534–546 (2022)
+5. **Immune exclusion in HGSOC**: Vázquez-García et al., Cancer Cell 41, 1692–1710 (2023)
 
 ## Use Case: HGSOC Immunotherapy Targets
 
@@ -340,12 +414,22 @@ This server was developed for high-grade serous ovarian cancer (HGSOC) research:
 - **Predict drug response**: Effects of checkpoint inhibitors on cell states
 - **Spatial context**: How tumor-immune boundaries affect fidelity
 
+## Synthetic Data and Research Status
+
+All validation results in this repository were produced in `SYNTHETIC_DATA` mode. The quantum circuit implementation is a proof-of-concept demonstration of variational quantum classification applied to spatial transcriptomics. It has not been validated on real patient specimens and is **not approved for clinical use**.
+
+The fidelity threshold (0.30) and reference vector construction were calibrated on the synthetic HGSOC and ER+/HER2− IDC datasets. Real-world deployment would require recalibration against labelled spatial transcriptomics data with ground-truth immune phenotype calls from a clinically annotated cohort.
+
+All patient identifiers (PAT001, PAT002, PAT003) refer to fully synthetic records. No real patient data was used in any stage of development or validation.
+
 ## Limitations
 
 - **Circuit depth**: Limited by decoherence on real quantum hardware
 - **Scalability**: Current implementation handles ~10,000 cells; for larger datasets, use sampling
 - **Feature encoding**: Simple amplitude encoding; future work will explore other encodings
 - **Training time**: Parameter-shift rule requires 2N forward passes per gradient
+- **Threshold calibration**: The 0.30 evasion threshold was set on synthetic data and will require prospective recalibration before clinical use
+- **Convergent validation only**: Quantum fidelity scores should always be interpreted alongside conventional spatial analysis results, not as standalone diagnostic outputs
 
 ## Future Work
 
@@ -354,6 +438,7 @@ This server was developed for high-grade serous ovarian cancer (HGSOC) research:
 - [ ] Integrate with GEARS perturbation server for combined analysis
 - [ ] Add Bayesian optimization for hyperparameter tuning
 - [ ] Support for IBM Quantum hardware execution
+- [ ] Prospective recalibration study on real clinical spatial transcriptomics cohort
 
 ## License
 
