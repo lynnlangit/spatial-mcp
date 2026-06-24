@@ -113,11 +113,74 @@ async def deidentify_text(
     source_format: str = "txt",
     output_path: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """[PHASE 3] De-identify plain text or DOCX content.
+    """De-identify plain text or DOCX content (Stage 0 preprocessing).
 
-    Not yet implemented. Raises NotImplementedError.
+    For source_format="txt": de-identifies the supplied string in memory.
+    For source_format="docx": treats `text` as a file path, reads the DOCX,
+    de-identifies all paragraphs, and writes a new DOCX to output_path.
+
+    Args:
+        text:          Plain text string (if source_format="txt"), or path to
+                       DOCX file (if source_format="docx").
+        patient_id:    Canonical patient identifier (e.g. "PAT004").
+        source_format: "txt" or "docx". Defaults to "txt".
+        output_path:   For DOCX only -- destination path for de-identified file.
+                       Defaults to {DEIDENTIFY_OUTPUT_DIR}/{patient_id}/deidentified/{stem}_deid.docx
+
+    Returns:
+        {
+          "deidentified_text": <str>,
+          "output_path": <str | null>,
+          "key_path": <str>,
+          "entities_found": [...],
+          "entity_count": <int>,
+          "source_format": <str>,
+          "dry_run": <bool>
+        }
     """
-    raise NotImplementedError("deidentify_text is implemented in Phase 3.")
+    from mcp_deidentify.format_handlers.text_handler import (
+        deidentify_docx_file,
+        deidentify_text_string,
+    )
+    from mcp_deidentify.key_manager import KeyManager
+
+    km = KeyManager(patient_id)
+
+    if source_format == "docx":
+        deid_text, written_path, entities = await deidentify_docx_file(
+            docx_path=text,
+            patient_id=patient_id,
+            session_key=km.session_key,
+            output_path=output_path,
+        )
+        key_path = km.save()
+        return add_dry_run_warning(
+            {
+                "deidentified_text": deid_text,
+                "output_path": written_path,
+                "key_path": key_path,
+                "entities_found": entities,
+                "entity_count": len(entities),
+                "source_format": source_format,
+                "dry_run": DRY_RUN,
+            }
+        )
+    else:
+        deid_text, entities = await deidentify_text_string(
+            text=text, patient_id=patient_id, session_key=km.session_key
+        )
+        key_path = km.save()
+        return add_dry_run_warning(
+            {
+                "deidentified_text": deid_text,
+                "output_path": None,
+                "key_path": key_path,
+                "entities_found": entities,
+                "entity_count": len(entities),
+                "source_format": source_format,
+                "dry_run": DRY_RUN,
+            }
+        )
 
 
 @mcp.tool()
@@ -125,11 +188,47 @@ async def deidentify_pdf(
     pdf_path: str,
     patient_id: str,
 ) -> Dict[str, Any]:
-    """[PHASE 3] Extract and de-identify a PDF document.
+    """Extract and de-identify a PDF document (Stage 0 preprocessing).
 
-    Not yet implemented. Raises NotImplementedError.
+    Extracts text from each page via pdfplumber and de-identifies it using
+    Haiku (or synthetic fixture in DRY_RUN). Returns de-identified plain text;
+    does not produce a de-identified PDF file.
+
+    Args:
+        pdf_path:   Path to the source PDF file.
+        patient_id: Canonical patient identifier (e.g. "PAT004").
+
+    Returns:
+        {
+          "extracted_text": <str>,
+          "deidentified_text": <str>,
+          "key_path": <str>,
+          "page_count": <int>,
+          "entities_found": [...],
+          "entity_count": <int>,
+          "dry_run": <bool>
+        }
     """
-    raise NotImplementedError("deidentify_pdf is implemented in Phase 3.")
+    from mcp_deidentify.format_handlers.pdf_handler import deidentify_pdf_file
+    from mcp_deidentify.key_manager import KeyManager
+
+    km = KeyManager(patient_id)
+    raw_text, deid_text, page_count, entities = await deidentify_pdf_file(
+        pdf_path=pdf_path, patient_id=patient_id, session_key=km.session_key
+    )
+    key_path = km.save()
+
+    return add_dry_run_warning(
+        {
+            "extracted_text": raw_text,
+            "deidentified_text": deid_text,
+            "key_path": key_path,
+            "page_count": page_count,
+            "entities_found": entities,
+            "entity_count": len(entities),
+            "dry_run": DRY_RUN,
+        }
+    )
 
 
 @mcp.tool()
@@ -138,11 +237,55 @@ async def deidentify_genomics_file(
     patient_id: str,
     file_type: str = "vcf",
 ) -> Dict[str, Any]:
-    """[PHASE 4] De-identify VCF headers, h5ad .uns fields, or CNS headers.
+    """De-identify PII from genomics file headers (Stage 0 preprocessing).
 
-    Not yet implemented. Raises NotImplementedError.
+    Supported file types:
+      "vcf"  -- scrubs ## meta-information header lines; data rows untouched
+      "h5ad" -- de-identifies string values in adata.uns only; writes file in-place
+      "cns"  -- scrubs # comment lines; CNV segment data rows untouched
+
+    Args:
+        file_path:  Path to the genomics file.
+        patient_id: Canonical patient identifier (e.g. "PAT004").
+        file_type:  One of "vcf", "h5ad", "cns". Defaults to "vcf".
+
+    Returns:
+        {
+          "deidentified_content": <str>,
+          "key_path": <str>,
+          "fields_modified": [<str>, ...],
+          "entity_count": <int>,
+          "file_type": <str>,
+          "dry_run": <bool>
+        }
     """
-    raise NotImplementedError("deidentify_genomics_file is implemented in Phase 4.")
+    from mcp_deidentify.format_handlers.genomics_handler import (
+        deidentify_genomics_file as _deid_genomics,
+    )
+    from mcp_deidentify.key_manager import KeyManager
+
+    km = KeyManager(patient_id)
+    try:
+        content, fields_modified, entities = await _deid_genomics(
+            file_path=file_path,
+            patient_id=patient_id,
+            session_key=km.session_key,
+            file_type=file_type,
+        )
+    except ValueError as e:
+        return add_dry_run_warning({"error": str(e), "patient_id": patient_id})
+
+    key_path = km.save()
+    return add_dry_run_warning(
+        {
+            "deidentified_content": content,
+            "key_path": key_path,
+            "fields_modified": fields_modified,
+            "entity_count": len(entities),
+            "file_type": file_type,
+            "dry_run": DRY_RUN,
+        }
+    )
 
 
 @mcp.tool()
@@ -189,11 +332,41 @@ async def validate_deidentification(
     content: str,
     patient_id: str,
 ) -> Dict[str, Any]:
-    """[PHASE 5] Three-layer PII validation: Haiku red-team + regex + key reverse lookup.
+    """Three-layer validation that de-identified content contains no residual PII.
 
-    Not yet implemented. Raises NotImplementedError.
+    Runs three independent layers:
+      Layer 1 -- Haiku red-team: aggressive Haiku prompt (skipped in DRY_RUN).
+      Layer 2 -- Regex sweep: 9 structural patterns (SSN, phone, email, dates,
+                             MRN, accession numbers).
+      Layer 3 -- Key reverse lookup: checks that no original entity text from the
+                             patient's anonymization key appears verbatim.
+
+    All three layers must pass for passed=True. A single hit in any layer
+    returns passed=False regardless of the other layers.
+
+    Args:
+        content:    The de-identified text to audit.
+        patient_id: Canonical patient identifier -- used to load the anonymization
+                    key for Layer 3.
+
+    Returns:
+        {
+          "passed": <bool>,
+          "confidence": <float>,     # 1.0 = clean, 0.67 = one layer failed, 0.0 = all failed
+          "layers": { ... },         # per-layer passed + hits
+          "residual_pii_found": [...],
+          "patient_id": <str>,
+          "dry_run": <bool>
+        }
     """
-    raise NotImplementedError("validate_deidentification is implemented in Phase 5.")
+    from mcp_deidentify.key_manager import KeyManager
+    from mcp_deidentify.validator import validate
+
+    km = KeyManager(patient_id)
+    result = await validate(content=content, session_key=km.session_key)
+    result["patient_id"] = patient_id
+    result["dry_run"] = DRY_RUN
+    return add_dry_run_warning(result)
 
 
 # ---------------------------------------------------------------------------

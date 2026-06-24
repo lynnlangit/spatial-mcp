@@ -52,3 +52,151 @@ async def test_generate_anonymization_key_dry_run():
     assert "entry_count" in result
     assert result["dry_run"] is True
     assert isinstance(result["code_map"], dict)
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 tool tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_deidentify_text_txt_dry_run():
+    from mcp_deidentify.server import deidentify_text
+
+    result = await deidentify_text(text="Jane Doe Smith was seen today.", patient_id="PAT-TEST")
+    assert "deidentified_text" in result
+    assert "key_path" in result
+    assert "entity_count" in result
+    assert result["dry_run"] is True
+    assert result["source_format"] == "txt"
+
+
+@pytest.mark.asyncio
+async def test_deidentify_text_docx_dry_run():
+    from mcp_deidentify.server import deidentify_text
+
+    result = await deidentify_text(
+        text="tests/fixtures/synthetic_note.docx",
+        patient_id="PAT-TEST",
+        source_format="docx",
+    )
+    assert "deidentified_text" in result
+    assert "output_path" in result
+    assert result["source_format"] == "docx"
+
+
+@pytest.mark.asyncio
+async def test_deidentify_pdf_dry_run():
+    from mcp_deidentify.server import deidentify_pdf
+
+    result = await deidentify_pdf(pdf_path="tests/fixtures/synthetic.pdf", patient_id="PAT-TEST")
+    assert "extracted_text" in result
+    assert "deidentified_text" in result
+    assert "page_count" in result
+    assert result["page_count"] == 3
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 tool tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_deidentify_genomics_vcf_dry_run():
+    from mcp_deidentify.server import deidentify_genomics_file
+
+    result = await deidentify_genomics_file(
+        file_path="any.vcf", patient_id="PAT-TEST", file_type="vcf"
+    )
+    assert "deidentified_content" in result
+    assert "fields_modified" in result
+    assert result["file_type"] == "vcf"
+    assert result["dry_run"] is True
+
+
+@pytest.mark.asyncio
+async def test_deidentify_genomics_h5ad_dry_run():
+    from mcp_deidentify.server import deidentify_genomics_file
+
+    result = await deidentify_genomics_file(
+        file_path="any.h5ad", patient_id="PAT-TEST", file_type="h5ad"
+    )
+    assert "deidentified_content" in result
+    assert result["file_type"] == "h5ad"
+
+
+@pytest.mark.asyncio
+async def test_deidentify_genomics_invalid_type_returns_error():
+    from mcp_deidentify.server import deidentify_genomics_file
+
+    result = await deidentify_genomics_file(
+        file_path="any.xyz", patient_id="PAT-TEST", file_type="xyz"
+    )
+    assert "error" in result
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 tool tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_validate_deidentification_clean_text():
+    from mcp_deidentify.server import validate_deidentification
+
+    result = await validate_deidentification(
+        content="GNA11 R183C mutation detected. Treatment: Trametinib.",
+        patient_id="PAT-TEST",
+    )
+    assert "passed" in result
+    assert "confidence" in result
+    assert "layers" in result
+    assert result["passed"] is True
+    assert result["dry_run"] is True
+
+
+@pytest.mark.asyncio
+async def test_validate_deidentification_ssn_fails():
+    from mcp_deidentify.server import validate_deidentification
+
+    result = await validate_deidentification(
+        content="Patient SSN: 123-45-6789",
+        patient_id="PAT-TEST",
+    )
+    assert result["passed"] is False
+    assert result["confidence"] < 1.0
+    assert len(result["residual_pii_found"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_all_six_tools_no_longer_raise():
+    """Confirm all six tools are implemented -- none raise NotImplementedError."""
+    from mcp_deidentify.server import (
+        deidentify_genomics_file,
+        deidentify_json,
+        deidentify_pdf,
+        deidentify_text,
+        generate_anonymization_key,
+        validate_deidentification,
+    )
+
+    # Each call should return a dict, not raise
+    r1 = await deidentify_json(json_content='{"name": "test"}', patient_id="PAT-TEST")
+    assert isinstance(r1, dict)
+
+    r2 = await deidentify_text(text="some note", patient_id="PAT-TEST")
+    assert isinstance(r2, dict)
+
+    r3 = await deidentify_pdf(pdf_path="any.pdf", patient_id="PAT-TEST")
+    assert isinstance(r3, dict)
+
+    r4 = await deidentify_genomics_file(
+        file_path="any.vcf", patient_id="PAT-TEST", file_type="vcf"
+    )
+    assert isinstance(r4, dict)
+
+    r5 = await generate_anonymization_key(patient_id="PAT-TEST")
+    assert isinstance(r5, dict)
+
+    r6 = await validate_deidentification(content="clean text", patient_id="PAT-TEST")
+    assert isinstance(r6, dict)

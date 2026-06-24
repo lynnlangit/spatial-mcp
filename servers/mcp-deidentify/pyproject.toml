@@ -11,6 +11,9 @@ dependencies = [
     "fastmcp>=2.13.0",
     "anthropic>=0.30.0",
     "pydantic>=2.0.0",
+    "python-docx>=1.1.0",
+    "pdfplumber>=0.11.0",
+    "anndata>=0.10.0",
 ]
 
 [project.optional-dependencies]
