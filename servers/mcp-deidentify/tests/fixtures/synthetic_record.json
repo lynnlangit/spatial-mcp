@@ -1,0 +1,18 @@
+{
+  "patient_id": "PAT-SYNTHETIC-001",
+  "note": "SYNTHETIC DATA — not a real patient",
+  "demographics": {
+    "name": "Jane Doe Smith",
+    "date_of_birth": "1980-01-01",
+    "mrn": "12345678"
+  },
+  "provider": {
+    "name": "Dr. Robert Sample",
+    "facility": "City General Hospital"
+  },
+  "lab": {
+    "accession": "22X-SAMPLE-00001",
+    "specimen_id": "S22-SYNTHETIC-A1",
+    "director": "Dr. Alice Testcase"
+  }
+}

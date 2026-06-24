@@ -1,0 +1,4 @@
+Patient Jane Doe Smith (DOB: 1980-01-01, MRN: 12345678) was seen by
+Dr. Robert Sample at City General Hospital on 2024-03-15.
+Lab specimen S22-SYNTHETIC-A1 was processed under accession 22X-SAMPLE-00001.
+Contact: (555) 123-4567 | lab-director@citygeneral-synthetic.example.com
