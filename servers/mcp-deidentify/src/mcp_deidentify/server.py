@@ -31,7 +31,7 @@ def add_dry_run_warning(result: Dict) -> Dict:
 
 
 # ---------------------------------------------------------------------------
-# Phase 1 stubs -- tools not yet implemented
+# Phase 2 tools (implemented) + Phase 3-5 stubs
 # ---------------------------------------------------------------------------
 
 
@@ -41,11 +41,69 @@ async def deidentify_json(
     patient_id: str,
     code_map: Optional[Dict] = None,
 ) -> Dict[str, Any]:
-    """[PHASE 2] De-identify a JSON clinical record.
+    """De-identify a JSON clinical record (Stage 0 preprocessing).
 
-    Not yet implemented. Raises NotImplementedError.
+    Recursively scans every string leaf in the JSON dict, detects PII using
+    Haiku (or returns synthetic fixture in DRY_RUN mode), and replaces each
+    entity with a deterministic anonymization code. The anonymization key is
+    written to disk at {DEIDENTIFY_KEY_DIR}/{patient_id}/{patient_id}_anonymization_key.json.
+
+    Args:
+        json_content: JSON string of the clinical record to de-identify.
+        patient_id:   Canonical patient identifier (e.g. "PAT004").
+        code_map:     Optional dict of entity_text->code overrides. If provided,
+                      these mappings take priority over auto-generated codes.
+
+    Returns:
+        {
+          "deidentified": <dict>,          # de-identified record
+          "key_path": <str>,               # path to written anonymization key
+          "entities_found": [...]          # list of detected entities
+          "entity_count": <int>,
+          "synthetic_data": <bool>,
+          "dry_run": <bool>
+        }
     """
-    raise NotImplementedError("deidentify_json is implemented in Phase 2.")
+    import json as _json
+
+    from mcp_deidentify.format_handlers.json_handler import deidentify_json_dict
+    from mcp_deidentify.key_manager import KeyManager
+
+    # Parse input
+    try:
+        record = _json.loads(json_content)
+    except _json.JSONDecodeError as e:
+        return add_dry_run_warning({"error": f"Invalid JSON: {e}", "patient_id": patient_id})
+
+    # Load / create key
+    km = KeyManager(patient_id)
+
+    # Apply any caller-supplied overrides to the session key
+    if code_map:
+        for entity_text, code in code_map.items():
+            km.session_key.setdefault("entity_map", {})[entity_text] = {
+                "code": code,
+                "entity_type": "OVERRIDE",
+            }
+
+    # De-identify
+    deidentified, entities = await deidentify_json_dict(
+        record, patient_id=patient_id, session_key=km.session_key
+    )
+
+    # Persist key
+    key_path = km.save()
+
+    return add_dry_run_warning(
+        {
+            "deidentified": deidentified,
+            "key_path": key_path,
+            "entities_found": entities,
+            "entity_count": len(entities),
+            "synthetic_data": DRY_RUN,
+            "dry_run": DRY_RUN,
+        }
+    )
 
 
 @mcp.tool()
@@ -89,11 +147,41 @@ async def deidentify_genomics_file(
 
 @mcp.tool()
 async def generate_anonymization_key(patient_id: str) -> Dict[str, Any]:
-    """[PHASE 2] Retrieve or regenerate the anonymization key for a patient.
+    """Retrieve or initialise the anonymization key for a patient.
 
-    Not yet implemented. Raises NotImplementedError.
+    If a key file already exists on disk for this patient, loads and returns it.
+    If no key exists yet, creates an empty key, writes it to disk, and returns it.
+    Does not modify any existing entity->code mappings.
+
+    Args:
+        patient_id: Canonical patient identifier (e.g. "PAT004").
+
+    Returns:
+        {
+          "patient_id": <str>,
+          "key_path": <str>,
+          "code_map": <dict>,     # entity_text -> {code, entity_type}
+          "entry_count": <int>,
+          "generated_at": <str>,
+          "dry_run": <bool>
+        }
     """
-    raise NotImplementedError("generate_anonymization_key is implemented in Phase 2.")
+    from mcp_deidentify.key_manager import KeyManager
+
+    km = KeyManager(patient_id)
+    key_path = km.save()  # no-op if already exists (save is idempotent)
+    clean = km.as_dict()
+
+    return add_dry_run_warning(
+        {
+            "patient_id": patient_id,
+            "key_path": key_path,
+            "code_map": clean.get("entity_map", {}),
+            "entry_count": len(clean.get("entity_map", {})),
+            "generated_at": clean.get("generated_at", ""),
+            "dry_run": DRY_RUN,
+        }
+    )
 
 
 @mcp.tool()
