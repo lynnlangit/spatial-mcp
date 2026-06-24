@@ -2,7 +2,7 @@
 
 Cardiovascular risk scoring, biomarker interpretation, and preventive health monitoring. Server #19 in the Precision Medicine MCP Platform.
 
-## Tools (5)
+## Tools (9)
 
 | Tool | Description |
 |------|-------------|
@@ -11,6 +11,10 @@ Cardiovascular risk scoring, biomarker interpretation, and preventive health mon
 | `assess_lpa_status` | Interpret Lp(a) status or recommend testing if not yet measured |
 | `generate_preventive_report` | Structured preventive health summary with priority actions and monitoring schedule |
 | `get_lifestyle_evidence` | Evidence-based lifestyle interventions with landmark trial citations |
+| `search_cvd_prs_scores` | Query PGS Catalog REST API for validated CVD polygenic risk scores by trait |
+| `calculate_cvd_prs` | Compute polygenic risk score from germline genotype file + PGS Catalog score |
+| `interpret_cvd_prs_percentile` | Map raw PRS to population percentile and clinical risk tier (Khera et al. 2018) |
+| `assess_pregnancy_complication_cv_risk` | Evaluate adverse pregnancy outcomes as CVD risk enhancers per 2025 AHA/ACC and ESC guidelines |
 
 ## Risk Equations
 
@@ -32,7 +36,7 @@ cd servers/mcp-cardiometabolic
 uv run pytest -v
 ```
 
-23 tests covering risk equations, biomarker classification, tool implementations, and DRY_RUN behavior.
+34 tests covering risk equations, biomarker classification, PRS tools, APO risk assessment, and DRY_RUN behavior.
 
 ## Environment
 
