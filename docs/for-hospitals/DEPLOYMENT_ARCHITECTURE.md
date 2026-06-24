@@ -6,14 +6,14 @@
 graph TD
     subgraph Hospital["Hospital Network (Firewall Boundary)"]
         EHR["EHR System\n(Mock EPIC MCP Server)"]
-        DEIDENT["De-identification Layer"]
-        MCPCLUSTER["FastMCP Server Cluster\n18 servers"]
+        STAGE0["Stage 0: mcp-deidentify\nHIPAA Safe Harbor"]
+        MCPCLUSTER["FastMCP Server Cluster\n20 servers · 110 tools"]
         AUDIT["Audit Log Store\n(PHI access log)"]
     end
     CLIENT["Claude Desktop\nor API Gateway Client"]
     CLIENT -->|"TLS"| MCPCLUSTER
-    EHR --> DEIDENT
-    DEIDENT --> MCPCLUSTER
+    EHR --> STAGE0
+    STAGE0 --> MCPCLUSTER
     MCPCLUSTER --> AUDIT
 ```
 
@@ -42,6 +42,6 @@ For a basic genomic + neoantigen workflow, only these five servers are required:
 | De-identification layer | Yes | PHI must not leave hospital network unmasked |
 | GEARS model weights | Yes (recommended) | Proximity to PHI data |
 | Quantum server | Yes (recommended) | Research prototype; not validated for cloud latency |
-| FastMCP server cluster (all 18) | Yes | Co-locate with patient data |
+| FastMCP server cluster (all 20) | Yes | Co-locate with patient data |
 | Claude API gateway | Cloud | Anthropic-hosted; only de-identified data flows here |
 | Audit log store | Yes | HIPAA audit requirement; must be tamper-evident |
