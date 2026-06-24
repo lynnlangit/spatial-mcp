@@ -30,6 +30,7 @@ export {SERVER_NAME}_DRY_RUN=true
 | mcp-mocktcga | `MOCKTCGA_DRY_RUN` |
 | mcp-genomic-results | `GENOMIC_RESULTS_DRY_RUN` |
 | mcp-quantum-celltype-fidelity | `QUANTUM_DRY_RUN` |
+| mcp-deidentify | `DEIDENTIFY_DRY_RUN` |
 
 ## When to Use
 
@@ -57,6 +58,8 @@ Always set `DRY_RUN=false` in production deployments. Production mode requires:
 - Real data files accessible via GCS or local paths
 - Bioinformatics tools installed (or Cloud Run containers)
 - Appropriate API credentials
+
+> **mcp-deidentify note:** When `DEIDENTIFY_DRY_RUN=false`, the server calls `claude-haiku-4-5-20251001` via the Anthropic API. `ANTHROPIC_API_KEY` must be set. In Cloud Run (HOSPITAL1), this is provided via ambient service account auth — no Secret Manager action required.
 
 ---
 

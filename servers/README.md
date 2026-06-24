@@ -8,6 +8,7 @@ Specialized MCP servers for precision medicine analysis. For current server and 
 
 | Server | Tools | Status | Documentation |
 |--------|-------|--------|---------------|
+| 🔒 **mcp-deidentify** | 6 | ✅ 100% real | [README →](mcp-deidentify/README.md) |
 | 🏥 **mcp-epic** | 4 | ✅ 100% real (local only) | [Testing Guide →](mcp-epic/CLAUDE_DESKTOP_TESTING.md) |
 | 🎭 **mcp-mockepic** | 3 | 🎭 Mock by design (GCP) | — |
 | 🧬 **mcp-fgbio** | 4 | ✅ 95% real | [README →](mcp-fgbio/README.md) |
@@ -34,6 +35,7 @@ Specialized MCP servers for precision medicine analysis. For current server and 
 
 ### ✅ Production Servers
 Use these for real analysis:
+- 🔒 **mcp-deidentify** - Stage 0 HIPAA Safe Harbor de-identification for JSON, DOCX, PDF, VCF, h5ad — runs before all pipeline stages ([README](mcp-deidentify/README.md))
 - 🏥 **mcp-epic** - Real Epic FHIR with HIPAA de-identification ([Testing Guide](mcp-epic/CLAUDE_DESKTOP_TESTING.md))
 - 🧬 **mcp-fgbio** - Reference genomes, FASTQ QC ([README](mcp-fgbio/README.md))
 - 🔬 **mcp-multiomics** - RNA/Protein/Phospho integration - 91 tests ✅ ([README](mcp-multiomics/README.md))

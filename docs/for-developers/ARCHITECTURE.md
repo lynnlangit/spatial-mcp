@@ -417,6 +417,11 @@ A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analy
 **Orchestrated Workflow (DRY_RUN: ~35 minutes / Production: an estimated 2-5 hours):**
 
 ```
+[Stage 0] De-identification (prerequisite — run once per patient onboarding)
+  → mcp-deidentify.deidentify_json(json_content=patient_record, patient_id="PAT001-OVC-2025")
+  → mcp-deidentify.generate_anonymization_key(patient_id="PAT001-OVC-2025")
+  → Writes PAT001-OVC-2025_anonymization_key.json (stored separately from pipeline data)
+
 [0-5 min] Clinical Context
   → mcp-mockepic.query_patient_records(patient_id="PAT001-OVC-2025")
   → Returns: Stage IV HGSOC, platinum-resistant, CA-125 elevated
@@ -445,11 +450,12 @@ A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analy
 ```
 
 **Server Call Summary:**
+- 2 calls to mcp-deidentify (Stage 0, one-time per patient onboarding)
 - 2 calls to mcp-mockepic
 - 3 calls to mcp-fgbio
 - 4 calls to mcp-multiomics
 - 3 calls to mcp-spatialtools
-- **Total: 12 tool calls, ~35 min DRY_RUN / an estimated 2-5 hrs production**
+- **Total: 14 tool calls, ~35 min DRY_RUN / an estimated 2-5 hrs production**
 
 ---
 

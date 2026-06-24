@@ -40,6 +40,7 @@ precision-medicine-mcp/
 │   ├── mcp-cibersortx/        # CIBERSORTx immune deconvolution
 │   ├── mcp-neoantigen/        # Neoantigen prediction & HLA binding
 │   ├── mcp-cardiometabolic/   # CVD risk scoring & preventive health
+│   ├── mcp-deidentify/        # Stage 0: HIPAA Safe Harbor de-identification (JSON, DOCX, PDF, VCF, h5ad)
 │   └── mcp-server-boilerplate/# Template for new servers
 ├── data/                       # Patient data and reference files
 │   ├── patient-data/PAT001-OVC-2025/  # Synthetic PatientOne data (HGSOC)

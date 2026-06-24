@@ -93,6 +93,7 @@ Each server requires specific environment variables:
 | **opentargets** | `OPENTARGETS_DRY_RUN` | Mock execution mode |
 | **cibersortx** | `CIBERSORTX_DRY_RUN` | Mock execution mode |
 | **neoantigen** | `NEOANTIGEN_DRY_RUN` | Mock execution mode |
+| **deidentify** | `DEIDENTIFY_DRY_RUN`<br>`DEIDENTIFY_KEY_DIR`<br>`DEIDENTIFY_OUTPUT_DIR`<br>`ANTHROPIC_API_KEY` | Mock execution mode<br>Anonymization key storage dir<br>De-identified output dir<br>Required when DRY_RUN=false (Haiku calls) |
 | **epic** | `EPIC_FHIR_ENDPOINT`<br>`EPIC_CLIENT_ID`<br>`EPIC_CLIENT_SECRET`<br>`DEIDENTIFY_ENABLED` | FHIR endpoint URL<br>OAuth client ID<br>OAuth client secret<br>PHI de-identification |
 
 ### DRY_RUN Mode
@@ -128,7 +129,7 @@ Expected output: Should show the config JSON
 
 ### Verify All Server Paths Exist
 ```bash
-for server in fgbio spatialtools openimagedata mockepic tcga multiomics perturbation quantum-celltype-fidelity patient-report geodownload opentargets cibersortx neoantigen; do
+for server in deidentify fgbio spatialtools openimagedata mockepic tcga multiomics perturbation quantum-celltype-fidelity patient-report geodownload opentargets cibersortx neoantigen; do
   echo "Checking mcp-$server..."
   ls /Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-$server/
 done

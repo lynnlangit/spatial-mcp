@@ -23,13 +23,15 @@ A multi-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 
 
 ```mermaid
 flowchart LR
-    A["1 Data<br/>Acquisition"] --> B["2 Spatial<br/>Deconvolution"]
+    Z["0 De-ID<br/>Preprocessing"] --> A["1 Data<br/>Acquisition"]
+    A --> B["2 Spatial<br/>Deconvolution"]
     B --> C["3 Target<br/>Profiling"]
     C --> D["4 Causal<br/>Inference"]
     D --> E["5 Report"]
 
     subgraph servers [" "]
         direction TB
+        S0["De-identify · JSON · PDF · DOCX · VCF"]
         S1["EHR · GEO · TCGA"]
         S2["Spatial · DeepCell · CIBERSORTx"]
         S3["OpenTargets · Neoantigen"]
@@ -37,13 +39,15 @@ flowchart LR
         S5["Patient Report"]
     end
 
+    Z --- S0
     A --- S1
     B --- S2
     C --- S3
     D --- S4
     E --- S5
 
-    AI(["AI Orchestrator<br/>Claude + Gemini"]) -.-> A
+    AI(["AI Orchestrator<br/>Claude + Gemini"]) -.-> Z
+    AI -.-> A
     AI -.-> B
     AI -.-> C
     AI -.-> D
@@ -62,6 +66,9 @@ flowchart LR
                          MCP (FastMCP >= 2.13)
                                    |
    +---------------------------------------------------------------+
+   |                                                               |
+   |  PRE-PROCESSING (Stage 0)                                     |
+   |  deidentify                                                   |
    |                                                               |
    |  DATA ACQUISITION      ANALYSIS & INFERENCE      REPORTING   |
    |                                                               |
@@ -91,7 +98,7 @@ The platform surfaces clinically actionable findings that standard workup cannot
 | **ER+ Breast Cancer** | PAT002 | 3 investigational hypotheses: inavolisib over alpelisib (PIK3CA H1047R, 2024 FDA approval), MYC-driven triple therapy, YSAPLSSSL neoepitope vaccine + CAF depletion + anti-PD-1 — zero disease-specific code changes |
 | **Preventive Cardiovascular** | PAT003 | Intermediate CVD risk (Reynolds 14.3%) with 3 high-priority gaps missed by standard lipid panel AND population genetic screen: Lp(a), APOE genotype, CAC score |
 
-The same 19-server architecture runs all three. No disease-specific code changes between use cases.
+The same 20-server architecture runs all three. No disease-specific code changes between use cases.
 
 ### Validated results — PAT001 (HGSOC)
 

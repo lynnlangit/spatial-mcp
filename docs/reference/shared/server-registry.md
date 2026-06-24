@@ -1,6 +1,6 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 19 (104 tools) | **Production Ready:** 17 (89%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
+**Custom Servers:** 20 (110 tools) | **Production Ready:** 18 (90%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -10,6 +10,7 @@
 
 | Server | Tools | Status | Key Capabilities | Documentation |
 |--------|-------|--------|------------------|---------------|
+| **mcp-deidentify** | 6 | 100% Real | Stage 0 preprocessing — HIPAA Safe Harbor de-identification for JSON, DOCX, PDF, VCF, h5ad; three-layer validation | [README](../../../servers/mcp-deidentify/README.md) |
 | **mcp-fgbio** | 4 | 95% Real | FASTQ/VCF QC, genome refs, variant calling | [README](../../../servers/mcp-fgbio/README.md) |
 | **mcp-multiomics** | 10 | 95% Real | HAllA integration, Stouffer meta-analysis, upstream regulators, heatmap, PCA | [README](../../../servers/mcp-multiomics/README.md) |
 | **mcp-spatialtools** | 16 | 95% Real | Spatial DE, STAR alignment, ComBat, pathway enrichment, patient-context resolution | [README](../../../servers/mcp-spatialtools/README.md) |
@@ -93,7 +94,7 @@ Six external servers complement the custom servers above. These are either Anthr
 
 ## Framework Version
 
-All 19 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
+All 20 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
 as of 2026-04-08 (HOSPITAL1 migration — see `docs/HOSPITAL1_DEPLOYMENT_PLAN.md`).
 Resolved versions in `uv.lock` span 2.14.1 through 3.1.0; every server has
 been verified by `scripts/phase6_signature_audit.sh` to import cleanly,
@@ -102,7 +103,7 @@ enumerate the expected tool count, and use only public FastMCP APIs
 
 | Build backend | Count | Servers |
 |---|---|---|
-| `hatchling.build` | 11 | server-boilerplate, patient-report, genomic-results, cibersortx, geodownload, neoantigen, opentargets, multiomics, quantum-celltype-fidelity, perturbation, cardiometabolic |
+| `hatchling.build` | 12 | server-boilerplate, deidentify, patient-report, genomic-results, cibersortx, geodownload, neoantigen, opentargets, multiomics, quantum-celltype-fidelity, perturbation, cardiometabolic |
 | `setuptools.build_meta` | 8 | epic, fgbio, mockepic, cell-classify, openimagedata, mocktcga, spatialtools, deepcell |
 
 Both backends are PEP 517-compliant and work with `uv build` and

@@ -60,6 +60,15 @@ Step-by-step checklist for deploying the Precision Medicine MCP Platform at your
 
 ## Month 2: Core Servers Deployment
 
+### Deploy mcp-deidentify (Stage 0 — De-identification)
+> Deploy this **before all other servers** — Stage 0 preprocessing is required by every downstream pipeline stage.
+- [ ] Deploy to Cloud Run: `mcp-deidentify`
+- [ ] Configure environment variables: `DEIDENTIFY_DRY_RUN=false`, `DEIDENTIFY_KEY_DIR=/gcs/bucket/keys`, `DEIDENTIFY_OUTPUT_DIR=/gcs/bucket/deidentified`
+- [ ] Confirm `ANTHROPIC_API_KEY` available via ambient Cloud Run SA auth
+- [ ] Test: "De-identify this synthetic patient JSON record"
+- [ ] Verify anonymization key written to `DEIDENTIFY_KEY_DIR`
+- [ ] Run `validate_deidentification` on a de-identified record and confirm `passed: true`
+
 ### Deploy mcp-fgbio (Reference Genomes)
 - [ ] Deploy to Cloud Run: `mcp-fgbio`
 - [ ] Configure environment variables: `FGBIO_DRY_RUN=false`

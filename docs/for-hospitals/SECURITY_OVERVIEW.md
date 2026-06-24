@@ -53,7 +53,7 @@ graph TB
 | **Auth** | Azure AD SSO, MFA required, RBAC (clinician/bioinformatician/admin), 30-min idle timeout | 164.312(d), 164.308(a)(4) |
 | **Encryption** | AES-256 at rest (Cloud Storage, FHIR Store), TLS 1.3 in transit, GCP Secret Manager | 164.312(a)(2)(iv), (e)(2) |
 | **Audit** | 10-year immutable Cloud Logging + FHIR AuditEvent, all API calls logged | 164.312(b), 164.316(b)(2) |
-| **De-ID** | HIPAA Safe Harbor (all 18 identifiers removed automatically by mcp-epic) | 164.514(b)(2) |
+| **De-ID** | HIPAA Safe Harbor (all 18 identifiers removed) — mcp-epic for FHIR/EHR data; mcp-deidentify (Stage 0) for clinical documents, genomics files; three-layer validation (Haiku red-team + regex + key lookup) | 164.514(b)(2) |
 | **Incident** | 60-day breach notification, documented response procedures | 164.408 |
 
 ---

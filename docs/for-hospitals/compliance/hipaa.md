@@ -11,7 +11,7 @@ This document covers hospital-specific procedures and validation checklists.
 
 | Feature | Implementation | HIPAA Section |
 |---------|----------------|---------------|
-| **De-identification** | Safe Harbor method, all 18 identifiers removed by mcp-epic | 164.514(b)(2) |
+| **De-identification** | Safe Harbor method, all 18 identifiers removed — mcp-epic (FHIR/EHR data) and mcp-deidentify Stage 0 (JSON clinical records, DOCX, PDF, VCF, h5ad headers) | 164.514(b)(2) |
 | **Access Control** | Azure AD SSO + MFA, RBAC, VPN required | 164.312(a)(1), (d) |
 | **Audit Logging** | 10-year immutable retention (Cloud Logging + FHIR AuditEvent) | 164.312(b), 164.316(b)(2) |
 | **Encryption** | AES-256 at rest, TLS 1.3 in transit | 164.312(a)(2)(iv), (e)(2) |
@@ -52,16 +52,28 @@ This document covers hospital-specific procedures and validation checklists.
 ## PHI Data Flow
 
 ```
-Epic FHIR (hospital network)
+PHI Source 1: Epic FHIR (hospital network)
     |
     v
 mcp-epic (local-only, never on Cloud Run)
-    |  -- removes all 18 HIPAA identifiers --
+    |  -- removes all 18 HIPAA identifiers (FHIR/EHR data) --
     v
-De-identified data --> Cloud Run MCP servers
-    |
-    v
-Analysis results (no PHI) --> Clinician review
+De-identified FHIR data ──────────────────────────────────┐
+                                                           │
+PHI Source 2: Clinical documents (JSON/DOCX/PDF/VCF/h5ad) │
+    |                                                      │
+    v                                                      │
+mcp-deidentify (Stage 0 — runs before pipeline)           │
+    |  -- removes all 18 HIPAA identifiers (documents) --  │
+    |  -- writes anonymization_key.json separately --      │
+    v                                                      │
+De-identified documents ───────────────────────────────────┤
+                                                           │
+                                                           v
+                                          Cloud Run MCP servers (Stages 1–5)
+                                                           |
+                                                           v
+                                          Analysis results (no PHI) --> Clinician review
 ```
 
 **Key constraint:** mcp-epic runs on the hospital network only. PHI never leaves the hospital VPC. All other MCP servers receive only de-identified data.

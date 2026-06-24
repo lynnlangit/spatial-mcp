@@ -1,7 +1,8 @@
 # Executive Summary
 
 > **v17 update (April 2026):** Platform expanded from oncology to preventive health.
-> 19 custom servers (104 tools). PAT003 (preventive CVD) validated April 23, 2026.
+> **v18 update (June 2026):** mcp-deidentify added — HIPAA Safe Harbor Stage 0 preprocessing.
+> 20 custom servers (110 tools). PAT003 (preventive CVD) validated April 23, 2026.
 > See [ROADMAP.md](../../ROADMAP.md) for full version history.
 
 ## The Problem
@@ -10,13 +11,13 @@ Standard HGSOC workup (BRCA1/2, HRD panel, CT imaging) generates no immunotherap
 
 ## The Platform
 
-A 19-server MCP architecture orchestrated by AI (Claude + Gemini) executes automated multi-modal analysis pipelines: oncology patients follow a 5-stage workflow (Data Acquisition → Spatial Deconvolution → Target Profiling → Causal Inference → Report); preventive health patients use a parallel cardiometabolic risk-stratification workflow.
+A 20-server MCP architecture orchestrated by AI (Claude + Gemini) executes automated multi-modal analysis pipelines: all patients first pass through Stage 0 de-identification (mcp-deidentify), then oncology patients follow a 5-stage workflow (Data Acquisition → Spatial Deconvolution → Target Profiling → Causal Inference → Report); preventive health patients use a parallel cardiometabolic risk-stratification workflow.
 
 All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant architecture with Safe Harbor de-identification and 10-year audit trails.
 
 **Metrics:** 40 hours -> 2-5 hours (production), ~$324-702/patient vs $6,000-9,000 traditional. See [Value Proposition](../reference/shared/value-proposition.md) for details.
 
-**Servers:** 19 custom (104 tools) + 6 external connectors — see [Server Registry](../reference/shared/server-registry.md) for current counts.
+**Servers:** 20 custom (110 tools) + 6 external connectors — see [Server Registry](../reference/shared/server-registry.md) for current counts.
 
 ---
 
@@ -39,7 +40,7 @@ Clinical details: [PatientOne Profile](../reference/shared/patientone-profile.md
 | Tier | Investment | Deliverable | Timeline |
 |------|-----------|-------------|----------|
 | **Pilot** | $50,000 | 3 production servers, 100 patients, training | 6 months |
-| **Production** | $75,000/year | Full 19-server deployment, Epic FHIR, 500 patients | 12 months |
+| **Production** | $75,000/year | Full 20-server deployment, Epic FHIR, 500 patients | 12 months |
 | **Multi-Site** | $150,000 | 3-5 hospitals, IRB protocol, publication support | 18 months |
 
 Projected annual savings: ~$313K (100 patients) to ~$1.6M (500 patients). Modeled, pending clinical validation.

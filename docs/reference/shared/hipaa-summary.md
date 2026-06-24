@@ -8,7 +8,7 @@ The Precision Medicine MCP system meets all applicable HIPAA requirements for a 
 
 | Feature | Implementation | Status |
 |---------|---------------|--------|
-| **De-identification** | HIPAA Safe Harbor method (all 18 identifiers removed) | ✅ |
+| **De-identification** | HIPAA Safe Harbor method (all 18 identifiers removed) — mcp-epic for FHIR data; mcp-deidentify for clinical documents, genomics files | ✅ |
 | **Access Control** | Azure AD SSO with MFA, VPN required | ✅ |
 | **Audit Logging** | 10-year retention in encrypted Cloud Logging | ✅ |
 | **Encryption** | AES-256 at rest, TLS 1.3 in transit | ✅ |
@@ -52,7 +52,9 @@ All 18 HIPAA identifiers are removed before data enters the MCP system:
 - PHI is de-identified **before** entering the MCP system
 - The MCP system processes only de-identified data
 - No PHI is stored on local devices (web-based system)
-- Epic FHIR client handles de-identification at the source
+- Two de-identification paths:
+  - **FHIR/EHR data:** mcp-epic handles de-identification at the source (local-only, never on Cloud Run)
+  - **Clinical documents (JSON, DOCX, PDF, VCF, h5ad):** mcp-deidentify (Stage 0) applies Safe Harbor de-identification before any pipeline stage runs; anonymization keys are stored separately and never passed downstream
 
 ---
 
