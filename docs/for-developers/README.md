@@ -83,120 +83,61 @@ graph LR
 ```mermaid
 graph TB
     subgraph "User Interfaces"
-        STREAMLIT[🌐 Streamlit Chat UI<br/>Web Interface<br/>Cloud Run]
-        JUPYTER[📓 Jupyter Notebook<br/>Data Science Interface<br/>Cloud Run]
-        DESKTOP[💬 Claude Desktop<br/>Local STDIO]
+        STREAMLIT["🌐 Streamlit Chat UI<br/>Web Interface"]
+        JUPYTER["📓 Jupyter Notebook<br/>Data Science"]
+        DESKTOP["💬 Claude Desktop<br/>Local STDIO"]
     end
 
     subgraph "AI Orchestration Layer"
-        API[🤖 Claude API<br/>Anthropic Sonnet 4.6<br/>MCP Client Support]
+        API["🤖 Claude API<br/>Anthropic Sonnet 4.6<br/>MCP Client"]
     end
 
-    subgraph "Local-Only Servers"
-        REALEPIC[mcp-epic<br/>Real Epic FHIR<br/>✅ Production<br/>🏥 HIPAA-compliant]
+    subgraph "20 Custom MCP Servers (110 tools)"
+        STAGE0["🔒 Stage 0: De-identification (6 tools)<br/>mcp-deidentify"]
+        CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>mcp-epic · mcp-fgbio · mcp-genomic-results<br/>mcp-mockepic 🎭 · mcp-mocktcga 🔧"]
+        OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>mcp-multiomics · mcp-spatialtools<br/>mcp-openimagedata · mcp-deepcell · mcp-cell-classify"]
+        IMMUNO["💉 Immunology & Treatment (25 tools)<br/>mcp-cibersortx · mcp-neoantigen<br/>mcp-perturbation · mcp-quantum-celltype-fidelity"]
+        EXTDATA["🌐 External Data (12 tools)<br/>mcp-geodownload · mcp-opentargets"]
+        PREVENT["❤️ Preventive Health (5 tools)<br/>mcp-cardiometabolic"]
+        REPORT["📋 Reporting (5 tools)<br/>mcp-patient-report"]
     end
 
-    subgraph "GCP Cloud Run - 19 Custom MCP Servers"
-        subgraph "Clinical & Genomic"
-            MOCKEPIC[mcp-mockepic<br/>Mock FHIR<br/>🎭 Demo Only]
-            FGBIO[mcp-fgbio<br/>FASTQ/VCF<br/>✅ Production]
-            TCGA[mcp-mocktcga<br/>Cancer Data<br/>🔧 Framework]
-        end
-
-        subgraph "Multi-Omics"
-            MULTI[mcp-multiomics<br/>RNA/Protein/Phospho<br/>✅ Production]
-        end
-
-        subgraph "Spatial & Imaging"
-            SPATIAL[mcp-spatialtools<br/>Spatial RNA-seq<br/>✅ Production]
-            IMAGE[mcp-openimagedata<br/>Histology<br/>✅ Production]
-            DEEPCELL[mcp-deepcell<br/>Cell Segmentation<br/>✅ Production]
-            CELLCLASS[mcp-cell-classify<br/>Phenotyping<br/>✅ Production]
-        end
-
-        subgraph "Genomic Results & Reporting"
-            GENOMICRES[mcp-genomic-results<br/>Somatic/CNV/HRD<br/>✅ Production]
-            PATREPORT[mcp-patient-report<br/>PDF Reports<br/>✅ Production]
-        end
-
-        subgraph "Advanced Analytics"
-            PERTURB[mcp-perturbation<br/>GEARS GNN<br/>✅ Production]
-            QUANTUM[mcp-quantum-celltype-fidelity<br/>Quantum PQCs<br/>✅ Production]
-        end
-
-        subgraph "External Data & Immunology"
-            GEODL[mcp-geodownload<br/>GEO/SRA Download<br/>✅ Production]
-            OPENTARGETS[mcp-opentargets<br/>Drug-Target Assoc.<br/>✅ Production]
-            CIBERSORTX[mcp-cibersortx<br/>Immune Deconv.<br/>✅ Production]
-            NEOANTIGEN[mcp-neoantigen<br/>HLA/Neoantigen<br/>✅ Production]
-        end
-
-    end
-
-    subgraph "Analysis Workflow"
-        PATIENT[🏥 PatientOne<br/>Stage IV HGSOC<br/>Multi-Omics Analysis]
+    subgraph "Patient Analysis Workflows"
+        PATIENT["🏥 Three Validated Patients<br/>PAT001 Stage IV HGSOC · PAT002 ER+ Breast<br/>PAT003 Preventive CVD"]
     end
 
     STREAMLIT ==> API
     JUPYTER ==> API
     DESKTOP --> API
 
-    API ==> FGBIO
-    API ==> MULTI
-    API ==> SPATIAL
-    API ==> REALEPIC
-    API ==> DEEPCELL
-    API ==> PERTURB
-    API ==> QUANTUM
-    API -.-> MOCKEPIC
-    API -.-> TCGA
-    API ==> IMAGE
-    API ==> CELLCLASS
-    API ==> GENOMICRES
-    API ==> PATREPORT
-    API ==> GEODL
-    API ==> OPENTARGETS
-    API ==> CIBERSORTX
-    API ==> NEOANTIGEN
-    FGBIO ==> PATIENT
-    MULTI ==> PATIENT
-    SPATIAL ==> PATIENT
-    REALEPIC ==> PATIENT
-    DEEPCELL ==> PATIENT
-    PERTURB ==> PATIENT
-    QUANTUM ==> PATIENT
-    MOCKEPIC -.-> PATIENT
-    TCGA -.-> PATIENT
-    IMAGE ==> PATIENT
-    CELLCLASS ==> PATIENT
-    GENOMICRES ==> PATIENT
-    PATREPORT ==> PATIENT
-    GEODL ==> PATIENT
-    OPENTARGETS ==> PATIENT
-    CIBERSORTX ==> PATIENT
-    NEOANTIGEN ==> PATIENT
+    API ==> STAGE0
+    API ==> CLINICAL
+    API ==> OMICS
+    API ==> IMMUNO
+    API ==> EXTDATA
+    API ==> PREVENT
+    API ==> REPORT
+
+    STAGE0 ==> CLINICAL
+    CLINICAL ==> PATIENT
+    OMICS ==> PATIENT
+    IMMUNO ==> PATIENT
+    EXTDATA ==> PATIENT
+    PREVENT ==> PATIENT
+    REPORT ==> PATIENT
+
     style STREAMLIT fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
     style JUPYTER fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
     style DESKTOP fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
     style API fill:#cce5ff,stroke:#004085,stroke-width:3px
     style PATIENT fill:#e1f5ff,stroke:#0066cc,stroke-width:3px
-    style FGBIO fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style MULTI fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style SPATIAL fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style REALEPIC fill:#d4edda,stroke:#28a745,stroke-width:3px
-    style DEEPCELL fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style PERTURB fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style QUANTUM fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style IMAGE fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style CELLCLASS fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style GENOMICRES fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style PATREPORT fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style GEODL fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style OPENTARGETS fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style CIBERSORTX fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style NEOANTIGEN fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style TCGA fill:#fff3cd,stroke:#ffc107,stroke-width:1px
-    style MOCKEPIC fill:#e2e3e5,stroke:#6c757d,stroke-width:1px
+    style STAGE0 fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    style CLINICAL fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style OMICS fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style IMMUNO fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style EXTDATA fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style PREVENT fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style REPORT fill:#d4edda,stroke:#28a745,stroke-width:2px
 ```
 
 **Legend:**
