@@ -8,11 +8,11 @@ Cheat sheet for common development tasks in the precision-medicine-mcp platform.
 
 ```
 precision-medicine-mcp/
-├── servers/                      # 19 MCP servers (104 tools)
+├── servers/                      # 20 MCP servers (110 tools)
 │   ├── mcp-fgbio/               # Reference genomes, VCF/FASTQ (4 tools)
 │   ├── mcp-genomic-results/     # Somatic variant/CNV parsing (4 tools)
 │   ├── mcp-multiomics/          # RNA/Protein/Phospho (10 tools, best reference)
-│   ├── mcp-spatialtools/        # Spatial transcriptomics (14 tools)
+│   ├── mcp-spatialtools/        # Spatial transcriptomics (16 tools)
 │   ├── mcp-cibersortx/          # Immune deconvolution (5 tools)
 │   ├── mcp-neoantigen/          # Neoantigen prediction & HLA binding (6 tools)
 │   ├── mcp-opentargets/         # Drug-target associations (6 tools)
@@ -23,6 +23,7 @@ precision-medicine-mcp/
 │   ├── mcp-cell-classify/       # Cell phenotype classification (3 tools)
 │   ├── mcp-geodownload/         # GEO/SRA dataset download (6 tools)
 │   ├── mcp-cardiometabolic/     # CVD risk scoring & preventive health (5 tools)
+│   ├── mcp-deidentify/          # HIPAA Safe Harbor de-identification (6 tools)
 │   ├── mcp-epic/                # Real Epic FHIR (local-only, 4 tools)
 │   ├── mcp-mockepic/            # Synthetic FHIR for demos (3 tools)
 │   ├── mcp-mocktcga/            # Mock TCGA cohort comparison (5 tools)
@@ -41,7 +42,7 @@ precision-medicine-mcp/
 │   ├── for-funders/             # ROI, grants
 │   ├── for-hospitals/           # Deployment, security, HIPAA
 │   ├── for-patients/            # Patient-facing overviews
-│   ├── for-researchers/         # Research guides, paper v17, open questions
+│   ├── for-researchers/         # Research guides, paper v19, open questions
 │   ├── getting-started/         # Installation, desktop configs
 │   └── reference/               # Architecture, testing, shared canonical docs
 ├── data/                        # Patient data and reference files
@@ -623,8 +624,6 @@ print(result)
 - [ ] Deploy to GCP Cloud Run
 - [ ] Test SSE endpoint
 
-**Estimated time:** 4-8 hours from template to deployed server
-
 ---
 
-**Last Updated:** 2026-05-09
+**Last Updated:** 2026-06-24
