@@ -92,7 +92,7 @@ graph TB
         API["🤖 Claude API<br/>Anthropic Sonnet 4.6<br/>MCP Client"]
     end
 
-    subgraph "20 Custom MCP Servers (110 tools)"
+    subgraph "20 Custom MCP Servers (114 tools)"
         STAGE0["🔒 Stage 0: De-identification (6 tools)<br/>mcp-deidentify"]
         CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>mcp-epic · mcp-fgbio · mcp-genomic-results<br/>mcp-mockepic 🎭 · mcp-mocktcga 🔧"]
         OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>mcp-multiomics · mcp-spatialtools<br/>mcp-openimagedata · mcp-deepcell · mcp-cell-classify"]
