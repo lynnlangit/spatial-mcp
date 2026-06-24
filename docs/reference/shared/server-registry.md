@@ -1,6 +1,6 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 20 (110 tools) | **Production Ready:** 18 (90%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
+**Custom Servers:** 20 (114 tools) | **Production Ready:** 18 (90%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -26,7 +26,7 @@
 | **mcp-opentargets** | 6 | 100% Real | Drug-target associations, disease ontology, GraphQL API | [README](../../../servers/mcp-opentargets/README.md) |
 | **mcp-cibersortx** | 5 | 100% Real | Immune deconvolution, LM22 signatures, job polling | [README](../../../servers/mcp-cibersortx/README.md) |
 | **mcp-neoantigen** | 6 | 100% Real | MHC binding prediction, IEDB API, neoantigen burden scoring | [README](../../../servers/mcp-neoantigen/README.md) |
-| **mcp-cardiometabolic** | 5 | 100% Real | Reynolds/Framingham/ASCVD risk scoring, biomarker panels, Lp(a), preventive reports | [README](../../../servers/mcp-cardiometabolic/README.md) |
+| **mcp-cardiometabolic** | 9 | 100% Real | Reynolds/Framingham/ASCVD risk scoring, biomarker panels, Lp(a), PRS (PGS Catalog), APO CV risk, preventive reports | [README](../../../servers/mcp-cardiometabolic/README.md) |
 
 ---
 
