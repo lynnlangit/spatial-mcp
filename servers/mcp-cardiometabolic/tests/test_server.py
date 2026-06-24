@@ -13,6 +13,10 @@ from mcp_cardiometabolic.server import (
     _assess_lpa_status_impl,
     _generate_preventive_report_impl,
     _get_lifestyle_evidence_impl,
+    _search_cvd_prs_scores_impl,
+    _calculate_cvd_prs_impl,
+    _interpret_cvd_prs_percentile_impl,
+    _assess_pregnancy_complication_cv_risk_impl,
 )
 
 # PAT003 canonical input values
@@ -239,3 +243,131 @@ class TestCalculateCVDRiskScores:
     async def test_dry_run_flag(self):
         r = await _calculate_cvd_risk_scores_impl()
         assert r["dry_run"] is True
+
+
+class TestSearchCvdPrsScores:
+    """Tool: search_cvd_prs_scores."""
+
+    @pytest.mark.asyncio
+    async def test_dry_run_returns_fixture(self):
+        r = await _search_cvd_prs_scores_impl(trait="coronary artery disease")
+        assert r["dry_run"] is True
+        assert r["scores"][0]["pgs_id"] == "PGS000018"
+        assert r["total_found"] == 2
+
+    @pytest.mark.asyncio
+    async def test_trait_echoed(self):
+        r = await _search_cvd_prs_scores_impl(trait="atrial fibrillation")
+        assert r["trait_queried"] == "atrial fibrillation"
+
+
+class TestCalculateCvdPrs:
+    """Tool: calculate_cvd_prs."""
+
+    @pytest.mark.asyncio
+    async def test_no_germline_file(self):
+        r = await _calculate_cvd_prs_impl(
+            patient_id="PAT003",
+            genotype_file_path="/nonexistent/PAT003_germline.txt",
+            pgs_id="PGS000018",
+        )
+        assert r["status"] == "NO_GERMLINE_GENOTYPE"
+        assert "Somatic VCFs" in r["action_required"]
+
+    @pytest.mark.asyncio
+    async def test_dry_run_synthetic(self):
+        r = await _calculate_cvd_prs_impl(
+            patient_id="PAT003",
+            genotype_file_path="SYNTHETIC",
+            pgs_id="PGS000018",
+        )
+        assert r["status"] == "CALCULATED"
+        assert r["dry_run"] is True
+        assert r["raw_score"] == 0.847
+        assert r["match_fraction"] == 0.089
+
+
+class TestInterpretCvdPrsPercentile:
+    """Tool: interpret_cvd_prs_percentile."""
+
+    @pytest.mark.asyncio
+    async def test_dry_run_returns_percentile(self):
+        r = await _interpret_cvd_prs_percentile_impl(
+            patient_id="PAT003",
+            pgs_id="PGS000018",
+            raw_score=0.847,
+        )
+        assert r["percentile"] == 73.2
+        assert r["risk_tier"] == "Intermediate"
+        assert r["dry_run"] is True
+
+    @pytest.mark.asyncio
+    async def test_has_reference(self):
+        r = await _interpret_cvd_prs_percentile_impl(
+            patient_id="PAT003",
+            pgs_id="PGS000018",
+            raw_score=0.847,
+        )
+        assert "Khera" in r["reference"]
+
+
+class TestAssessPregnancyComplicationCvRisk:
+    """Tool: assess_pregnancy_complication_cv_risk."""
+
+    @pytest.mark.asyncio
+    async def test_preeclampsia_high_risk(self):
+        r = await _assess_pregnancy_complication_cv_risk_impl(
+            patient_id="PAT003",
+            complications=["preeclampsia"],
+            age_at_complication=32,
+            num_affected_pregnancies=1,
+        )
+        assert r["risk_enhancement"]["category"] == "High"
+        assert r["risk_enhancement"]["cad_multiplier"] == 2.0
+        assert r["risk_enhancement"]["stroke_multiplier"] == 2.0
+        assert "preeclampsia" in r["complications_recognized"]
+        assert len(r["screening_recommendations"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_unknown_complication(self):
+        r = await _assess_pregnancy_complication_cv_risk_impl(
+            patient_id="PAT003",
+            complications=["morning_sickness"],
+        )
+        assert r["complications_recognized"] == []
+        assert r["risk_enhancement"]["category"] == "None"
+        assert r["risk_enhancement"]["cad_multiplier"] == 1.0
+
+    @pytest.mark.asyncio
+    async def test_multiple_complications_additive(self):
+        r = await _assess_pregnancy_complication_cv_risk_impl(
+            patient_id="PAT003",
+            complications=["preeclampsia", "gestational_diabetes"],
+        )
+        assert r["risk_enhancement"]["category"] == "High"
+        # Additive: (2.0-1) + (1.7-1) + 1.0 = 2.7
+        assert r["risk_enhancement"]["cad_multiplier"] == 2.7
+        assert len(r["complications_recognized"]) == 2
+
+    @pytest.mark.asyncio
+    async def test_cap_applied(self):
+        r = await _assess_pregnancy_complication_cv_risk_impl(
+            patient_id="PAT003",
+            complications=[
+                "preeclampsia", "eclampsia", "gestational_diabetes",
+                "gestational_hypertension",
+            ],
+        )
+        # Sum would exceed 3.5 cap
+        assert r["risk_enhancement"]["cad_multiplier"] <= 3.5
+        assert r["risk_enhancement"]["stroke_multiplier"] <= 3.5
+
+    @pytest.mark.asyncio
+    async def test_guideline_sources_present(self):
+        r = await _assess_pregnancy_complication_cv_risk_impl(
+            patient_id="PAT003",
+            complications=["preeclampsia"],
+        )
+        assert len(r["guideline_sources"]) == 3
+        assert any("AHA" in s for s in r["guideline_sources"])
+        assert any("ESC" in s for s in r["guideline_sources"])

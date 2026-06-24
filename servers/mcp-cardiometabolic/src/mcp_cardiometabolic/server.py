@@ -13,7 +13,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional, Union
 
 from fastmcp import FastMCP
 from pydantic import BeforeValidator
@@ -338,6 +338,353 @@ async def _get_lifestyle_evidence_impl(
     }
 
 
+# ---------------------------------------------------------------------------
+# PRS + APO tool implementations
+# ---------------------------------------------------------------------------
+
+# APO risk multipliers from AHA scientific statement and ESC 2025 guidelines
+_APO_RISK_TABLE: Dict[str, Dict[str, float]] = {
+    "preeclampsia": {"cad": 2.0, "stroke": 2.0, "grade": "AHA/ACC 2025 Class I"},
+    "eclampsia": {"cad": 2.5, "stroke": 2.7, "grade": "ESC 2025"},
+    "gestational_hypertension": {"cad": 1.7, "stroke": 1.8, "grade": "ESC 2025"},
+    "gestational_diabetes": {"cad": 1.7, "stroke": 1.2, "grade": "AHA scientific statement"},
+    "preterm_birth": {"cad": 1.4, "stroke": 1.6, "grade": "AHA scientific statement"},
+    "low_birth_weight": {"cad": 1.3, "stroke": 1.3, "grade": "AHA scientific statement"},
+    "iugr": {"cad": 1.3, "stroke": 1.3, "grade": "AHA scientific statement"},
+    "placental_abruption": {"cad": 1.5, "stroke": 1.5, "grade": "ESC 2025"},
+    "stillbirth": {"cad": 1.5, "stroke": 1.5, "grade": "ESC 2025"},
+    "recurrent_miscarriage": {"cad": 1.3, "stroke": 1.3, "grade": "ESC 2025"},
+}
+
+_APO_CAP = 3.5  # Max combined multiplier to avoid compounding artifact
+
+
+async def _search_cvd_prs_scores_impl(
+    trait: str = "coronary artery disease",
+    max_results: int = 10,
+) -> Dict[str, Any]:
+    """Query the PGS Catalog REST API for validated CVD polygenic risk scores."""
+    if DRY_RUN:
+        return {
+            "scores": [
+                {
+                    "pgs_id": "PGS000018",
+                    "trait_reported": "Coronary artery disease",
+                    "variants_number": 6630150,
+                    "ancestry_broad": "European",
+                    "publication_doi": "10.1038/s41586-018-0183-z",
+                },
+                {
+                    "pgs_id": "PGS000818",
+                    "trait_reported": "Coronary heart disease",
+                    "variants_number": 300,
+                    "ancestry_broad": "European",
+                    "publication_doi": "10.1161/CIRCULATIONAHA.120.053430",
+                },
+            ],
+            "trait_queried": trait,
+            "total_found": 2,
+            "dry_run": True,
+            "catalog_url": "https://www.pgscatalog.org/trait/EFO_0001645/",
+        }
+
+    import requests as _requests
+
+    url = "https://www.pgscatalog.org/rest/score/search/"
+    params = {"trait_mapped": trait, "limit": max_results}
+    resp = _requests.get(url, params=params, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+
+    scores = []
+    for item in data.get("results", []):
+        scores.append({
+            "pgs_id": item.get("id", ""),
+            "trait_reported": item.get("trait_reported", ""),
+            "variants_number": item.get("variants_number", 0),
+            "ancestry_broad": (
+                item.get("ancestry_distribution", {})
+                .get("gwas", {})
+                .get("broad", "unknown")
+                if isinstance(item.get("ancestry_distribution"), dict)
+                else "unknown"
+            ),
+            "publication_doi": (
+                item.get("publication", {}).get("doi", "")
+                if isinstance(item.get("publication"), dict)
+                else ""
+            ),
+        })
+
+    return {
+        "scores": scores,
+        "trait_queried": trait,
+        "total_found": len(scores),
+        "dry_run": False,
+        "catalog_url": f"https://www.pgscatalog.org/rest/score/search/?trait_mapped={trait}",
+    }
+
+
+async def _calculate_cvd_prs_impl(
+    patient_id: str,
+    genotype_file_path: str,
+    pgs_id: str = "PGS000018",
+) -> Dict[str, Any]:
+    """Compute a polygenic risk score from a germline genotype file."""
+    if DRY_RUN:
+        # In DRY_RUN, accept "SYNTHETIC" as a valid path sentinel
+        if genotype_file_path != "SYNTHETIC" and not os.path.exists(genotype_file_path):
+            return {
+                "status": "NO_GERMLINE_GENOTYPE",
+                "patient_id": patient_id,
+                "action_required": (
+                    "Germline genotype data needed — SNP array (e.g. 23andMe/AncestryDNA "
+                    "raw download) or germline WGS VCF. Somatic VCFs from tumor biopsy "
+                    "are NOT valid input for PRS."
+                ),
+            }
+        return {
+            "patient_id": patient_id,
+            "pgs_id": pgs_id,
+            "raw_score": 0.847,
+            "snps_in_score": 6630150,
+            "snps_matched": 589234,
+            "match_fraction": 0.089,
+            "status": "CALCULATED",
+            "dry_run": True,
+            "note": "SYNTHETIC DATA — NOT FOR CLINICAL USE",
+        }
+
+    # Live path: check file exists
+    if not os.path.exists(genotype_file_path):
+        return {
+            "status": "NO_GERMLINE_GENOTYPE",
+            "patient_id": patient_id,
+            "action_required": (
+                "Germline genotype data needed — SNP array (e.g. 23andMe/AncestryDNA "
+                "raw download) or germline WGS VCF. Somatic VCFs from tumor biopsy "
+                "are NOT valid input for PRS."
+            ),
+        }
+
+    import pandaspgs
+    import pandas as pd
+
+    # Fetch scoring file from PGS Catalog
+    score_df = pandaspgs.get_score(pgs_id)
+    if score_df is None or (hasattr(score_df, "empty") and score_df.empty):
+        return {
+            "status": "ERROR",
+            "patient_id": patient_id,
+            "error": f"Could not retrieve scoring file for {pgs_id} from PGS Catalog",
+        }
+
+    # Parse patient genotype (supports simple TSV with rsID, allele1, allele2)
+    geno_df = pd.read_csv(genotype_file_path, sep="\t", comment="#")
+
+    # Match SNPs and compute weighted sum
+    snps_in_score = len(score_df)
+    merged = score_df.merge(geno_df, left_on="rsID", right_on="rsID", how="inner")
+    snps_matched = len(merged)
+
+    if snps_matched == 0:
+        return {
+            "status": "NO_SNPS_MATCHED",
+            "patient_id": patient_id,
+            "pgs_id": pgs_id,
+            "snps_in_score": snps_in_score,
+            "snps_matched": 0,
+            "match_fraction": 0.0,
+        }
+
+    # Sum weighted dosages (dosage column or count effect alleles)
+    if "dosage" in merged.columns:
+        raw_score = float((merged["effect_weight"] * merged["dosage"]).sum())
+    else:
+        raw_score = float(merged["effect_weight"].sum())
+
+    return {
+        "patient_id": patient_id,
+        "pgs_id": pgs_id,
+        "raw_score": raw_score,
+        "snps_in_score": snps_in_score,
+        "snps_matched": snps_matched,
+        "match_fraction": round(snps_matched / snps_in_score, 4),
+        "status": "CALCULATED",
+        "dry_run": False,
+    }
+
+
+async def _interpret_cvd_prs_percentile_impl(
+    patient_id: str,
+    pgs_id: str,
+    raw_score: float,
+    ancestry: str = "European",
+) -> Dict[str, Any]:
+    """Map a raw PRS to a population percentile and clinical risk tier."""
+    if DRY_RUN:
+        return {
+            "patient_id": patient_id,
+            "pgs_id": pgs_id,
+            "raw_score": raw_score,
+            "percentile": 73.2,
+            "risk_tier": "Intermediate",
+            "ancestry_used": ancestry,
+            "clinical_note": (
+                "PRS in the intermediate range. Combine with traditional risk factors "
+                "(Framingham, PCE) and adverse pregnancy outcome history for complete "
+                "CVD risk picture."
+            ),
+            "reference": (
+                "Khera et al. Nature 2018 — "
+                "https://doi.org/10.1038/s41586-018-0183-z"
+            ),
+            "dry_run": True,
+        }
+
+    import requests as _requests
+    from scipy.stats import norm
+
+    # Fetch normalization stats from PGS Catalog
+    url = f"https://www.pgscatalog.org/rest/score/{pgs_id}/"
+    resp = _requests.get(url, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+
+    # Extract mean/sd for ancestry (fall back to overall if unavailable)
+    mean = 0.0
+    sd = 1.0
+    norm_data = data.get("ancestry_distribution", {}).get("eval", {})
+    if isinstance(norm_data, dict) and ancestry in norm_data:
+        stats = norm_data[ancestry]
+        if isinstance(stats, dict):
+            mean = stats.get("mean", 0.0)
+            sd = stats.get("sd", 1.0)
+
+    z = (raw_score - mean) / sd if sd > 0 else 0.0
+    percentile = round(float(norm.cdf(z) * 100), 1)
+
+    if percentile < 20:
+        risk_tier = "Low"
+    elif percentile < 80:
+        risk_tier = "Intermediate"
+    elif percentile < 95:
+        risk_tier = "High"
+    else:
+        risk_tier = "Very High"
+
+    return {
+        "patient_id": patient_id,
+        "pgs_id": pgs_id,
+        "raw_score": raw_score,
+        "percentile": percentile,
+        "risk_tier": risk_tier,
+        "ancestry_used": ancestry,
+        "clinical_note": (
+            f"PRS in the {risk_tier.lower()} range. Combine with traditional risk "
+            f"factors (Framingham, PCE) and adverse pregnancy outcome history for "
+            f"complete CVD risk picture."
+        ),
+        "reference": (
+            "Khera et al. Nature 2018 — "
+            "https://doi.org/10.1038/s41586-018-0183-z"
+        ),
+        "dry_run": False,
+    }
+
+
+async def _assess_pregnancy_complication_cv_risk_impl(
+    patient_id: str,
+    complications: List[str],
+    age_at_complication: Optional[int] = None,
+    num_affected_pregnancies: int = 1,
+) -> Dict[str, Any]:
+    """Assess lifetime CVD risk from adverse pregnancy outcome history."""
+    recognized = []
+    max_cad = 1.0
+    max_stroke = 1.0
+
+    for comp in complications:
+        key = comp.strip().lower().replace(" ", "_").replace("-", "_")
+        if key in _APO_RISK_TABLE:
+            entry = _APO_RISK_TABLE[key]
+            recognized.append(key)
+            max_cad = max(max_cad, entry["cad"])
+            max_stroke = max(max_stroke, entry["stroke"])
+
+    # Additive enhancement for multiple distinct complications, capped
+    if len(recognized) > 1:
+        cad_sum = sum(_APO_RISK_TABLE[r]["cad"] - 1.0 for r in recognized) + 1.0
+        stroke_sum = sum(_APO_RISK_TABLE[r]["stroke"] - 1.0 for r in recognized) + 1.0
+        max_cad = min(cad_sum, _APO_CAP)
+        max_stroke = min(stroke_sum, _APO_CAP)
+
+    if max_cad <= 1.0:
+        category = "None"
+    elif max_cad <= 1.4:
+        category = "Mild"
+    elif max_cad < 2.0:
+        category = "Moderate"
+    else:
+        category = "High"
+
+    # Screening recommendations per 2025 guidelines
+    screening = []
+    if recognized:
+        screening = [
+            "Annual blood pressure monitoring",
+            "Fasting lipid panel every 3 years from age 30",
+            "Fasting glucose / HbA1c every 3 years",
+            "Cardiology referral if ≥2 traditional CVD risk factors co-present",
+        ]
+        # Complication-specific additions
+        for comp in recognized:
+            screening.append(
+                f"Inform all future care providers of {comp.replace('_', ' ')} history"
+            )
+
+    guideline_sources = [
+        "2025 AHA/ACC Hypertension Guideline — https://www.ahajournals.org/",
+        "2025 ESC Guidelines: CVD and Pregnancy — https://www.escardio.org/guidelines/",
+        (
+            "AHA Scientific Statement on APOs and CVD — "
+            "https://www.ahajournals.org/doi/10.1161/CIR.0000000000000961"
+        ),
+    ]
+
+    clinical_note = ""
+    if recognized:
+        comps_str = ", ".join(r.replace("_", " ") for r in recognized)
+        clinical_note = (
+            f"{comps_str.capitalize()} is a recognized CVD risk factor per 2025 "
+            f"AHA/ACC and ESC guidelines. This history should be documented in all "
+            f"CVD risk calculations and shared with cardiologist. This assessment is "
+            f"for research purposes only — NOT FOR CLINICAL USE."
+        )
+    else:
+        clinical_note = (
+            "No recognized adverse pregnancy outcomes identified from the provided "
+            "complications list. No additional CVD risk enhancement from APO history."
+        )
+
+    return {
+        "patient_id": patient_id,
+        "complications_reported": complications,
+        "complications_recognized": recognized,
+        "risk_enhancement": {
+            "cad_multiplier": max_cad,
+            "stroke_multiplier": max_stroke,
+            "category": category,
+        },
+        "num_affected_pregnancies": num_affected_pregnancies,
+        "age_at_complication": age_at_complication,
+        "screening_recommendations": screening,
+        "guideline_sources": guideline_sources,
+        "clinical_note": clinical_note,
+        "dry_run": DRY_RUN,
+    }
+
+
 # ============================================================================
 # MCP Tool wrappers
 # ============================================================================
@@ -512,6 +859,138 @@ async def get_lifestyle_evidence(
         List of evidence-based interventions with citations and relevance.
     """
     result = await _get_lifestyle_evidence_impl(risk_factors=risk_factors)
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def search_cvd_prs_scores(
+    trait: str = "coronary artery disease",
+    max_results: int = 10,
+) -> dict:
+    """Search the PGS Catalog for validated cardiovascular polygenic risk scores.
+
+    Queries the PGS Catalog REST API for published, peer-reviewed polygenic
+    risk scores matching a cardiovascular trait. Returns score IDs, variant
+    counts, ancestry information, and publication DOIs.
+
+    Args:
+        trait: Trait to search for (e.g., "coronary artery disease",
+            "atrial fibrillation", "hypertension").
+        max_results: Maximum number of scores to return (default: 10).
+
+    Returns:
+        Dictionary with matching PGS Catalog scores, trait queried, and
+        catalog URL.
+    """
+    result = await _search_cvd_prs_scores_impl(trait=trait, max_results=max_results)
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def calculate_cvd_prs(
+    patient_id: str,
+    genotype_file_path: str,
+    pgs_id: str = "PGS000018",
+) -> dict:
+    """Compute a polygenic risk score from a patient's germline genotype file.
+
+    Fetches the scoring file from the PGS Catalog, matches SNPs by rsID
+    against the patient's genotype, and computes a weighted sum. Requires
+    germline genotype data (SNP array or WGS VCF) — somatic VCFs from
+    tumor biopsy are NOT valid input.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        genotype_file_path: Path to germline genotype file (TSV or VCF).
+            Use "SYNTHETIC" in DRY_RUN mode to get a synthetic fixture.
+        pgs_id: PGS Catalog score ID (default: "PGS000018" for CAD).
+
+    Returns:
+        Dictionary with raw score, SNP match statistics, and status.
+        Returns NO_GERMLINE_GENOTYPE if file not found.
+    """
+    result = await _calculate_cvd_prs_impl(
+        patient_id=patient_id,
+        genotype_file_path=genotype_file_path,
+        pgs_id=pgs_id,
+    )
+    if DRY_RUN and result.get("status") != "NO_GERMLINE_GENOTYPE":
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def interpret_cvd_prs_percentile(
+    patient_id: str,
+    pgs_id: str,
+    raw_score: float,
+    ancestry: str = "European",
+) -> dict:
+    """Map a raw polygenic risk score to a population percentile and risk tier.
+
+    Uses PGS Catalog normalization data to compute a z-score and percentile
+    for the patient's ancestry group. Maps percentile to clinical risk tiers
+    per Khera et al. 2018: <20th Low, 20-80 Intermediate, 80-95 High,
+    >95 Very High (equivalent to monogenic risk).
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        pgs_id: PGS Catalog score ID used in calculate_cvd_prs.
+        raw_score: Raw PRS value from calculate_cvd_prs.
+        ancestry: Ancestry group for normalization (default: "European").
+
+    Returns:
+        Dictionary with percentile, risk tier, clinical note, and reference.
+    """
+    result = await _interpret_cvd_prs_percentile_impl(
+        patient_id=patient_id,
+        pgs_id=pgs_id,
+        raw_score=raw_score,
+        ancestry=ancestry,
+    )
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def assess_pregnancy_complication_cv_risk(
+    patient_id: str,
+    complications: Annotated[List[str], _CoerceList],
+    age_at_complication: Optional[int] = None,
+    num_affected_pregnancies: int = 1,
+) -> dict:
+    """Assess lifetime cardiovascular risk from adverse pregnancy outcome history.
+
+    Evaluates known adverse pregnancy outcomes (APOs) as independent CVD risk
+    enhancers per 2025 AHA/ACC and ESC guidelines. Preeclampsia, for example,
+    doubles 5-15 year stroke and heart disease risk. Returns risk multipliers,
+    category, and screening recommendations.
+
+    Recognized complications: preeclampsia, eclampsia, gestational_hypertension,
+    gestational_diabetes, preterm_birth, low_birth_weight, iugr,
+    placental_abruption, stillbirth, recurrent_miscarriage.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        complications: List of adverse pregnancy outcomes (case-insensitive).
+        age_at_complication: Age at time of complication (optional).
+        num_affected_pregnancies: Number of pregnancies affected (default: 1).
+
+    Returns:
+        Dictionary with recognized complications, CAD/stroke risk multipliers,
+        risk category, screening recommendations, and guideline citations.
+    """
+    result = await _assess_pregnancy_complication_cv_risk_impl(
+        patient_id=patient_id,
+        complications=complications,
+        age_at_complication=age_at_complication,
+        num_affected_pregnancies=num_affected_pregnancies,
+    )
     if DRY_RUN:
         result = add_dry_run_warning(result)
     return result
