@@ -66,30 +66,39 @@ No Python scripts, no manual file conversions, no copy-paste.
 
 ```mermaid
 graph TD
-    USER[Clinician Query:<br/>'Find treatment targets']
+    USER["Clinician Query:<br/>'Find treatment targets for PAT001'"]
 
     subgraph Claude["🤖 Claude as Orchestrator"]
-        PLAN[1. Understand intent<br/>2. Plan workflow<br/>3. Execute servers]
+        PLAN["1. Understand intent<br/>2. Plan workflow<br/>3. Execute across 20 servers"]
     end
 
-    subgraph Servers["🔧 Specialized MCP Servers"]
-        CLINICAL[mcp-epic<br/>Clinical context]
-        GENOMIC[mcp-fgbio<br/>Variant calls]
-        MULTIOMICS[mcp-multiomics<br/>Pathway analysis]
-        SPATIAL[mcp-spatialtools<br/>Spatial regions]
+    subgraph Servers["🔧 20 MCP Servers — 7 Categories (110 tools)"]
+        STAGE0["🔒 De-identification (6 tools)<br/>HIPAA Safe Harbor"]
+        CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>EHR context + variant calls"]
+        OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>Pathway + spatial analysis"]
+        IMMUNO["💉 Immunology & Treatment (25 tools)<br/>Immune deconv + drug targets"]
+        EXTDATA["🌐 External Data (12 tools)<br/>GEO datasets + Open Targets"]
+        PREVENT["❤️ Preventive Health (5 tools)<br/>CVD risk scoring"]
+        REPORT["📋 Reporting (5 tools)<br/>PDF report generation"]
     end
 
-    RESULT[📊 Integrated Report:<br/>Ranked targets + evidence]
+    RESULT["📊 Integrated Report:<br/>Ranked targets + evidence<br/>PAT001 · PAT002 · PAT003"]
 
     USER --> PLAN
+    PLAN --> STAGE0
     PLAN --> CLINICAL
-    PLAN --> GENOMIC
-    PLAN --> MULTIOMICS
-    PLAN --> SPATIAL
+    PLAN --> OMICS
+    PLAN --> IMMUNO
+    PLAN --> EXTDATA
+    PLAN --> PREVENT
+    PLAN --> REPORT
+    STAGE0 --> CLINICAL
     CLINICAL --> RESULT
-    GENOMIC --> RESULT
-    MULTIOMICS --> RESULT
-    SPATIAL --> RESULT
+    OMICS --> RESULT
+    IMMUNO --> RESULT
+    EXTDATA --> RESULT
+    PREVENT --> RESULT
+    REPORT --> RESULT
 
     style USER fill:#e1f5ff
     style Claude fill:#fff3cd
@@ -98,14 +107,17 @@ graph TD
 ```
 
 ### 3. Domain Expertise Encoded
-**Each server contains bioinformatics best practices:**
+**Each category encapsulates bioinformatics best practices (20 servers, 110 tools):**
 
-| Server | Encoded Expertise | Replaces |
-|--------|-------------------|----------|
-| **mcp-fgbio** | Reference genome handling, FASTQ QC, VCF parsing | 5+ custom scripts |
-| **mcp-multiomics** | Stouffer meta-analysis, pathway enrichment, DE analysis | R packages + glue code |
-| **mcp-spatialtools** | Spatial clustering, Squidpy workflows, region annotation | Python notebooks |
-| **mcp-epic** | FHIR queries, clinical timeline extraction | Manual EHR navigation |
+| Category | Encoded Expertise | Replaces |
+|----------|-------------------|----------|
+| **De-identification** (6 tools) | HIPAA Safe Harbor for JSON, DOCX, PDF, VCF, h5ad | Manual redaction workflows |
+| **Clinical & Genomic** (20 tools) | FHIR queries, VCF parsing, somatic/CNV/HRD analysis | EHR navigation + custom scripts |
+| **Multi-Omics & Spatial** (37 tools) | Stouffer meta-analysis, Squidpy clustering, cell segmentation | R packages + Python notebooks |
+| **Immunology & Treatment** (25 tools) | Immune deconvolution, neoantigen prediction, perturbation GNNs | Specialized pipelines |
+| **External Data** (12 tools) | GEO/SRA download, Open Targets drug-target associations | Manual database queries |
+| **Preventive Health** (5 tools) | CVD risk equations, ACC/AHA statin logic | Spreadsheet calculators |
+| **Reporting** (5 tools) | PDF report generation with integrated evidence | Manual report assembly |
 
 **Instead of:** Bioinformatician writes custom integration scripts
 **Now:** Domain knowledge lives in the server, accessible via natural language
