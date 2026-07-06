@@ -13,7 +13,7 @@ Specialized MCP servers for precision medicine analysis. For current server and 
 | 🎭 **mcp-mockepic** | 3 | 🎭 Mock by design (GCP) | — |
 | 🧬 **mcp-fgbio** | 4 | ✅ 95% real | [README →](mcp-fgbio/README.md) |
 | 🔬 **mcp-multiomics** | 10 | ✅ 95% real | [README →](mcp-multiomics/README.md) |
-| 📍 **mcp-spatialtools** | 14 | ✅ 95% real | [README →](mcp-spatialtools/README.md) |
+| 📍 **mcp-spatialtools** | 16 | ✅ 95% real | [README →](mcp-spatialtools/README.md) |
 | 🧪 **mcp-perturbation** | 8 | ✅ 100% real (GEARS) | [README →](mcp-perturbation/README.md) |
 | ⚛️ **mcp-quantum-celltype-fidelity** | 6 | ✅ 100% real (Qiskit) | [README →](mcp-quantum-celltype-fidelity/README.md) |
 | 🖼️ **mcp-openimagedata** | 5 | ✅ 100% real | [README →](mcp-openimagedata/README.md) |
@@ -26,6 +26,7 @@ Specialized MCP servers for precision medicine analysis. For current server and 
 | 🎯 **mcp-opentargets** | 6 | ✅ 100% real | [README →](mcp-opentargets/README.md) |
 | 🧫 **mcp-cibersortx** | 5 | ✅ 100% real | [README →](mcp-cibersortx/README.md) |
 | 💉 **mcp-neoantigen** | 6 | ✅ 100% real | [README →](mcp-neoantigen/README.md) |
+| ❤️ **mcp-cardiometabolic** | 14 | ✅ 100% real | [README →](mcp-cardiometabolic/README.md) |
 
 **Production Ready:** See [Server Registry](../docs/reference/shared/server-registry.md) for current production readiness status.
 
@@ -50,6 +51,8 @@ Use these for real analysis:
 - 🎯 **mcp-opentargets** - Open Targets drug-target associations, disease ontology, GraphQL API ([README](mcp-opentargets/README.md))
 - 🧫 **mcp-cibersortx** - CIBERSORTx immune deconvolution, LM22 signatures, job polling ([README](mcp-cibersortx/README.md))
 - 💉 **mcp-neoantigen** - Neoantigen prediction, MHC binding, IEDB API, neoantigen burden scoring ([README](mcp-neoantigen/README.md))
+- 📄 **mcp-patient-report** - Patient-facing PDF reports, plain-language summaries, clinician review gate ([README](mcp-patient-report/README.md))
+- ❤️ **mcp-cardiometabolic** - CVD risk scoring, biomarker panels, lipid patterns, FH scoring, renal drug constraints, lipid treatment targets, post-COVID CV risk, PRS, APO risk - 82 tests ✅ ([README](mcp-cardiometabolic/README.md))
 
 ### 🎭 Development/Demo Servers
 Mock implementations for workflow demonstration:
