@@ -18,7 +18,9 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 from fastmcp import FastMCP
 from pydantic import BeforeValidator
 
-from .biomarker_ranges import REFERENCE_RANGES, classify_biomarker, JUPITER_NOTE
+from .biomarker_ranges import (
+    REFERENCE_RANGES, classify_biomarker, JUPITER_NOTE, LOW_FLAG_CATEGORIES,
+)
 from .risk_scoring import (
     calculate_reynolds_women,
     calculate_framingham_women,
@@ -95,12 +97,20 @@ async def _assess_biomarker_panel_impl(
     hba1c_percent: Optional[float] = None,
     hscrp_mg_l: Optional[float] = None,
     bp_systolic_mmhg: Optional[float] = None,
+    apob_mg_dl: Optional[float] = None,
+    non_hdl_cholesterol_mg_dl: Optional[float] = None,
     patient_sex: str = "female",
     patient_age: int = 67,
 ) -> Dict[str, Any]:
     """Interpret a cardiovascular biomarker panel against clinical reference ranges."""
     results = {}
     flags = []
+
+    # Compute Non-HDL if not provided but TC and HDL are available
+    if non_hdl_cholesterol_mg_dl is None and (
+        total_cholesterol_mg_dl is not None and hdl_mg_dl is not None
+    ):
+        non_hdl_cholesterol_mg_dl = total_cholesterol_mg_dl - hdl_mg_dl
 
     panel = {
         "ldl_mg_dl": ldl_mg_dl,
@@ -111,6 +121,8 @@ async def _assess_biomarker_panel_impl(
         "hba1c_percent": hba1c_percent,
         "hscrp_mg_l": hscrp_mg_l,
         "bp_systolic_mmhg": bp_systolic_mmhg,
+        "apob_mg_dl": apob_mg_dl,
+        "non_hdl_cholesterol_mg_dl": non_hdl_cholesterol_mg_dl,
     }
 
     for name, value in panel.items():
@@ -118,9 +130,34 @@ async def _assess_biomarker_panel_impl(
             results[name] = {"value": None, "category": "not provided"}
             continue
         category = classify_biomarker(name, value)
-        results[name] = {"value": value, "category": category}
-        if "high" in category or category in ("prediabetes", "diabetes"):
+        entry: Dict[str, Any] = {"value": value, "category": category}
+
+        # Flag high values
+        if "high" in category or "elevated" in category or category in (
+            "prediabetes", "diabetes",
+        ):
             flags.append(f"{name}={value} is {category}")
+
+        # Flag low values (bidirectional)
+        if category in LOW_FLAG_CATEGORIES:
+            flags.append(f"{name}={value} is {category}")
+
+        # ApoB risk-tier context
+        if name == "apob_mg_dl" and value is not None:
+            entry["risk_tier_context"] = (
+                "ApoB targets are risk-tier dependent. For very high CVD risk "
+                "(possible FH, multiple risk factors), target is <70-80 mg/dL. "
+                "For high risk, <80 mg/dL. For intermediate risk, <100 mg/dL."
+            )
+
+        # Non-HDL therapeutic target note
+        if name == "non_hdl_cholesterol_mg_dl" and value is not None:
+            entry["therapeutic_target_note"] = (
+                "For high-risk patients, Non-HDL target = LDL target + 30 mg/dL. "
+                "For very high-risk (LDL target <70 mg/dL), Non-HDL target = <100 mg/dL."
+            )
+
+        results[name] = entry
 
     return {
         "status": "success",
@@ -685,6 +722,395 @@ async def _assess_pregnancy_complication_cv_risk_impl(
     }
 
 
+# ---------------------------------------------------------------------------
+# Lipid pattern + FH clinical score implementations
+# ---------------------------------------------------------------------------
+
+# ApoB targets by risk tier (mg/dL)
+_APOB_TARGETS = {"very_high": 70, "high": 80, "intermediate": 90, "low": 100}
+
+# LDL targets by risk tier (mg/dL)
+_LDL_TARGETS = {"very_high": 55, "high": 70, "intermediate": 100, "low": 116}
+
+# Non-HDL targets by risk tier (mg/dL) — LDL target + 30
+_NON_HDL_TARGETS = {"very_high": 85, "high": 100, "intermediate": 130, "low": 146}
+
+
+async def _interpret_lipid_pattern_impl(
+    patient_id: str,
+    ldl_cholesterol: Optional[float] = None,
+    total_cholesterol: Optional[float] = None,
+    hdl_cholesterol: Optional[float] = None,
+    triglycerides: Optional[float] = None,
+    non_hdl_cholesterol: Optional[float] = None,
+    apob: Optional[float] = None,
+    ldl_measured_directly: bool = False,
+    patient_risk_tier: str = "high",
+    patient_sex: str = "female",
+) -> Dict[str, Any]:
+    """Classify clinical dyslipidemia pattern from a full lipid panel."""
+    # Pure computation -- run real logic even in DRY_RUN mode (no external APIs)
+
+    # Compute Non-HDL if not provided
+    if non_hdl_cholesterol is None and (
+        total_cholesterol is not None and hdl_cholesterol is not None
+    ):
+        non_hdl_cholesterol = total_cholesterol - hdl_cholesterol
+
+    # Friedewald LDL validity
+    friedewald_valid = True
+    friedewald_note = None
+    if triglycerides is not None and not ldl_measured_directly:
+        if triglycerides > 400:
+            friedewald_valid = False
+            friedewald_note = (
+                "Calculated LDL is UNRELIABLE at TG >400 mg/dL. Direct LDL "
+                "measurement required."
+            )
+        elif triglycerides > 200:
+            friedewald_valid = False
+            friedewald_note = (
+                "Calculated LDL may be INACCURATE at TG >200 mg/dL. The Friedewald "
+                "equation (LDL = TC - HDL - TG/5) assumes VLDL = TG/5, which "
+                "underestimates VLDL when triglycerides are elevated. A direct LDL "
+                "blood test is recommended to confirm."
+            )
+
+    # Determine LDL target for risk tier
+    ldl_target = _LDL_TARGETS.get(patient_risk_tier, 100)
+    ldl_elevated = ldl_cholesterol is not None and ldl_cholesterol > ldl_target
+    tg_elevated = triglycerides is not None and triglycerides >= 150
+
+    # HDL sex-specific target
+    hdl_target = 50 if patient_sex == "female" else 40
+    hdl_low = hdl_cholesterol is not None and hdl_cholesterol < hdl_target
+
+    # Pattern classification (first match wins)
+    if ldl_elevated and tg_elevated and hdl_low:
+        pattern = "atherogenic_dyslipidemia"
+        pattern_desc = (
+            "Classic metabolic syndrome lipid triad: elevated TG, low HDL, "
+            "borderline-to-elevated LDL. ApoB often elevated even when LDL "
+            "appears normal."
+        )
+    elif ldl_elevated and tg_elevated:
+        pattern = "mixed_dyslipidemia"
+        pattern_desc = (
+            "Elevated LDL combined with elevated triglycerides (>=150 mg/dL). "
+            "Higher CV risk than either alone; implies both hepatic overproduction "
+            "and impaired triglyceride clearance."
+        )
+    elif ldl_elevated and not tg_elevated:
+        pattern = "isolated_hypercholesterolemia"
+        pattern_desc = (
+            "Elevated LDL with normal triglycerides. Classic pattern for familial "
+            "hypercholesterolemia or dietary hypercholesterolemia."
+        )
+    elif tg_elevated and not ldl_elevated:
+        pattern = "isolated_hypertriglyceridemia"
+        pattern_desc = (
+            "Elevated triglycerides with normal LDL. Associated with metabolic "
+            "syndrome, type 2 diabetes, alcohol, CKD."
+        )
+    elif hdl_low:
+        pattern = "low_hdl_syndrome"
+        pattern_desc = (
+            "HDL below sex-specific target with otherwise unremarkable panel. "
+            "Residual CV risk; associated with metabolic syndrome."
+        )
+    else:
+        pattern = "normal_pattern"
+        pattern_desc = "All values within targets for the stated risk tier."
+
+    # Non-HDL vs target
+    non_hdl_vs_target = None
+    if non_hdl_cholesterol is not None:
+        nhdl_target = _NON_HDL_TARGETS.get(patient_risk_tier, 130)
+        if non_hdl_cholesterol >= 190:
+            nhdl_status = "Very High"
+        elif non_hdl_cholesterol >= 160:
+            nhdl_status = "High"
+        elif non_hdl_cholesterol >= 130:
+            nhdl_status = "Borderline High"
+        else:
+            nhdl_status = "Normal"
+        ratio = round(non_hdl_cholesterol / nhdl_target, 2) if nhdl_target > 0 else 0
+        non_hdl_vs_target = {
+            "value": non_hdl_cholesterol,
+            "target_for_risk_tier": nhdl_target,
+            "status": f"{nhdl_status} — {ratio}x target for {patient_risk_tier}-risk patients",
+        }
+
+    # ApoB / LDL concordance
+    apob_ldl_concordance = None
+    if apob is not None and ldl_cholesterol is not None:
+        apob_target = _APOB_TARGETS.get(patient_risk_tier, 90)
+        apob_high = apob > apob_target
+        if apob_high and ldl_elevated:
+            apob_ldl_concordance = {
+                "status": "concordant_elevated",
+                "note": (
+                    f"Both ApoB ({apob} mg/dL) and LDL ({ldl_cholesterol} mg/dL) "
+                    f"are elevated — concordant. Confirms high atherogenic particle "
+                    f"burden."
+                ),
+            }
+        elif not apob_high and not ldl_elevated:
+            apob_ldl_concordance = {
+                "status": "concordant_normal",
+                "note": "Both ApoB and LDL within targets — lower atherogenic risk.",
+            }
+        elif apob_high and not ldl_elevated:
+            apob_ldl_concordance = {
+                "status": "discordant_apob_high",
+                "note": (
+                    f"ApoB ({apob} mg/dL) elevated but LDL ({ldl_cholesterol} mg/dL) "
+                    f"appears normal. Suggests small dense LDL particles — each "
+                    f"particle carries less cholesterol but is more atherogenic. "
+                    f"ApoB is the more reliable risk marker here."
+                ),
+            }
+        else:
+            apob_ldl_concordance = {
+                "status": "discordant_ldl_high",
+                "note": (
+                    f"LDL ({ldl_cholesterol} mg/dL) elevated but ApoB ({apob} mg/dL) "
+                    f"within target. Suggests large buoyant LDL particles — fewer "
+                    f"particles carrying more cholesterol per particle; lower "
+                    f"atherogenic risk than LDL number implies."
+                ),
+            }
+
+    # Treatment implications
+    implications = []
+    if pattern == "mixed_dyslipidemia":
+        implications = [
+            "Mixed dyslipidemia requires addressing both LDL and triglycerides.",
+            "Statin is first-line for LDL reduction; also reduces TG 10-30%.",
+            (
+                "If TG remain >=150 on statin, consider prescription omega-3 "
+                "(icosapentaenoic acid / Vascepa) — REDUCE-IT trial: 25% CV event "
+                "reduction vs placebo in patients with TG >=150 on statin."
+            ),
+            (
+                "Non-HDL cholesterol is the preferred treatment target in mixed "
+                "dyslipidemia because it captures VLDL in addition to LDL."
+            ),
+        ]
+        if not friedewald_valid:
+            implications.append(
+                "Direct LDL measurement recommended to confirm LDL given TG >200."
+            )
+    elif pattern == "isolated_hypercholesterolemia":
+        implications = [
+            "Consider FH evaluation (DLCN score) if LDL persistently >190 mg/dL.",
+            "High-intensity statin first-line; ezetimibe add-on if target not reached.",
+        ]
+    elif pattern == "isolated_hypertriglyceridemia":
+        implications = [
+            "Evaluate for secondary causes: diabetes, alcohol, CKD, hypothyroidism.",
+            "Lifestyle (weight loss, reduced refined carbs, alcohol reduction) first-line.",
+            "If TG >500, fibrate or prescription omega-3 to reduce pancreatitis risk.",
+        ]
+    elif pattern == "atherogenic_dyslipidemia":
+        implications = [
+            "Classic metabolic syndrome triad — evaluate for insulin resistance.",
+            "ApoB may be more informative than LDL in this pattern.",
+            "Statin + lifestyle; consider adding ezetimibe or PCSK9 if needed.",
+        ]
+
+    return {
+        "patient_id": patient_id,
+        "pattern": pattern,
+        "pattern_description": pattern_desc,
+        "friedewald_ldl_valid": friedewald_valid,
+        "friedewald_note": friedewald_note,
+        "non_hdl_cholesterol": non_hdl_cholesterol,
+        "non_hdl_vs_target": non_hdl_vs_target,
+        "apob_ldl_concordance": apob_ldl_concordance,
+        "treatment_implications": implications,
+        "clinical_note": "RESEARCH ONLY — NOT FOR CLINICAL USE",
+        "dry_run": DRY_RUN,
+    }
+
+
+async def _calculate_fh_clinical_score_impl(
+    patient_id: str,
+    ldl_cholesterol_mgdl: float,
+    family_hx_premature_cvd: bool = False,
+    family_hx_high_ldl: bool = False,
+    family_hx_tendon_xanthomas: bool = False,
+    personal_premature_cvd: bool = False,
+    personal_cerebrovascular_disease: bool = False,
+    tendon_xanthomas: bool = False,
+    corneal_arcus_under_45: bool = False,
+    genetic_test_performed: bool = False,
+    genetic_test_type: Optional[str] = None,
+    genetic_test_variants_tested: Optional[str] = None,
+    genetic_test_result: Optional[str] = None,
+    causative_mutation_identified: bool = False,
+) -> Dict[str, Any]:
+    """Calculate Dutch Lipid Clinic Network (DLCN) score for FH diagnosis."""
+    # Category 1 — Family history (max 2 points, take highest)
+    fam_hx_points = 0
+    if family_hx_tendon_xanthomas:
+        fam_hx_points = 2
+    elif family_hx_premature_cvd:
+        fam_hx_points = 1
+    elif family_hx_high_ldl:
+        fam_hx_points = 1
+
+    # Category 2 — Clinical history (max 2 points, take highest)
+    clinical_points = 0
+    if personal_premature_cvd:
+        clinical_points = 2
+    elif personal_cerebrovascular_disease:
+        clinical_points = 1
+
+    # Category 3 — Physical exam (max 6 points, take highest)
+    exam_points = 0
+    if tendon_xanthomas:
+        exam_points = 6
+    elif corneal_arcus_under_45:
+        exam_points = 4
+
+    # Category 4 — LDL Cholesterol (max 8 points, take highest)
+    ldl_mmol = ldl_cholesterol_mgdl / 38.67
+    ldl_points = 0
+    if ldl_mmol >= 8.5:       # >=330 mg/dL
+        ldl_points = 8
+    elif ldl_mmol >= 6.5:     # 250-329 mg/dL
+        ldl_points = 5
+    elif ldl_mmol >= 5.0:     # 190-249 mg/dL
+        ldl_points = 3
+    elif ldl_mmol >= 4.0:     # 155-189 mg/dL
+        ldl_points = 1
+
+    # Category 5 — DNA analysis (max 8 points)
+    dna_points = 8 if causative_mutation_identified else 0
+
+    total = fam_hx_points + clinical_points + exam_points + ldl_points + dna_points
+
+    # Score interpretation
+    if total >= 9:
+        tier = "Definite FH"
+        tier_note = (
+            "Score >=9. Strong clinical evidence for FH. Cascade screening "
+            "of first-degree relatives is indicated."
+        )
+    elif total >= 6:
+        tier = "Probable FH"
+        tier_note = (
+            "Score 6-8. Probable FH. Full diagnostic genetic panel recommended "
+            "if not already done."
+        )
+    elif total >= 3:
+        tier = "Possible FH"
+        tier_note = (
+            "Score 3-5. Possible FH. Clinical treatment should proceed regardless "
+            "of genetic result. Full diagnostic panel may be warranted."
+        )
+    else:
+        tier = "Unlikely FH"
+        tier_note = (
+            "Score <3. FH unlikely on clinical criteria, though other causes of "
+            "elevated LDL should still be evaluated."
+        )
+
+    # Genetic test interpretation
+    genetic_interpretation = None
+    if genetic_test_performed and genetic_test_result == "negative":
+        if genetic_test_type == "population_screening":
+            genetic_interpretation = {
+                "result": "NEGATIVE SCREENING — does NOT rule out FH",
+                "warning": (
+                    "A negative population screening result does NOT reduce the DLCN "
+                    "score and does NOT rule out Familial Hypercholesterolemia. "
+                    "Population screening tests check a small, predefined subset of "
+                    "variants. For example, the Helix Molecular Screen checks only 2 "
+                    "APOB variants (c.10580G>A and c.10579C>T) and misses the vast "
+                    "majority of pathogenic LDLR and APOB variants. The DLCN score is "
+                    "a clinical diagnosis — it does not require genetic confirmation. "
+                    "A Probable or Possible FH score warrants a FULL DIAGNOSTIC panel "
+                    "(comprehensive LDLR sequencing + large rearrangement analysis + "
+                    "full APOB + PCSK9) regardless of screening result."
+                ),
+                "action": (
+                    "Full diagnostic FH panel recommended"
+                    if total >= 3
+                    else "Discuss with clinician"
+                ),
+            }
+        elif genetic_test_type in ("diagnostic", "panel"):
+            genetic_interpretation = {
+                "result": "NEGATIVE DIAGNOSTIC PANEL",
+                "note": (
+                    "A negative full diagnostic panel reduces but does not eliminate "
+                    "the probability of monogenic FH — approximately 20-40% of "
+                    "clinically definite FH cases have no identifiable variant with "
+                    "current panels (polygenic or unknown variants). Clinical DLCN "
+                    "score remains valid. Treatment decisions should be based on the "
+                    "clinical score and LDL level, not solely on genetic result."
+                ),
+            }
+
+    if causative_mutation_identified:
+        genetic_interpretation = {
+            "result": "CAUSATIVE MUTATION IDENTIFIED",
+            "note": (
+                "Genetic diagnosis confirmed. DLCN score elevated by 8 points "
+                "(DNA category). Cascade family screening indicated."
+            ),
+        }
+
+    # PCSK9 inhibitor eligibility note
+    pcsk9_note = None
+    if total >= 3:
+        pcsk9_note = (
+            "Patients with Possible, Probable, or Definite FH (DLCN >=3) may "
+            "qualify for PCSK9 inhibitor (evolocumab/Repatha or alirocumab/Praluent) "
+            "insurance coverage on clinical grounds, even without genetic "
+            "confirmation. Eligibility typically also requires documented statin "
+            "intolerance or failure to reach LDL target on maximally tolerated "
+            "statin + ezetimibe. Some payers require an FH diagnosis code "
+            "(ICD-10: E78.01) — clinical DLCN score >=3 supports this code. "
+            "Confirm with cardiologist and insurer."
+        )
+
+    return {
+        "patient_id": patient_id,
+        "dlcn_score": total,
+        "dlcn_tier": tier,
+        "tier_note": tier_note,
+        "score_components": {
+            "family_history": fam_hx_points,
+            "clinical_history": clinical_points,
+            "physical_exam": exam_points,
+            "ldl_cholesterol": ldl_points,
+            "ldl_mmol": round(ldl_mmol, 2),
+            "dna_analysis": dna_points,
+        },
+        "genetic_test_interpretation": genetic_interpretation,
+        "pcsk9_inhibitor_eligibility_note": pcsk9_note,
+        "diagnostic_panel_recommended": (total >= 3 and not causative_mutation_identified),
+        "cascade_screening_recommended": (total >= 6 or causative_mutation_identified),
+        "guideline_references": [
+            "EAS FH Guidelines 2023 — https://doi.org/10.1093/eurheartj/ehab099",
+            "ACC/AHA 2018 Cholesterol Guideline — https://doi.org/10.1016/j.jacc.2018.11.003",
+            (
+                "DLCN Score — Familial Hypercholesterolaemia: summary of guidance — "
+                "https://www.nice.org.uk/guidance/cg71"
+            ),
+        ],
+        "clinical_note": (
+            "RESEARCH ONLY — NOT FOR CLINICAL USE. DLCN score is a clinical "
+            "research tool — requires clinician review before any diagnostic or "
+            "treatment decision."
+        ),
+        "dry_run": DRY_RUN,
+    }
+
+
 # ============================================================================
 # MCP Tool wrappers
 # ============================================================================
@@ -699,14 +1125,17 @@ async def assess_biomarker_panel(
     hba1c_percent: Optional[float] = None,
     hscrp_mg_l: Optional[float] = None,
     bp_systolic_mmhg: Optional[float] = None,
+    apob_mg_dl: Optional[float] = None,
+    non_hdl_cholesterol_mg_dl: Optional[float] = None,
     patient_sex: str = "female",
     patient_age: int = 67,
 ) -> dict:
     """Interpret a cardiovascular biomarker panel against clinical reference ranges.
 
     Classifies each biomarker value into clinical categories (e.g., optimal,
-    borderline, high) and flags out-of-range values. Uses ACC/AHA and
-    ATP III reference ranges.
+    borderline, high) and flags both high AND low out-of-range values.
+    Computes Non-HDL cholesterol if total cholesterol and HDL are provided.
+    Uses ACC/AHA and ATP III reference ranges.
 
     Args:
         ldl_mg_dl: LDL cholesterol in mg/dL.
@@ -717,6 +1146,9 @@ async def assess_biomarker_panel(
         hba1c_percent: Hemoglobin A1c as percentage.
         hscrp_mg_l: High-sensitivity C-reactive protein in mg/L.
         bp_systolic_mmhg: Systolic blood pressure in mmHg.
+        apob_mg_dl: Apolipoprotein B in mg/dL (risk-tier-dependent targets).
+        non_hdl_cholesterol_mg_dl: Non-HDL cholesterol in mg/dL (auto-computed
+            from TC - HDL if not provided).
         patient_sex: Patient sex (male/female).
         patient_age: Patient age in years.
 
@@ -730,6 +1162,8 @@ async def assess_biomarker_panel(
         fasting_glucose_mg_dl=fasting_glucose_mg_dl,
         hba1c_percent=hba1c_percent, hscrp_mg_l=hscrp_mg_l,
         bp_systolic_mmhg=bp_systolic_mmhg,
+        apob_mg_dl=apob_mg_dl,
+        non_hdl_cholesterol_mg_dl=non_hdl_cholesterol_mg_dl,
         patient_sex=patient_sex, patient_age=patient_age,
     )
     if DRY_RUN:
@@ -990,6 +1424,126 @@ async def assess_pregnancy_complication_cv_risk(
         complications=complications,
         age_at_complication=age_at_complication,
         num_affected_pregnancies=num_affected_pregnancies,
+    )
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def interpret_lipid_pattern(
+    patient_id: str,
+    ldl_cholesterol: Optional[float] = None,
+    total_cholesterol: Optional[float] = None,
+    hdl_cholesterol: Optional[float] = None,
+    triglycerides: Optional[float] = None,
+    non_hdl_cholesterol: Optional[float] = None,
+    apob: Optional[float] = None,
+    ldl_measured_directly: bool = False,
+    patient_risk_tier: str = "high",
+    patient_sex: str = "female",
+) -> dict:
+    """Classify the clinical dyslipidemia pattern from a full lipid panel.
+
+    Treats the lipid panel as a system rather than individual values. Identifies
+    the clinical pattern (mixed dyslipidemia, isolated hypercholesterolemia,
+    etc.), checks Friedewald LDL validity, evaluates ApoB/LDL concordance,
+    and provides treatment implications. All lipid values in mg/dL.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        ldl_cholesterol: LDL cholesterol in mg/dL.
+        total_cholesterol: Total cholesterol in mg/dL.
+        hdl_cholesterol: HDL cholesterol in mg/dL.
+        triglycerides: Triglycerides in mg/dL.
+        non_hdl_cholesterol: Non-HDL in mg/dL (auto-computed from TC - HDL).
+        apob: Apolipoprotein B in mg/dL.
+        ldl_measured_directly: True if LDL was directly measured (not Friedewald).
+        patient_risk_tier: "low", "intermediate", "high", or "very_high".
+        patient_sex: Patient sex for HDL targets (male/female).
+
+    Returns:
+        Dictionary with pattern classification, Friedewald validity,
+        ApoB/LDL concordance, Non-HDL vs target, and treatment implications.
+    """
+    result = await _interpret_lipid_pattern_impl(
+        patient_id=patient_id,
+        ldl_cholesterol=ldl_cholesterol,
+        total_cholesterol=total_cholesterol,
+        hdl_cholesterol=hdl_cholesterol,
+        triglycerides=triglycerides,
+        non_hdl_cholesterol=non_hdl_cholesterol,
+        apob=apob,
+        ldl_measured_directly=ldl_measured_directly,
+        patient_risk_tier=patient_risk_tier,
+        patient_sex=patient_sex,
+    )
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def calculate_fh_clinical_score(
+    patient_id: str,
+    ldl_cholesterol_mgdl: float,
+    family_hx_premature_cvd: bool = False,
+    family_hx_high_ldl: bool = False,
+    family_hx_tendon_xanthomas: bool = False,
+    personal_premature_cvd: bool = False,
+    personal_cerebrovascular_disease: bool = False,
+    tendon_xanthomas: bool = False,
+    corneal_arcus_under_45: bool = False,
+    genetic_test_performed: bool = False,
+    genetic_test_type: Optional[str] = None,
+    genetic_test_variants_tested: Optional[str] = None,
+    genetic_test_result: Optional[str] = None,
+    causative_mutation_identified: bool = False,
+) -> dict:
+    """Calculate the Dutch Lipid Clinic Network (DLCN) score for Familial Hypercholesterolemia.
+
+    The DLCN score is the most widely used clinical scoring system for FH,
+    validated in EAS 2023 and ACC/AHA 2018 guidelines. It is a clinical
+    diagnosis — it does not require genetic confirmation. A negative population
+    screening test (e.g., Helix checking 2 APOB variants) does NOT reduce the
+    score or rule out FH.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        ldl_cholesterol_mgdl: LDL cholesterol in mg/dL.
+        family_hx_premature_cvd: 1st-degree relative with CVD <55 (M) or <60 (F).
+        family_hx_high_ldl: 1st-degree relative with LDL above 95th percentile.
+        family_hx_tendon_xanthomas: 1st-degree relative has tendon xanthomas.
+        personal_premature_cvd: Patient has premature CAD/stroke.
+        personal_cerebrovascular_disease: Premature peripheral/cerebrovascular disease.
+        tendon_xanthomas: Patient has tendon xanthomas.
+        corneal_arcus_under_45: Patient has corneal arcus and is under 45.
+        genetic_test_performed: Whether any genetic test was done.
+        genetic_test_type: "population_screening", "diagnostic", or "panel".
+        genetic_test_variants_tested: Description of variants tested.
+        genetic_test_result: "positive", "negative", or "vus".
+        causative_mutation_identified: True only if full diagnostic panel confirmed
+            a pathogenic variant.
+
+    Returns:
+        Dictionary with DLCN score, tier, genetic interpretation, PCSK9
+        eligibility note, and guideline references.
+    """
+    result = await _calculate_fh_clinical_score_impl(
+        patient_id=patient_id,
+        ldl_cholesterol_mgdl=ldl_cholesterol_mgdl,
+        family_hx_premature_cvd=family_hx_premature_cvd,
+        family_hx_high_ldl=family_hx_high_ldl,
+        family_hx_tendon_xanthomas=family_hx_tendon_xanthomas,
+        personal_premature_cvd=personal_premature_cvd,
+        personal_cerebrovascular_disease=personal_cerebrovascular_disease,
+        tendon_xanthomas=tendon_xanthomas,
+        corneal_arcus_under_45=corneal_arcus_under_45,
+        genetic_test_performed=genetic_test_performed,
+        genetic_test_type=genetic_test_type,
+        genetic_test_variants_tested=genetic_test_variants_tested,
+        genetic_test_result=genetic_test_result,
+        causative_mutation_identified=causative_mutation_identified,
     )
     if DRY_RUN:
         result = add_dry_run_warning(result)

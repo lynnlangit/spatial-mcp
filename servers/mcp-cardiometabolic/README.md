@@ -2,15 +2,17 @@
 
 Cardiovascular risk scoring, biomarker interpretation, and preventive health monitoring. Server #19 in the Precision Medicine MCP Platform.
 
-## Tools (9)
+## Tools (11)
 
 | Tool | Description |
 |------|-------------|
-| `assess_biomarker_panel` | Interpret cardiovascular biomarkers against clinical reference ranges (LDL, HDL, hsCRP, glucose, HbA1c, BP, triglycerides) |
+| `assess_biomarker_panel` | Interpret cardiovascular biomarkers against clinical reference ranges (LDL, HDL, hsCRP, glucose, HbA1c, BP, triglycerides, ApoB, Non-HDL) with bidirectional flagging |
 | `calculate_cvd_risk_scores` | Compute Reynolds, Framingham, and ASCVD Pooled Cohort 10-year risk scores |
 | `assess_lpa_status` | Interpret Lp(a) status or recommend testing if not yet measured |
 | `generate_preventive_report` | Structured preventive health summary with priority actions and monitoring schedule |
 | `get_lifestyle_evidence` | Evidence-based lifestyle interventions with landmark trial citations |
+| `interpret_lipid_pattern` | Classify lipid phenotype (mixed dyslipidemia, isolated hypercholesterolemia, etc.), Friedewald validity, ApoB/LDL concordance |
+| `calculate_fh_clinical_score` | Dutch Lipid Clinic Network (DLCN) scoring for familial hypercholesterolemia with genetic test interpretation |
 | `search_cvd_prs_scores` | Query PGS Catalog REST API for validated CVD polygenic risk scores by trait |
 | `calculate_cvd_prs` | Compute polygenic risk score from germline genotype file + PGS Catalog score |
 | `interpret_cvd_prs_percentile` | Map raw PRS to population percentile and clinical risk tier (Khera et al. 2018) |
@@ -36,7 +38,7 @@ cd servers/mcp-cardiometabolic
 uv run pytest -v
 ```
 
-34 tests covering risk equations, biomarker classification, PRS tools, APO risk assessment, and DRY_RUN behavior.
+56 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, PRS tools, APO risk assessment, and DRY_RUN behavior.
 
 ## Environment
 

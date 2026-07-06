@@ -33,11 +33,12 @@ REFERENCE_RANGES = {
         "pat003_category": "normal",
     },
     "fasting_glucose_mg_dl": {
-        "normal": (0, 100),
+        "low_hypoglycemia": (0, 70),
+        "normal": (70, 100),
         "prediabetes": (100, 125),
         "diabetes": (126, float("inf")),
         "pat003_value": 98,
-        "pat003_category": "normal_upper",
+        "pat003_category": "normal",
     },
     "hba1c_percent": {
         "normal": (0, 5.7),
@@ -67,6 +68,22 @@ REFERENCE_RANGES = {
         "stage2_htn": (140, float("inf")),
         "pat003_value": 138,
         "pat003_category": "stage1_htn_controlled",
+    },
+    "apob_mg_dl": {
+        "at_target_high_risk": (0, 80),
+        "borderline": (80, 100),
+        "above_standard_target": (100, 130),
+        "significantly_elevated": (130, float("inf")),
+        "pat003_value": None,
+        "pat003_category": "unknown -- test recommended",
+    },
+    "non_hdl_cholesterol_mg_dl": {
+        "normal": (0, 130),
+        "borderline_high": (130, 160),
+        "high": (160, 190),
+        "very_high": (190, float("inf")),
+        "pat003_value": 137,
+        "pat003_category": "borderline_high",
     },
 }
 
@@ -99,3 +116,10 @@ def classify_biomarker(name: str, value: float) -> str:
             if low <= value < high:
                 return category
     return "unknown"
+
+
+# Categories that represent a low/below-target value requiring a flag
+LOW_FLAG_CATEGORIES = frozenset({
+    "low_hypoglycemia",
+    "low_women",
+})
