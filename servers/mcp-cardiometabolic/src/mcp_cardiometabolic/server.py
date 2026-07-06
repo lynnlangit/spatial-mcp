@@ -711,14 +711,17 @@ async def _assess_pregnancy_complication_cv_risk_impl(
 
     if double_injury:
         screening.append(
-            "Double endothelial injury identified (preeclampsia + severe COVID). "
-            "Standard risk calculators apply the preeclampsia multiplier but cannot "
-            "capture compounding with COVID-associated endothelial damage. "
-            "Cardiovascular risk likely exceeds any calculated estimate. "
-            "Consider referral to preventive cardiology."
+            "DOUBLE ENDOTHELIAL INJURY IDENTIFIED — preeclampsia + severe COVID-19: "
+            "Two independent endothelial injury events are present. Preeclampsia (AHA/ACC "
+            "Class I, 2× CAD/stroke risk) damaged vascular endothelium at the time of "
+            "pregnancy. Severe COVID-19 caused a second wave of endothelial injury via "
+            "ACE2 receptor disruption and angiotensin II accumulation. Standard risk "
+            "calculators apply the preeclampsia 2× multiplier but cannot capture this "
+            "compounding — true cardiovascular risk likely exceeds any calculated estimate. "
+            "Preventive cardiology referral strongly recommended."
         )
 
-    result = {
+    return {
         "patient_id": patient_id,
         "complications_reported": complications,
         "complications_recognized": recognized,
@@ -732,19 +735,15 @@ async def _assess_pregnancy_complication_cv_risk_impl(
         "screening_recommendations": screening,
         "guideline_sources": guideline_sources,
         "clinical_note": clinical_note,
+        "double_endothelial_injury_flag": double_injury,
+        "double_endothelial_injury_note": (
+            "Two independent endothelial injury events: preeclampsia (2025 AHA/ACC Class I, "
+            "2× CAD and stroke risk) and severe COVID-19 (ACE2-mediated endothelial activation "
+            "and RAAS disruption). The combined atherogenic burden is not modeled by any standard "
+            "risk calculator. This is a research flag — requires clinician review."
+        ) if double_injury else None,
         "dry_run": DRY_RUN,
     }
-
-    if double_injury:
-        result["double_endothelial_injury_flag"] = True
-        result["double_endothelial_injury_note"] = (
-            "Two independent endothelial injury events are present: preeclampsia "
-            "(AHA/ACC Class I, 2x CAD/stroke risk) and severe COVID-19 "
-            "(ACE2-mediated vascular endothelial injury). The combined atherogenic "
-            "burden is not captured by any standard risk calculator."
-        )
-
-    return result
 
 
 # ---------------------------------------------------------------------------

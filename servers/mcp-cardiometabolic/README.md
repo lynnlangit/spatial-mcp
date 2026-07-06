@@ -41,7 +41,7 @@ cd servers/mcp-cardiometabolic
 uv run pytest -v
 ```
 
-76 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, renal drug constraints, lipid treatment targets, post-COVID CV risk, PRS tools, APO risk assessment, and DRY_RUN behavior.
+82 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, renal drug constraints, lipid treatment targets, post-COVID CV risk, double endothelial injury detection, PRS tools, APO risk assessment, and DRY_RUN behavior.
 
 ## Environment
 
