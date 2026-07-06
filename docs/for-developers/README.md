@@ -92,13 +92,13 @@ graph TB
         API["🤖 Claude API<br/>Anthropic Sonnet 4.6<br/>MCP Client"]
     end
 
-    subgraph "20 Custom MCP Servers (116 tools)"
+    subgraph "20 Custom MCP Servers (119 tools)"
         STAGE0["🔒 Stage 0: De-identification (6 tools)<br/>mcp-deidentify"]
         CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>mcp-epic · mcp-fgbio · mcp-genomic-results<br/>mcp-mockepic 🎭 · mcp-mocktcga 🔧"]
         OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>mcp-multiomics · mcp-spatialtools<br/>mcp-openimagedata · mcp-deepcell · mcp-cell-classify"]
         IMMUNO["💉 Immunology & Treatment (25 tools)<br/>mcp-cibersortx · mcp-neoantigen<br/>mcp-perturbation · mcp-quantum-celltype-fidelity"]
         EXTDATA["🌐 External Data (12 tools)<br/>mcp-geodownload · mcp-opentargets"]
-        PREVENT["❤️ Preventive Health (11 tools)<br/>mcp-cardiometabolic"]
+        PREVENT["❤️ Preventive Health (14 tools)<br/>mcp-cardiometabolic"]
         REPORT["📋 Reporting (5 tools)<br/>mcp-patient-report"]
     end
 

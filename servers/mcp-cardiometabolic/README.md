@@ -2,7 +2,7 @@
 
 Cardiovascular risk scoring, biomarker interpretation, and preventive health monitoring. Server #19 in the Precision Medicine MCP Platform.
 
-## Tools (11)
+## Tools (14)
 
 | Tool | Description |
 |------|-------------|
@@ -13,10 +13,13 @@ Cardiovascular risk scoring, biomarker interpretation, and preventive health mon
 | `get_lifestyle_evidence` | Evidence-based lifestyle interventions with landmark trial citations |
 | `interpret_lipid_pattern` | Classify lipid phenotype (mixed dyslipidemia, isolated hypercholesterolemia, etc.), Friedewald validity, ApoB/LDL concordance |
 | `calculate_fh_clinical_score` | Dutch Lipid Clinic Network (DLCN) scoring for familial hypercholesterolemia with genetic test interpretation |
+| `assess_renal_drug_constraints` | Assess CV drug safety by eGFR stage and kidney count (13 drug classes, single-kidney modifier, KDIGO 2024) |
+| `calculate_lipid_treatment_targets` | LDL/ApoB/Non-HDL targets by risk tier with stepwise therapy pathway modeling (statin → ezetimibe → PCSK9) |
+| `assess_postcovid_cv_risk` | Post-COVID CV risk tier adjustment, mechanism flags, double endothelial injury detection, cardiac workup recommendations |
 | `search_cvd_prs_scores` | Query PGS Catalog REST API for validated CVD polygenic risk scores by trait |
 | `calculate_cvd_prs` | Compute polygenic risk score from germline genotype file + PGS Catalog score |
 | `interpret_cvd_prs_percentile` | Map raw PRS to population percentile and clinical risk tier (Khera et al. 2018) |
-| `assess_pregnancy_complication_cv_risk` | Evaluate adverse pregnancy outcomes as CVD risk enhancers per 2025 AHA/ACC and ESC guidelines |
+| `assess_pregnancy_complication_cv_risk` | Evaluate adverse pregnancy outcomes as CVD risk enhancers per 2025 AHA/ACC and ESC guidelines, with COVID double endothelial injury detection |
 
 ## Risk Equations
 
@@ -38,7 +41,7 @@ cd servers/mcp-cardiometabolic
 uv run pytest -v
 ```
 
-56 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, PRS tools, APO risk assessment, and DRY_RUN behavior.
+76 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, renal drug constraints, lipid treatment targets, post-COVID CV risk, PRS tools, APO risk assessment, and DRY_RUN behavior.
 
 ## Environment
 

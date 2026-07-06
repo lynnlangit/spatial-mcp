@@ -8,7 +8,7 @@ Cheat sheet for common development tasks in the precision-medicine-mcp platform.
 
 ```
 precision-medicine-mcp/
-├── servers/                      # 20 MCP servers (116 tools)
+├── servers/                      # 20 MCP servers (119 tools)
 │   ├── mcp-fgbio/               # Reference genomes, VCF/FASTQ (4 tools)
 │   ├── mcp-genomic-results/     # Somatic variant/CNV parsing (4 tools)
 │   ├── mcp-multiomics/          # RNA/Protein/Phospho (10 tools, best reference)

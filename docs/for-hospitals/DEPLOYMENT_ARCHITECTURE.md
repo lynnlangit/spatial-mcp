@@ -7,7 +7,7 @@ graph TD
     subgraph Hospital["Hospital Network (Firewall Boundary)"]
         EHR["EHR System\n(Mock EPIC MCP Server)"]
         STAGE0["Stage 0: mcp-deidentify\nHIPAA Safe Harbor"]
-        MCPCLUSTER["FastMCP Server Cluster\n20 servers · 116 tools"]
+        MCPCLUSTER["FastMCP Server Cluster\n20 servers · 119 tools"]
         AUDIT["Audit Log Store\n(PHI access log)"]
     end
     CLIENT["Claude Desktop\nor API Gateway Client"]

@@ -635,6 +635,7 @@ async def _assess_pregnancy_complication_cv_risk_impl(
     complications: List[str],
     age_at_complication: Optional[int] = None,
     num_affected_pregnancies: int = 1,
+    covid_severe_history: bool = False,
 ) -> Dict[str, Any]:
     """Assess lifetime CVD risk from adverse pregnancy outcome history."""
     recognized = []
@@ -704,7 +705,20 @@ async def _assess_pregnancy_complication_cv_risk_impl(
             "complications list. No additional CVD risk enhancement from APO history."
         )
 
-    return {
+    # Double endothelial injury: preeclampsia/eclampsia + severe COVID
+    has_pe = any(c in recognized for c in ("preeclampsia", "eclampsia"))
+    double_injury = covid_severe_history and has_pe
+
+    if double_injury:
+        screening.append(
+            "Double endothelial injury identified (preeclampsia + severe COVID). "
+            "Standard risk calculators apply the preeclampsia multiplier but cannot "
+            "capture compounding with COVID-associated endothelial damage. "
+            "Cardiovascular risk likely exceeds any calculated estimate. "
+            "Consider referral to preventive cardiology."
+        )
+
+    result = {
         "patient_id": patient_id,
         "complications_reported": complications,
         "complications_recognized": recognized,
@@ -720,6 +734,17 @@ async def _assess_pregnancy_complication_cv_risk_impl(
         "clinical_note": clinical_note,
         "dry_run": DRY_RUN,
     }
+
+    if double_injury:
+        result["double_endothelial_injury_flag"] = True
+        result["double_endothelial_injury_note"] = (
+            "Two independent endothelial injury events are present: preeclampsia "
+            "(AHA/ACC Class I, 2x CAD/stroke risk) and severe COVID-19 "
+            "(ACE2-mediated vascular endothelial injury). The combined atherogenic "
+            "burden is not captured by any standard risk calculator."
+        )
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -1111,6 +1136,837 @@ async def _calculate_fh_clinical_score_impl(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase B tool implementations
+# ---------------------------------------------------------------------------
+
+# eGFR stage classification (KDIGO 2024)
+def _classify_egfr_stage(egfr: float) -> tuple:
+    if egfr >= 90:
+        return "G1", "Normal or high"
+    if egfr >= 60:
+        return "G2", "Mildly decreased"
+    if egfr >= 45:
+        return "G3a", "Mildly to moderately decreased"
+    if egfr >= 30:
+        return "G3b", "Moderately to severely decreased"
+    if egfr >= 15:
+        return "G4", "Severely decreased"
+    return "G5", "Kidney failure"
+
+
+# Single-kidney status upgrade map
+_SINGLE_KIDNEY_UPGRADE = {
+    "safe": "safe_with_monitoring",
+    "safe_with_preference": "safe_with_monitoring",
+    "acceptable": "use_with_caution",
+    "use_with_caution": "use_with_caution",
+    "dose_reduce": "dose_reduce_and_monitor_closely",
+    "avoid": "avoid",
+    "contraindicated": "contraindicated",
+}
+
+_SINGLE_KIDNEY_NOTE = (
+    "This patient has one functioning kidney (eGFR on a single kidney is more "
+    "precarious than the same eGFR on two — there is no functional reserve). "
+    "All renally-cleared drugs carry amplified risk. Any further eGFR decline "
+    "has no compensatory mechanism."
+)
+
+
+def _assess_statin_drugs(egfr: float) -> dict:
+    """Assess individual statins by eGFR."""
+    drugs = {}
+
+    # Atorvastatin — >98% hepatic, safe at any eGFR
+    drugs["atorvastatin"] = {
+        "status": "safe", "renal_clearance": "<2%",
+        "note": "First choice in CKD — >98% hepatic metabolism, no renal adjustment at any eGFR",
+    }
+
+    # Rosuvastatin — ~10% renal
+    if egfr >= 60:
+        drugs["rosuvastatin"] = {"status": "safe", "renal_clearance": "~10%", "note": "Standard dose"}
+    elif egfr >= 30:
+        drugs["rosuvastatin"] = {"status": "dose_reduce", "renal_clearance": "~10%", "note": "Lower dose preferred"}
+    elif egfr >= 15:
+        drugs["rosuvastatin"] = {"status": "dose_reduce", "renal_clearance": "~10%", "note": "Max 10mg"}
+    else:
+        drugs["rosuvastatin"] = {"status": "avoid", "renal_clearance": "~10%", "note": "Avoid at eGFR <15"}
+
+    # Pravastatin
+    if egfr >= 60:
+        drugs["pravastatin"] = {"status": "safe", "renal_clearance": "~20%", "note": "Standard dose"}
+    elif egfr >= 30:
+        drugs["pravastatin"] = {"status": "use_with_caution", "renal_clearance": "~20%", "note": "Monitor"}
+    elif egfr >= 15:
+        drugs["pravastatin"] = {"status": "dose_reduce", "renal_clearance": "~20%", "note": "Reduce dose"}
+    else:
+        drugs["pravastatin"] = {"status": "avoid", "renal_clearance": "~20%", "note": "Avoid at eGFR <15"}
+
+    # Simvastatin
+    if egfr >= 60:
+        drugs["simvastatin"] = {"status": "safe", "renal_clearance": "~13%", "note": "Standard dose"}
+    elif egfr >= 30:
+        drugs["simvastatin"] = {"status": "use_with_caution", "renal_clearance": "~13%", "note": "Monitor"}
+    elif egfr >= 15:
+        drugs["simvastatin"] = {"status": "dose_reduce", "renal_clearance": "~13%", "note": "Max 10mg"}
+    else:
+        drugs["simvastatin"] = {"status": "avoid", "renal_clearance": "~13%", "note": "Avoid at eGFR <15"}
+
+    # Pitavastatin
+    if egfr >= 15:
+        drugs["pitavastatin"] = {"status": "safe", "renal_clearance": "<2%", "note": "Safe; minimal renal clearance"}
+    else:
+        drugs["pitavastatin"] = {"status": "use_with_caution", "renal_clearance": "<2%", "note": "Monitor at eGFR <15"}
+
+    # Fluvastatin
+    if egfr >= 30:
+        drugs["fluvastatin"] = {"status": "safe", "renal_clearance": "~6%", "note": "Safe"}
+    elif egfr >= 15:
+        drugs["fluvastatin"] = {"status": "use_with_caution", "renal_clearance": "~6%", "note": "Monitor"}
+    else:
+        drugs["fluvastatin"] = {"status": "avoid", "renal_clearance": "~6%", "note": "Avoid at eGFR <15"}
+
+    return {
+        "class_status": "safe_with_preference",
+        "preferred": ["atorvastatin — >98% hepatic, no renal adjustment at any eGFR"],
+        "drugs": drugs,
+        "note": (
+            "Atorvastatin is the statin of choice in CKD and single-kidney patients "
+            "due to >98% hepatic metabolism — renal function does not affect its "
+            "clearance or accumulation."
+        ),
+    }
+
+
+def _assess_anticoagulant_drugs(egfr: float) -> dict:
+    """Assess anticoagulants by eGFR."""
+    drugs = {}
+
+    # Apixaban — ~27% renal
+    if egfr >= 50:
+        drugs["apixaban"] = {"status": "safe", "renal_clearance": "~27%", "note": "Standard dose; PREFERRED DOAC in CKD"}
+    elif egfr >= 30:
+        drugs["apixaban"] = {"status": "dose_reduce", "renal_clearance": "~27%", "note": "Dose-reduce or monitor"}
+    elif egfr >= 15:
+        drugs["apixaban"] = {"status": "use_with_caution", "renal_clearance": "~27%", "note": "Use with caution"}
+    else:
+        drugs["apixaban"] = {"status": "avoid", "renal_clearance": "~27%", "note": "Avoid at eGFR <15"}
+
+    # Rivaroxaban — ~33% renal
+    if egfr >= 50:
+        drugs["rivaroxaban"] = {"status": "safe", "renal_clearance": "~33%", "note": "Standard dose"}
+    elif egfr >= 30:
+        drugs["rivaroxaban"] = {"status": "dose_reduce", "renal_clearance": "~33%", "note": "Dose-reduce"}
+    else:
+        drugs["rivaroxaban"] = {"status": "avoid", "renal_clearance": "~33%", "note": "Avoid at eGFR <30"}
+
+    # Edoxaban — ~50% renal
+    if egfr >= 50:
+        drugs["edoxaban"] = {"status": "safe", "renal_clearance": "~50%", "note": "Standard dose"}
+    elif egfr >= 30:
+        drugs["edoxaban"] = {"status": "dose_reduce", "renal_clearance": "~50%", "note": "Dose-reduce"}
+    else:
+        drugs["edoxaban"] = {"status": "avoid", "renal_clearance": "~50%", "note": "Avoid at eGFR <30"}
+
+    # Dabigatran — ~80% renal
+    if egfr >= 50:
+        drugs["dabigatran"] = {"status": "use_with_caution", "renal_clearance": "~80%", "note": "Use with caution; ~80% renal"}
+    elif egfr >= 30:
+        drugs["dabigatran"] = {"status": "avoid", "renal_clearance": "~80%", "note": "Avoid if possible"}
+    else:
+        drugs["dabigatran"] = {"status": "contraindicated", "renal_clearance": "~80%", "note": "CONTRAINDICATED"}
+
+    # Warfarin — no renal clearance
+    if egfr >= 15:
+        drugs["warfarin"] = {"status": "safe", "renal_clearance": "0%", "note": "No renal clearance; requires INR monitoring"}
+    else:
+        drugs["warfarin"] = {"status": "safe", "renal_clearance": "0%", "note": "Safe with dialysis adjustment; requires INR monitoring"}
+
+    return {
+        "class_status": "safe_with_preference",
+        "preferred": ["apixaban (Eliquis) — ~27% renal, lowest renal clearance of DOACs"],
+        "acceptable": ["warfarin — no renal clearance; requires INR monitoring"],
+        "avoid": ["dabigatran — ~80% renal; avoid in CKD"],
+        "drugs": drugs,
+        "note": "Apixaban is the preferred DOAC in CKD due to lowest renal clearance (~27%).",
+    }
+
+
+def _assess_ace_arb(egfr: float, single_kidney: bool) -> dict:
+    """Assess ACE inhibitors and ARBs by eGFR."""
+    if egfr >= 60:
+        status = "safe"
+        note = "Safe; renoprotective in proteinuric CKD"
+    elif egfr >= 30:
+        status = "use_with_caution"
+        note = "Monitor eGFR + K+; up to 20% eGFR decline on initiation acceptable"
+    elif egfr >= 15:
+        status = "use_with_caution"
+        note = "Use with specialist guidance"
+    else:
+        status = "avoid"
+        note = "Generally avoid at eGFR <15"
+
+    result = {
+        "class_status": status,
+        "note": note,
+    }
+
+    if single_kidney:
+        result["single_kidney_ace_arb_note"] = (
+            "In single-kidney patients, ACE inhibitors and ARBs can be used (they are "
+            "often renoprotective) but eGFR and potassium must be monitored closely at "
+            "initiation and dose changes. A >30% acute eGFR decline on initiation "
+            "should prompt evaluation for renal artery stenosis."
+        )
+
+    return result
+
+
+def _assess_metformin(egfr: float) -> dict:
+    """Assess metformin by eGFR."""
+    if egfr >= 60:
+        return {"class_status": "safe", "note": "Safe at standard dose (500-2000 mg/day)"}
+    if egfr >= 45:
+        return {"class_status": "safe", "note": "Continue with monitoring; consider reducing dose if approaching 45"}
+    if egfr >= 30:
+        return {"class_status": "dose_reduce", "note": "Reduce dose to maximum 500-1000 mg/day"}
+    return {"class_status": "contraindicated", "note": "CONTRAINDICATED — lactic acidosis risk"}
+
+
+def _assess_fibrates(egfr: float) -> dict:
+    """Assess fibrates by eGFR."""
+    drugs = {}
+    if egfr >= 60:
+        drugs["fenofibrate"] = {
+            "status": "safe",
+            "note": (
+                "Safe; monitor creatinine (fenofibrate increases serum creatinine ~10% "
+                "via tubular secretion — not true renal damage but confounds monitoring)"
+            ),
+        }
+    elif egfr >= 30:
+        drugs["fenofibrate"] = {"status": "dose_reduce", "note": "Dose-reduce; avoid if eGFR declining"}
+    else:
+        drugs["fenofibrate"] = {"status": "contraindicated", "note": "CONTRAINDICATED at eGFR <30"}
+
+    drugs["gemfibrozil"] = {
+        "status": "avoid",
+        "note": (
+            "Avoid with statins (significant rhabdomyolysis/myopathy risk with any statin). "
+            "Consider prescription omega-3 (Vascepa) as alternative for triglyceride reduction."
+        ),
+    }
+
+    overall = "avoid" if egfr < 30 else ("dose_reduce" if egfr < 60 else "use_with_caution")
+    return {
+        "class_status": overall,
+        "drugs": drugs,
+        "note": (
+            "For patients requiring both fibrate and statin therapy, fenofibrate "
+            "(not gemfibrozil) is the only acceptable combination."
+        ),
+    }
+
+
+def _assess_nsaids(egfr: float, single_kidney: bool) -> dict:
+    """Assess NSAIDs by eGFR and kidney count."""
+    if single_kidney:
+        return {
+            "class_status": "contraindicated",
+            "note": "CONTRAINDICATED — reduce blood flow to only functioning kidney",
+        }
+    if egfr >= 60:
+        return {
+            "class_status": "use_with_caution",
+            "note": "Short-term use acceptable with caution",
+        }
+    return {
+        "class_status": "avoid",
+        "note": "AVOID — reduce renal blood flow, worsen CKD",
+    }
+
+
+def _assess_contrast_iodinated(egfr: float, single_kidney: bool) -> dict:
+    """Assess iodinated contrast by eGFR."""
+    if egfr >= 60:
+        status = "safe"
+        note = "Generally safe with adequate hydration"
+    elif egfr >= 30:
+        status = "use_with_caution"
+        note = "Pre-hydration required; hold metformin 48h before/after; monitor eGFR post-procedure"
+    else:
+        status = "avoid"
+        note = "High risk — weigh benefit vs. risk with nephrology"
+
+    result = {"class_status": status, "note": note}
+    if single_kidney:
+        result["single_kidney_contrast_note"] = (
+            "Even at eGFR 68, iodinated contrast carries heightened risk in "
+            "single-kidney patients due to absence of functional reserve. Ensure "
+            "pre-hydration, post-procedure eGFR monitoring, and consider "
+            "non-contrast alternatives where available."
+        )
+    return result
+
+
+def _assess_contrast_gadolinium(egfr: float, single_kidney: bool) -> dict:
+    """Assess gadolinium contrast by eGFR."""
+    if egfr >= 30:
+        result = {
+            "class_status": "safe",
+            "note": "Macrocyclic agents (gadobutrol, gadoteridol, gadoterate) are safe",
+            "linear_agents_note": "Avoid linear agents (gadodiamide, gadopentetate)",
+        }
+    else:
+        result = {
+            "class_status": "use_with_caution",
+            "note": (
+                "Macrocyclic agents preferred if contrast required. "
+                "Linear agents CONTRAINDICATED — nephrogenic systemic fibrosis risk."
+            ),
+        }
+    if single_kidney:
+        result["single_kidney_note"] = "Note single kidney status in radiology referral."
+    return result
+
+
+async def _assess_renal_drug_constraints_impl(
+    patient_id: str,
+    egfr: float,
+    functional_kidney_count: int = 2,
+    drug_classes: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Assess cardiovascular drug safety based on eGFR and kidney count."""
+    stage, stage_desc = _classify_egfr_stage(egfr)
+    single_kidney = functional_kidney_count == 1
+
+    # All assessable drug classes
+    all_classes = {
+        "statins": lambda: _assess_statin_drugs(egfr),
+        "anticoagulants": lambda: _assess_anticoagulant_drugs(egfr),
+        "ace_inhibitors": lambda: _assess_ace_arb(egfr, single_kidney),
+        "arbs": lambda: _assess_ace_arb(egfr, single_kidney),
+        "metformin": lambda: _assess_metformin(egfr),
+        "fibrates": lambda: _assess_fibrates(egfr),
+        "pcsk9_inhibitors": lambda: {
+            "class_status": "safe",
+            "note": "Monoclonal antibodies — no renal clearance. Safe at all eGFR levels including dialysis. No dose adjustment required.",
+        },
+        "ezetimibe": lambda: {
+            "class_status": "safe",
+            "note": "No renal clearance. Safe at all eGFR levels. No dose adjustment required.",
+        },
+        "omega3": lambda: {
+            "class_status": "safe",
+            "note": "No renal clearance. Safe at all eGFR levels. No dose adjustment required.",
+        },
+        "glp1_agonists": lambda: {
+            "class_status": "safe" if egfr >= 15 else "use_with_caution",
+            "note": (
+                "Generally safe; no dose adjustment required"
+                if egfr >= 15
+                else "Limited data at eGFR <15; use with caution"
+            ),
+            "hydration_note": (
+                "GLP-1 agonists can cause nausea and vomiting → dehydration risk → "
+                "transient eGFR decline. Patients with single kidney or borderline "
+                "eGFR should monitor hydration carefully, especially at initiation."
+            ) if single_kidney else None,
+        },
+        "nsaids": lambda: _assess_nsaids(egfr, single_kidney),
+        "contrast_iodinated": lambda: _assess_contrast_iodinated(egfr, single_kidney),
+        "contrast_gadolinium": lambda: _assess_contrast_gadolinium(egfr, single_kidney),
+    }
+
+    # Filter to requested classes if specified
+    if drug_classes:
+        requested = {c.strip().lower().replace(" ", "_").replace("-", "_") for c in drug_classes}
+    else:
+        requested = set(all_classes.keys())
+
+    assessments = {}
+    for cls_name, assess_fn in all_classes.items():
+        if cls_name not in requested:
+            continue
+        assessment = assess_fn()
+
+        # Apply single-kidney modifier
+        if single_kidney and "class_status" in assessment:
+            original = assessment["class_status"]
+            assessment["class_status"] = _SINGLE_KIDNEY_UPGRADE.get(original, original)
+
+        assessments[cls_name] = assessment
+
+    # Top-line recommendations
+    top_line = [
+        "Preferred statin: atorvastatin (hepatic only, safe at any eGFR)",
+        "Preferred anticoagulant if indicated: apixaban (lowest renal DOAC)",
+        "Avoid: dabigatran, gemfibrozil, NSAIDs" + (" (single kidney)" if single_kidney else " (eGFR <60)") + ", iodinated contrast without pre-hydration protocol",
+        "Safe without dose adjustment: ezetimibe, PCSK9 inhibitors, prescription omega-3",
+    ]
+    if egfr >= 45:
+        top_line.append(f"Metformin safe at eGFR {egfr} — monitor if eGFR approaches 45")
+    elif egfr >= 30:
+        top_line.append(f"Metformin requires dose reduction at eGFR {egfr}")
+
+    result = {
+        "patient_id": patient_id,
+        "egfr": egfr,
+        "egfr_stage": stage,
+        "egfr_stage_description": stage_desc,
+        "functional_kidney_count": functional_kidney_count,
+        "single_kidney_modifier_applied": single_kidney,
+        "assessments": assessments,
+        "top_line_recommendations": top_line,
+        "clinical_note": (
+            "RESEARCH ONLY — NOT FOR CLINICAL USE. Drug selection requires "
+            "clinician review of full medication list, allergies, and individual "
+            "risk/benefit assessment."
+        ),
+        "dry_run": DRY_RUN,
+    }
+
+    if single_kidney:
+        result["single_kidney_note"] = _SINGLE_KIDNEY_NOTE
+
+    return result
+
+
+# Lipid treatment target tables (2022 ACC + 2023 ESC)
+_LIPID_TARGETS = {
+    "very_high": {
+        "ldl": 55, "apob": 65, "non_hdl": 85,
+        "tier_criteria": (
+            "Very high risk: established ASCVD, OR Definite/Probable FH + CVD, "
+            "OR 10-year CVD risk >20%, OR LDL >190 mg/dL with multiple risk factors"
+        ),
+    },
+    "high": {
+        "ldl": 70, "apob": 80, "non_hdl": 100,
+        "tier_criteria": (
+            "High risk: 10-year CVD risk 7.5-20%, OR Possible FH (DLCN 3-5), "
+            "OR diabetes with risk factors, OR CKD G3-G4"
+        ),
+    },
+    "intermediate": {
+        "ldl": 100, "apob": 90, "non_hdl": 130,
+        "tier_criteria": "Intermediate risk: 10-year CVD risk 5-7.5%",
+    },
+    "low": {
+        "ldl": 130, "apob": 100, "non_hdl": 160,
+        "tier_criteria": "Low risk: 10-year CVD risk <5%",
+    },
+}
+
+# Expected LDL reduction by therapy (from landmark trials)
+_THERAPY_REDUCTIONS = {
+    "high_intensity_statin": 0.50,
+    "moderate_intensity_statin": 0.35,
+    "low_intensity_statin": 0.25,
+    "ezetimibe": 0.20,
+    "pcsk9_inhibitor": 0.60,
+}
+
+_TIER_ORDER = ["low", "intermediate", "high", "very_high"]
+
+
+def _model_therapy_pathway(
+    starting_ldl: float,
+    ldl_target: float,
+    already_on_statin: bool,
+    statin_intensity: Optional[str],
+    already_on_ezetimibe: bool,
+    already_on_pcsk9: bool,
+    renal_constraint: bool,
+) -> tuple:
+    """Model stepwise lipid-lowering therapy to reach target."""
+    steps = []
+    current = starting_ldl
+
+    if not already_on_statin:
+        intensity = "high_intensity_statin"
+        label = (
+            "atorvastatin 40-80mg"
+            if renal_constraint
+            else "atorvastatin 40-80mg or rosuvastatin 20-40mg"
+        )
+        reduction = _THERAPY_REDUCTIONS[intensity]
+        projected = round(current * (1 - reduction), 1)
+        steps.append({
+            "step": 1,
+            "add": f"High-intensity statin ({label})",
+            "expected_ldl": projected,
+            "ldl_reduction_pct": round(reduction * 100),
+            "target_reached": projected <= ldl_target,
+        })
+        current = projected
+    else:
+        if statin_intensity in ("low", "moderate"):
+            current_reduction = _THERAPY_REDUCTIONS.get(
+                f"{statin_intensity}_intensity_statin", 0.30
+            )
+            additional_reduction = _THERAPY_REDUCTIONS["high_intensity_statin"] - current_reduction
+            projected = round(current * (1 - additional_reduction), 1)
+            steps.append({
+                "step": 1,
+                "add": "Intensify to high-intensity statin",
+                "expected_ldl": projected,
+                "target_reached": projected <= ldl_target,
+            })
+            current = projected
+
+    if current > ldl_target and not already_on_ezetimibe:
+        reduction = _THERAPY_REDUCTIONS["ezetimibe"]
+        projected = round(current * (1 - reduction), 1)
+        steps.append({
+            "step": len(steps) + 1,
+            "add": "Add ezetimibe 10mg",
+            "expected_ldl": projected,
+            "ldl_reduction_pct": round(reduction * 100),
+            "target_reached": projected <= ldl_target,
+        })
+        current = projected
+
+    if current > ldl_target and not already_on_pcsk9:
+        reduction = _THERAPY_REDUCTIONS["pcsk9_inhibitor"]
+        projected = round(current * (1 - reduction), 1)
+        steps.append({
+            "step": len(steps) + 1,
+            "add": "Add PCSK9 inhibitor (evolocumab/Repatha or alirocumab/Praluent)",
+            "expected_ldl": projected,
+            "ldl_reduction_pct": round(reduction * 100),
+            "target_reached": projected <= ldl_target,
+            "renal_note": (
+                "PCSK9 inhibitors are safe at any eGFR — monoclonal antibodies "
+                "with no renal clearance."
+            ),
+        })
+        current = projected
+
+    return steps, current
+
+
+async def _calculate_lipid_treatment_targets_impl(
+    patient_id: str,
+    current_ldl: float,
+    current_apob: Optional[float] = None,
+    current_non_hdl: Optional[float] = None,
+    current_triglycerides: Optional[float] = None,
+    risk_tier: str = "high",
+    fh_status: str = "possible",
+    currently_on_statin: bool = False,
+    current_statin_intensity: Optional[str] = None,
+    currently_on_ezetimibe: bool = False,
+    currently_on_pcsk9_inhibitor: bool = False,
+    renal_constraint: bool = False,
+) -> Dict[str, Any]:
+    """Calculate lipid treatment targets and model therapy pathway."""
+    # FH risk upgrade — definite, probable, or possible FH warrants tier upgrade
+    fh_upgrade = False
+    effective_tier = risk_tier
+    if fh_status in ("definite", "probable", "possible"):
+        idx = _TIER_ORDER.index(risk_tier) if risk_tier in _TIER_ORDER else 1
+        new_idx = min(idx + 1, len(_TIER_ORDER) - 1)
+        if new_idx != idx:
+            effective_tier = _TIER_ORDER[new_idx]
+            fh_upgrade = True
+
+    targets = _LIPID_TARGETS.get(effective_tier, _LIPID_TARGETS["high"])
+    ldl_target = targets["ldl"]
+    apob_target = targets["apob"]
+    non_hdl_target = targets["non_hdl"]
+
+    # Current vs target gaps
+    ldl_gap = round(current_ldl - ldl_target, 1)
+    ldl_reduction_pct = round((current_ldl - ldl_target) / current_ldl * 100, 1) if current_ldl > 0 else 0
+
+    apob_gap = round(current_apob - apob_target, 1) if current_apob is not None else None
+    non_hdl_gap = round(current_non_hdl - non_hdl_target, 1) if current_non_hdl is not None else None
+
+    # Model therapy pathway
+    pathway, final_ldl = _model_therapy_pathway(
+        starting_ldl=current_ldl,
+        ldl_target=ldl_target,
+        already_on_statin=currently_on_statin,
+        statin_intensity=current_statin_intensity,
+        already_on_ezetimibe=currently_on_ezetimibe,
+        already_on_pcsk9=currently_on_pcsk9_inhibitor,
+        renal_constraint=renal_constraint,
+    )
+
+    # Minimum steps to target
+    min_steps = None
+    for step in pathway:
+        if step["target_reached"]:
+            min_steps = step["step"]
+            break
+    if min_steps is None and pathway:
+        min_steps = len(pathway)
+
+    statin_note = None
+    if renal_constraint:
+        statin_note = (
+            "Atorvastatin preferred due to renal constraint (>98% hepatic "
+            "metabolism, safe at any eGFR)."
+        )
+
+    return {
+        "patient_id": patient_id,
+        "current_ldl": current_ldl,
+        "current_apob": current_apob,
+        "current_non_hdl": current_non_hdl,
+        "current_triglycerides": current_triglycerides,
+        "risk_tier_input": risk_tier,
+        "fh_status": fh_status,
+        "fh_risk_upgrade_applied": fh_upgrade,
+        "effective_risk_tier": effective_tier,
+        "targets": {
+            "ldl": ldl_target,
+            "apob": apob_target,
+            "non_hdl": non_hdl_target,
+            "tier_criteria": targets["tier_criteria"],
+        },
+        "current_vs_target": {
+            "ldl_gap": ldl_gap,
+            "ldl_reduction_needed_pct": ldl_reduction_pct,
+            "apob_gap": apob_gap,
+            "non_hdl_gap": non_hdl_gap,
+        },
+        "therapy_pathway": pathway,
+        "minimum_steps_to_target": min_steps,
+        "statin_preference_note": statin_note,
+        "guideline_references": [
+            "2022 ACC Expert Consensus Decision Pathway on Statin Therapy — https://doi.org/10.1016/j.jacc.2022.07.006",
+            "2023 ESC Guidelines on Dyslipidaemias — https://doi.org/10.1093/eurheartj/ehac468",
+            "FOURIER trial (evolocumab) — https://doi.org/10.1056/NEJMoa1615664",
+            "IMPROVE-IT trial (ezetimibe) — https://doi.org/10.1056/NEJMoa1410489",
+        ],
+        "clinical_note": (
+            "RESEARCH ONLY — NOT FOR CLINICAL USE. LDL reduction estimates are "
+            "population averages from clinical trials. Individual response varies. "
+            "Drug selection requires clinician assessment."
+        ),
+        "dry_run": DRY_RUN,
+    }
+
+
+# Post-COVID CV risk tier adjustment tables
+_SEVERITY_UPGRADE = {
+    "mild": 0,
+    "moderate": 1,
+    "severe": 1,
+    "hospitalized": 1,
+    "icu": 2,
+}
+
+_COMPLICATION_UPGRADES = {
+    "myocarditis_documented": 1,
+    "bp_crisis_during_covid": 0,
+    "new_prediabetes_post_covid": 0,
+    "new_arrhythmia_during_covid": 1,
+}
+
+
+async def _assess_postcovid_cv_risk_impl(
+    patient_id: str,
+    severity: str,
+    year_of_infection: Optional[int] = None,
+    myocarditis_documented: bool = False,
+    bp_crisis_during_covid: bool = False,
+    new_prediabetes_post_covid: bool = False,
+    new_arrhythmia_during_covid: bool = False,
+    adverse_pregnancy_outcome_history: bool = False,
+    baseline_risk_tier: str = "intermediate",
+) -> Dict[str, Any]:
+    """Assess post-COVID cardiovascular risk with tier adjustment."""
+    # Risk tier adjustment
+    base_idx = _TIER_ORDER.index(baseline_risk_tier) if baseline_risk_tier in _TIER_ORDER else 1
+    upgrade = _SEVERITY_UPGRADE.get(severity, 0)
+
+    complication_flags = {
+        "myocarditis_documented": myocarditis_documented,
+        "bp_crisis_during_covid": bp_crisis_during_covid,
+        "new_prediabetes_post_covid": new_prediabetes_post_covid,
+        "new_arrhythmia_during_covid": new_arrhythmia_during_covid,
+    }
+    upgrade += sum(
+        _COMPLICATION_UPGRADES[k] for k, v in complication_flags.items() if v
+    )
+
+    adjusted_idx = min(base_idx + upgrade, len(_TIER_ORDER) - 1)
+    adjusted_tier = _TIER_ORDER[adjusted_idx]
+
+    # Mechanism flags
+    mechanisms = [
+        {
+            "mechanism": "ACE2-mediated endothelial injury",
+            "present": severity in ("moderate", "severe", "hospitalized", "icu"),
+            "explanation": (
+                "SARS-CoV-2 binds and downregulates ACE2 receptors on vascular endothelium, "
+                "causing angiotensin II accumulation → acute vasoconstriction, oxidative stress, "
+                "and pro-inflammatory endothelial activation. This accelerates atherosclerosis "
+                "independently of traditional risk factors. Effect persists years after acute illness."
+            ),
+        },
+        {
+            "mechanism": "RAAS disruption / hypertensive crisis",
+            "present": bp_crisis_during_covid,
+            "explanation": (
+                "ACE2 downregulation → angiotensin II excess → acute hypertensive crisis. "
+                "Compounded by any pre-existing renovascular disease (e.g., renal artery stenosis). "
+                "Evaluate for structural renal causes that may have been unmasked by COVID-19."
+            ),
+        },
+        {
+            "mechanism": "COVID-associated myocarditis",
+            "present": myocarditis_documented or severity in ("severe", "hospitalized", "icu"),
+            "explanation": (
+                "Direct viral invasion of cardiomyocytes via ACE2. Can leave ventricular and atrial "
+                "fibrosis detectable on cardiac MRI (late gadolinium enhancement) years after acute illness. "
+                "Associated with arrhythmia, reduced ejection fraction, and exercise intolerance."
+            ),
+        },
+        {
+            "mechanism": "Post-COVID beta cell damage / prediabetes",
+            "present": new_prediabetes_post_covid,
+            "explanation": (
+                "COVID-19 directly infects pancreatic beta cells via ACE2, reducing insulin secretion. "
+                "New-onset prediabetes or diabetes emerging after COVID may reflect this mechanism "
+                "rather than purely lifestyle-driven insulin resistance. Fasting insulin and C-peptide "
+                "can help distinguish post-COVID beta cell damage from insulin resistance."
+            ),
+        },
+        {
+            "mechanism": "Post-COVID dyslipidemia",
+            "present": severity in ("severe", "hospitalized", "icu"),
+            "explanation": (
+                "COVID-19 hepatic inflammation impairs LDL receptor expression and VLDL clearance, "
+                "potentially worsening LDL and triglyceride levels independently of diet or genetics. "
+                "Lipid panel after COVID recovery may not reflect true pre-COVID baseline."
+            ),
+        },
+        {
+            "mechanism": "Double endothelial injury (preeclampsia + COVID)",
+            "present": adverse_pregnancy_outcome_history and severity in ("severe", "hospitalized", "icu"),
+            "explanation": (
+                "Two independent endothelial injury events: (1) preeclampsia causes sustained endothelial "
+                "dysfunction and vascular remodeling (2x CAD and stroke risk per 2025 AHA/ACC Class I); "
+                "(2) severe COVID-19 causes a second wave of endothelial injury via ACE2 disruption. "
+                "Standard risk calculators apply the preeclampsia multiplier but cannot capture this "
+                "compounding. True cardiovascular risk likely exceeds any calculated estimate."
+            ),
+        },
+    ]
+
+    # Cardiac workup recommendations
+    workup = []
+
+    if severity in ("severe", "hospitalized", "icu"):
+        workup.append({
+            "test": "Echocardiogram (transthoracic)",
+            "priority": "HIGH",
+            "rationale": (
+                "Assess LV ejection fraction and wall motion abnormalities after severe COVID "
+                "+ possible myocarditis. Foundational baseline missing if not done since acute illness."
+            ),
+        })
+        workup.append({
+            "test": "Cardiac MRI with late gadolinium enhancement",
+            "priority": "HIGH" if myocarditis_documented else "MODERATE",
+            "rationale": (
+                "Detects myocardial fibrosis/scarring from COVID myocarditis, which may persist "
+                "years after infection. Safe at eGFR >=30 with macrocyclic gadolinium agents — "
+                "confirm agent with radiology."
+            ),
+        })
+
+    if bp_crisis_during_covid:
+        workup.append({
+            "test": "Renal artery Doppler ultrasound or MRA kidneys",
+            "priority": "HIGH",
+            "rationale": (
+                "COVID-induced RAAS disruption + possible renal artery stenosis = "
+                "compounded BP crisis mechanism. Evaluate structural cause."
+            ),
+        })
+
+    if new_arrhythmia_during_covid:
+        workup.append({
+            "test": "24-48 hour Holter monitor or extended event monitor",
+            "priority": "HIGH",
+            "rationale": (
+                "Screen for recurrent or silent arrhythmia following documented "
+                "COVID-associated arrhythmia."
+            ),
+        })
+
+    if new_prediabetes_post_covid:
+        workup.append({
+            "test": "Fasting insulin + C-peptide",
+            "priority": "MODERATE",
+            "rationale": (
+                "Distinguishes post-COVID beta cell damage (reduced insulin secretion) "
+                "from insulin resistance. Guides treatment: GLP-1 agonists preferred "
+                "if beta cell damage identified."
+            ),
+        })
+
+    if severity != "mild":
+        workup.append({
+            "test": "Fasting lipid panel + HbA1c + eGFR trend",
+            "priority": "MODERATE",
+            "rationale": (
+                "COVID hepatic inflammation may have altered lipid levels post-recovery. "
+                "eGFR trend establishes whether any COVID-related AKI occurred."
+            ),
+        })
+
+    double_injury = (
+        adverse_pregnancy_outcome_history
+        and severity in ("severe", "hospitalized", "icu")
+    )
+
+    return {
+        "patient_id": patient_id,
+        "covid_severity": severity,
+        "year_of_infection": year_of_infection,
+        "baseline_risk_tier": baseline_risk_tier,
+        "adjusted_risk_tier": adjusted_tier,
+        "risk_tier_changed": adjusted_tier != baseline_risk_tier,
+        "risk_tier_change_summary": (
+            f"{baseline_risk_tier} → {adjusted_tier}"
+            if adjusted_tier != baseline_risk_tier
+            else "No change"
+        ),
+        "mechanisms_flagged": mechanisms,
+        "active_mechanisms": [m["mechanism"] for m in mechanisms if m["present"]],
+        "double_endothelial_injury_present": double_injury,
+        "cardiac_workup_recommended": workup,
+        "calculator_limitation_note": (
+            "Standard risk calculators (Reynolds Risk Score, ASCVD Pooled Cohort Equations, "
+            "Framingham) were developed before the COVID-19 pandemic and do not capture: "
+            "post-COVID endothelial injury, COVID-associated myocarditis, post-COVID "
+            "prediabetes, RAAS disruption, or the compounding of preeclampsia + COVID "
+            "endothelial injury. The adjusted risk tier above is a research estimate "
+            "only and must be reviewed by a clinician."
+        ),
+        "guideline_references": [
+            "Xie & Al-Aly 2022 — Long COVID CV outcomes — https://doi.org/10.1038/s41591-022-01689-3",
+            "Bhatt et al. 2022 — COVID-19 and MI/stroke risk — https://doi.org/10.1016/S0140-6736(22)00403-5",
+            "ACC COVID-19 CV Task Force 2023 — https://www.jacc.org/doi/10.1016/j.jacc.2023.04.003",
+            "2023 AHA Scientific Statement: COVID-19 and CVD — https://doi.org/10.1161/CIR.0000000000001123",
+        ],
+        "clinical_note": (
+            "RESEARCH ONLY — NOT FOR CLINICAL USE. Risk tier adjustment is a "
+            "research estimate. Requires clinician review."
+        ),
+        "dry_run": DRY_RUN,
+    }
+
+
 # ============================================================================
 # MCP Tool wrappers
 # ============================================================================
@@ -1397,6 +2253,7 @@ async def assess_pregnancy_complication_cv_risk(
     complications: Annotated[List[str], _CoerceList],
     age_at_complication: Optional[int] = None,
     num_affected_pregnancies: int = 1,
+    covid_severe_history: bool = False,
 ) -> dict:
     """Assess lifetime cardiovascular risk from adverse pregnancy outcome history.
 
@@ -1404,6 +2261,9 @@ async def assess_pregnancy_complication_cv_risk(
     enhancers per 2025 AHA/ACC and ESC guidelines. Preeclampsia, for example,
     doubles 5-15 year stroke and heart disease risk. Returns risk multipliers,
     category, and screening recommendations.
+
+    When covid_severe_history=True and preeclampsia/eclampsia is present, flags
+    double endothelial injury (two independent vascular damage events).
 
     Recognized complications: preeclampsia, eclampsia, gestational_hypertension,
     gestational_diabetes, preterm_birth, low_birth_weight, iugr,
@@ -1414,16 +2274,19 @@ async def assess_pregnancy_complication_cv_risk(
         complications: List of adverse pregnancy outcomes (case-insensitive).
         age_at_complication: Age at time of complication (optional).
         num_affected_pregnancies: Number of pregnancies affected (default: 1).
+        covid_severe_history: True if patient had severe/hospitalized/ICU COVID.
 
     Returns:
         Dictionary with recognized complications, CAD/stroke risk multipliers,
         risk category, screening recommendations, and guideline citations.
+        Includes double_endothelial_injury_flag when applicable.
     """
     result = await _assess_pregnancy_complication_cv_risk_impl(
         patient_id=patient_id,
         complications=complications,
         age_at_complication=age_at_complication,
         num_affected_pregnancies=num_affected_pregnancies,
+        covid_severe_history=covid_severe_history,
     )
     if DRY_RUN:
         result = add_dry_run_warning(result)
@@ -1544,6 +2407,160 @@ async def calculate_fh_clinical_score(
         genetic_test_variants_tested=genetic_test_variants_tested,
         genetic_test_result=genetic_test_result,
         causative_mutation_identified=causative_mutation_identified,
+    )
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def assess_renal_drug_constraints(
+    patient_id: str,
+    egfr: float,
+    functional_kidney_count: int = 2,
+    drug_classes: Annotated[Optional[List[str]], _CoerceList] = None,
+) -> dict:
+    """Assess cardiovascular drug safety based on eGFR and functional kidney count.
+
+    For patients with CKD or a single functioning kidney, determines which
+    cardiovascular drug classes are safe, require dose adjustment, or should
+    be avoided. Key insight: eGFR 68 on one kidney carries fundamentally
+    different risk than eGFR 68 on two kidneys — no functional reserve.
+
+    Assessed drug classes: statins, anticoagulants, ace_inhibitors, arbs,
+    metformin, fibrates, pcsk9_inhibitors, ezetimibe, omega3, glp1_agonists,
+    nsaids, contrast_iodinated, contrast_gadolinium.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        egfr: Estimated glomerular filtration rate in mL/min/1.73m².
+        functional_kidney_count: Number of functioning kidneys (1 or 2).
+        drug_classes: List of drug classes to assess (None = assess all).
+
+    Returns:
+        Dictionary with eGFR stage, per-class assessments, single-kidney
+        modifier status, top-line recommendations, and clinical note.
+    """
+    result = await _assess_renal_drug_constraints_impl(
+        patient_id=patient_id,
+        egfr=egfr,
+        functional_kidney_count=functional_kidney_count,
+        drug_classes=drug_classes,
+    )
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def calculate_lipid_treatment_targets(
+    patient_id: str,
+    current_ldl: float,
+    current_apob: Optional[float] = None,
+    current_non_hdl: Optional[float] = None,
+    current_triglycerides: Optional[float] = None,
+    risk_tier: str = "high",
+    fh_status: str = "possible",
+    currently_on_statin: bool = False,
+    current_statin_intensity: Optional[str] = None,
+    currently_on_ezetimibe: bool = False,
+    currently_on_pcsk9_inhibitor: bool = False,
+    renal_constraint: bool = False,
+) -> dict:
+    """Calculate LDL/ApoB/Non-HDL treatment targets and model therapy pathway.
+
+    Given current lipid values, risk tier, and FH status, calculates treatment
+    targets per 2022 ACC Expert Consensus and 2023 ESC guidelines. Models which
+    combination of therapies (statin → ezetimibe → PCSK9 inhibitor) is needed
+    to reach targets step by step.
+
+    FH status "definite" or "probable" upgrades risk tier one step.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        current_ldl: Current LDL cholesterol in mg/dL.
+        current_apob: Current ApoB in mg/dL (optional).
+        current_non_hdl: Current Non-HDL cholesterol in mg/dL (optional).
+        current_triglycerides: Current triglycerides in mg/dL (optional).
+        risk_tier: "very_high", "high", "intermediate", or "low".
+        fh_status: "definite", "probable", "possible", "unlikely", or "unknown".
+        currently_on_statin: Whether patient is currently on a statin.
+        current_statin_intensity: "high", "moderate", or "low" (if on statin).
+        currently_on_ezetimibe: Whether patient is currently on ezetimibe.
+        currently_on_pcsk9_inhibitor: Whether patient is on a PCSK9 inhibitor.
+        renal_constraint: True if single kidney or eGFR <60 (prefer atorvastatin).
+
+    Returns:
+        Dictionary with targets, current-vs-target gaps, stepwise therapy
+        pathway, guideline references, and statin preference note.
+    """
+    result = await _calculate_lipid_treatment_targets_impl(
+        patient_id=patient_id,
+        current_ldl=current_ldl,
+        current_apob=current_apob,
+        current_non_hdl=current_non_hdl,
+        current_triglycerides=current_triglycerides,
+        risk_tier=risk_tier,
+        fh_status=fh_status,
+        currently_on_statin=currently_on_statin,
+        current_statin_intensity=current_statin_intensity,
+        currently_on_ezetimibe=currently_on_ezetimibe,
+        currently_on_pcsk9_inhibitor=currently_on_pcsk9_inhibitor,
+        renal_constraint=renal_constraint,
+    )
+    if DRY_RUN:
+        result = add_dry_run_warning(result)
+    return result
+
+
+@mcp.tool()
+async def assess_postcovid_cv_risk(
+    patient_id: str,
+    severity: str,
+    year_of_infection: Optional[int] = None,
+    myocarditis_documented: bool = False,
+    bp_crisis_during_covid: bool = False,
+    new_prediabetes_post_covid: bool = False,
+    new_arrhythmia_during_covid: bool = False,
+    adverse_pregnancy_outcome_history: bool = False,
+    baseline_risk_tier: str = "intermediate",
+) -> dict:
+    """Assess post-COVID cardiovascular risk with tier adjustment and workup.
+
+    Standard risk calculators predate COVID-19 and cannot capture post-COVID
+    endothelial injury, myocarditis, RAAS disruption, or the compounding of
+    preeclampsia + COVID vascular damage. This tool adjusts a patient's
+    baseline cardiovascular risk tier based on COVID severity and complications,
+    flags active pathophysiological mechanisms, and generates a structured
+    post-COVID cardiac workup recommendation.
+
+    Args:
+        patient_id: Patient identifier (e.g., "PAT003").
+        severity: COVID severity — "mild", "moderate", "severe",
+            "hospitalized", or "icu".
+        year_of_infection: Year of COVID infection (optional).
+        myocarditis_documented: Chest pain, troponin elevation, or imaging.
+        bp_crisis_during_covid: Acute hypertensive event (SBP >180).
+        new_prediabetes_post_covid: HbA1c elevation first appearing post-COVID.
+        new_arrhythmia_during_covid: New arrhythmia during or within 30 days.
+        adverse_pregnancy_outcome_history: Preeclampsia or other APO history.
+        baseline_risk_tier: Pre-COVID risk tier — "low", "intermediate",
+            "high", or "very_high".
+
+    Returns:
+        Dictionary with adjusted risk tier, mechanism flags, double endothelial
+        injury detection, cardiac workup recommendations, and guideline refs.
+    """
+    result = await _assess_postcovid_cv_risk_impl(
+        patient_id=patient_id,
+        severity=severity,
+        year_of_infection=year_of_infection,
+        myocarditis_documented=myocarditis_documented,
+        bp_crisis_during_covid=bp_crisis_during_covid,
+        new_prediabetes_post_covid=new_prediabetes_post_covid,
+        new_arrhythmia_during_covid=new_arrhythmia_during_covid,
+        adverse_pregnancy_outcome_history=adverse_pregnancy_outcome_history,
+        baseline_risk_tier=baseline_risk_tier,
     )
     if DRY_RUN:
         result = add_dry_run_warning(result)

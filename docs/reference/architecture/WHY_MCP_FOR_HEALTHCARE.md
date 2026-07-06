@@ -72,13 +72,13 @@ graph TD
         PLAN["1. Understand intent<br/>2. Plan workflow<br/>3. Execute across 20 servers"]
     end
 
-    subgraph Servers["🔧 20 MCP Servers — 7 Categories (116 tools)"]
+    subgraph Servers["🔧 20 MCP Servers — 7 Categories (119 tools)"]
         STAGE0["🔒 De-identification (6 tools)<br/>HIPAA Safe Harbor"]
         CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>EHR context + variant calls"]
         OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>Pathway + spatial analysis"]
         IMMUNO["💉 Immunology & Treatment (25 tools)<br/>Immune deconv + drug targets"]
         EXTDATA["🌐 External Data (12 tools)<br/>GEO datasets + Open Targets"]
-        PREVENT["❤️ Preventive Health (11 tools)<br/>CVD risk scoring"]
+        PREVENT["❤️ Preventive Health (14 tools)<br/>CVD risk scoring"]
         REPORT["📋 Reporting (5 tools)<br/>PDF report generation"]
     end
 
@@ -107,7 +107,7 @@ graph TD
 ```
 
 ### 3. Domain Expertise Encoded
-**Each category encapsulates bioinformatics best practices (20 servers, 116 tools):**
+**Each category encapsulates bioinformatics best practices (20 servers, 119 tools):**
 
 | Category | Encoded Expertise | Replaces |
 |----------|-------------------|----------|
@@ -116,7 +116,7 @@ graph TD
 | **Multi-Omics & Spatial** (37 tools) | Stouffer meta-analysis, Squidpy clustering, cell segmentation | R packages + Python notebooks |
 | **Immunology & Treatment** (25 tools) | Immune deconvolution, neoantigen prediction, perturbation GNNs | Specialized pipelines |
 | **External Data** (12 tools) | GEO/SRA download, Open Targets drug-target associations | Manual database queries |
-| **Preventive Health** (11 tools) | CVD risk equations, lipid patterns, FH scoring (DLCN), PRS, APO risk, ACC/AHA statin logic | Spreadsheet calculators |
+| **Preventive Health** (14 tools) | CVD risk equations, lipid patterns, FH scoring (DLCN), renal drug constraints, lipid treatment targets, post-COVID CV risk, PRS, APO risk | Spreadsheet calculators |
 | **Reporting** (5 tools) | PDF report generation with integrated evidence | Manual report assembly |
 
 **Instead of:** Bioinformatician writes custom integration scripts
