@@ -85,6 +85,111 @@ _CoerceList = BeforeValidator(_coerce_list)
 
 
 # ---------------------------------------------------------------------------
+# XAI metadata helpers
+# ---------------------------------------------------------------------------
+
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual: Optional[str] = None,
+) -> dict:
+    """Standardized XAI metadata for all mcp-cardiometabolic tool outputs.
+
+    evidence_grade values:
+      "Class I (AHA/ACC)"     -- Strong recommendation; benefit clearly outweighs risk; RCT evidence
+      "Class I (ESC/EAS)"     -- Same strength, European guideline source
+      "Class IIa (AHA/ACC)"   -- Moderate recommendation; benefit likely outweighs risk
+      "Class IIb (AHA/ACC)"   -- Weak recommendation; benefit may outweigh risk
+      "Expert Consensus"      -- No RCT; guideline committee agreement
+      "Observational Data"    -- Cohort/epidemiological data; no RCT; higher uncertainty
+      "Research Only"         -- Platform-specific research estimate; no external guideline
+    """
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    # Filter None from key_drivers
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
+def _inline_confidence(value_str: str, xai: dict) -> str:
+    """Append confidence marker to a finding string when not high."""
+    level = xai.get("confidence_level", "high")
+    note = xai.get("confidence_note", "")
+    short_note = note.split(".")[0] if note else ""
+
+    if level == "moderate":
+        return f"{value_str} *(confidence: moderate -- {short_note})*"
+    elif level == "low":
+        return f"{value_str} !! *(confidence: low -- {short_note})*"
+    else:
+        return value_str
+
+
+_TOOL_LABELS = {
+    "biomarker_panel": "Biomarker Panel",
+    "cvd_risk_scores": "CVD Risk Score (Reynolds/ASCVD)",
+    "fh_clinical_score": "FH Clinical Score (DLCN)",
+    "lpa_status": "Lp(a) Status",
+    "lipid_pattern": "Lipid Pattern",
+    "lipid_treatment_targets": "Lipid Treatment Targets",
+    "renal_drug_constraints": "Renal Drug Constraints",
+    "postcovid_cv_risk": "Post-COVID CV Risk Adjustment",
+    "pregnancy_complication_risk": "Pregnancy Complication CV Risk",
+}
+
+_CONFIDENCE_ICONS = {"high": "OK", "moderate": "!!", "low": "XX"}
+
+
+def _build_evidence_table(xai_collection: dict) -> str:
+    """Build a plain-text Evidence Strength Summary table from collected xai_metadata."""
+    rows = []
+    for tool_key, xai in xai_collection.items():
+        if not xai:
+            continue
+        label = _TOOL_LABELS.get(tool_key, tool_key)
+        level = xai.get("confidence_level", "--")
+        icon = _CONFIDENCE_ICONS.get(level, "--")
+        grade = xai.get("evidence_grade", "--")
+        drivers = "; ".join(xai.get("key_drivers", []) or [])[:80]
+        rows.append((label, f"{icon} {level.capitalize()}", grade, drivers))
+
+    if not rows:
+        return ""
+
+    header = f"{'Finding':<40} {'Confidence':<18} {'Evidence Grade':<28} {'Key Drivers'}"
+    divider = "-" * 120
+    table_lines = [
+        "\n\nEVIDENCE STRENGTH SUMMARY",
+        "=" * 120,
+        header,
+        divider,
+    ]
+    for label, conf, grade, drivers in rows:
+        table_lines.append(f"{label:<40} {conf:<18} {grade:<28} {drivers}")
+
+    table_lines += [
+        divider,
+        "!!  Items with moderate/low confidence require additional clinical judgment.",
+        "XX  Low confidence items are research estimates only.",
+        "=" * 120,
+    ]
+    return "\n".join(table_lines)
+
+
+# ---------------------------------------------------------------------------
 # Tool implementations
 # ---------------------------------------------------------------------------
 
@@ -101,6 +206,7 @@ async def _assess_biomarker_panel_impl(
     non_hdl_cholesterol_mg_dl: Optional[float] = None,
     patient_sex: str = "female",
     patient_age: int = 67,
+    ldl_measured_directly: bool = False,
 ) -> Dict[str, Any]:
     """Interpret a cardiovascular biomarker panel against clinical reference ranges."""
     results = {}
@@ -159,12 +265,65 @@ async def _assess_biomarker_panel_impl(
 
         results[name] = entry
 
+    # XAI confidence logic
+    friedewald_invalid = (
+        triglycerides_mg_dl is not None
+        and triglycerides_mg_dl > 200
+        and ldl_mg_dl is not None
+        and not ldl_measured_directly
+    )
+    panel_values = [
+        ldl_mg_dl, hdl_mg_dl, total_cholesterol_mg_dl, triglycerides_mg_dl,
+        fasting_glucose_mg_dl, hba1c_percent, hscrp_mg_l, bp_systolic_mmhg,
+    ]
+    panel_incomplete = sum(1 for v in panel_values if v is not None) < 4
+
+    if friedewald_invalid:
+        conf = "low"
+        conf_note = (
+            "Calculated LDL (Friedewald equation) is unreliable at triglycerides >200 mg/dL. "
+            "LDL value may be underestimated. Direct LDL measurement recommended."
+        )
+    elif panel_incomplete or (ldl_mg_dl is not None and not ldl_measured_directly):
+        conf = "moderate"
+        conf_note = (
+            "One or more values are calculated rather than directly measured, "
+            "or panel is incomplete. Direct measurement preferred."
+        )
+    else:
+        conf = "high"
+        conf_note = "All values are directly measured laboratory results against validated reference ranges."
+
+    bio_drivers = [
+        f"Glucose {fasting_glucose_mg_dl} mg/dL" if fasting_glucose_mg_dl else None,
+        f"LDL {ldl_mg_dl} mg/dL" if ldl_mg_dl else None,
+        f"ApoB {apob_mg_dl} mg/dL" if apob_mg_dl else None,
+    ]
+    # Fallback if none of the primary drivers are available
+    if not any(bio_drivers):
+        provided = [k for k, v in panel.items() if v is not None]
+        bio_drivers = [f"Panel inputs: {', '.join(provided[:3]) if provided else 'none'}"]
+
+    xai = _build_xai_metadata(
+        confidence_level=conf,
+        confidence_note=conf_note,
+        key_drivers=bio_drivers,
+        guideline_version="AHA/ACC 2018 Cholesterol Guideline; ADA Standards of Care 2024",
+        evidence_grade="Class I (AHA/ACC)",
+        counterfactual=(
+            f"If LDL were reduced to target (<70 mg/dL for high-risk), "
+            f"atherogenic burden would decrease by approximately "
+            f"{round((ldl_mg_dl - 70) / ldl_mg_dl * 100)}%."
+        ) if ldl_mg_dl and ldl_mg_dl > 70 else None,
+    )
+
     return {
         "status": "success",
         "biomarkers": results,
         "flags": flags,
         "patient_sex": patient_sex,
         "patient_age": patient_age,
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
@@ -221,6 +380,39 @@ async def _calculate_cvd_risk_scores_impl(
 
     recommended = "reynolds" if patient_sex == "female" else "ascvd"
 
+    # XAI confidence logic
+    outside_validation = []
+    if age > 79 or age < 40:
+        outside_validation.append(f"age {age} is outside validated range (40-79)")
+    if patient_sex == "female":
+        outside_validation.append(
+            "Reynolds validated only in women; less robust for non-female patients"
+        ) if patient_sex != "female" else None
+
+    if not outside_validation:
+        conf = "high"
+        conf_note = "Patient characteristics fit the validated population range for this risk calculator."
+    else:
+        outside_validation = [v for v in outside_validation if v is not None]
+        conf = "moderate"
+        conf_note = (
+            f"Calculator may underestimate true risk. Known limitations: "
+            f"{'; '.join(outside_validation)}."
+        )
+
+    xai = _build_xai_metadata(
+        confidence_level=conf,
+        confidence_note=conf_note,
+        key_drivers=[
+            f"Systolic BP {systolic_bp} mmHg",
+            f"Total cholesterol {total_cholesterol} mg/dL, HDL {hdl} mg/dL",
+            f"hsCRP {hscrp} mg/L" if patient_sex == "female" else f"Diabetes: {diabetes}",
+        ],
+        guideline_version="Reynolds Risk Score (Ridker 2007); ACC/AHA PCE 2013",
+        evidence_grade="Class I (AHA/ACC)",
+        counterfactual=None,
+    )
+
     result = {
         "status": "success",
         "reynolds": reynolds,
@@ -228,6 +420,7 @@ async def _calculate_cvd_risk_scores_impl(
         "ascvd": ascvd,
         "recommended_primary_score": recommended,
         "statin_consideration": statin,
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
     if DRY_RUN:
@@ -251,6 +444,17 @@ async def _assess_lpa_status_impl(
                 "reclassification and more aggressive LDL targets are warranted."
             ),
             "clinical_urgency": "high",
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="high",
+                confidence_note=(
+                    "Recommendation to measure Lp(a) is a Class I guideline recommendation. "
+                    "No measurement data to interpret yet."
+                ),
+                key_drivers=["Lp(a) not yet measured -- recommend one-time test"],
+                guideline_version="EAS Lp(a) Consensus Statement 2022; ACC/AHA Cholesterol Guideline 2018",
+                evidence_grade="Class I (ESC/EAS)",
+                counterfactual=None,
+            ),
             "dry_run": DRY_RUN,
         }
 
@@ -270,6 +474,21 @@ async def _assess_lpa_status_impl(
         "lpa_mg_dl": lpa_mg_dl,
         "category": category,
         "implications": implications,
+        "xai_metadata": _build_xai_metadata(
+            confidence_level="high",
+            confidence_note=(
+                "Lp(a) is a direct laboratory measurement. Interpretation thresholds "
+                "are from EAS 2022 Lp(a) Consensus Statement and ACC/AHA 2018 Cholesterol "
+                "Guideline. Lp(a) is genetically fixed -- a single lifetime measurement is sufficient."
+            ),
+            key_drivers=[f"Lp(a): {lpa_mg_dl} mg/dL (threshold for elevated risk: >=50 mg/dL)"],
+            guideline_version="EAS Lp(a) Consensus Statement 2022; ACC/AHA Cholesterol Guideline 2018",
+            evidence_grade="Class I (ESC/EAS)",
+            counterfactual=(
+                f"If Lp(a) were >=50 mg/dL, it would be flagged as an independent "
+                "cardiovascular risk factor requiring targeted therapy consideration."
+            ) if lpa_mg_dl < 50 else None,
+        ),
         "dry_run": DRY_RUN,
     }
 
@@ -325,6 +544,72 @@ async def _generate_preventive_report_impl(
     monitoring = get_monitoring_schedule(risk_category, on_treatment=True)
     lifestyle = get_lifestyle_recommendations()
 
+    # Harvest XAI metadata by internally calling _impl functions
+    xai_collection = {}
+
+    biomarker_result = await _assess_biomarker_panel_impl(
+        ldl_mg_dl=biomarker_panel.get("ldl_mg_dl"),
+        hdl_mg_dl=biomarker_panel.get("hdl_mg_dl"),
+        total_cholesterol_mg_dl=biomarker_panel.get("total_cholesterol_mg_dl"),
+        triglycerides_mg_dl=biomarker_panel.get("triglycerides_mg_dl"),
+        fasting_glucose_mg_dl=biomarker_panel.get("fasting_glucose_mg_dl"),
+        hba1c_percent=biomarker_panel.get("hba1c_percent"),
+        hscrp_mg_l=biomarker_panel.get("hscrp_mg_l"),
+        bp_systolic_mmhg=biomarker_panel.get("bp_systolic_mmhg"),
+        apob_mg_dl=biomarker_panel.get("apob_mg_dl"),
+    )
+    xai_collection["biomarker_panel"] = biomarker_result.get("xai_metadata", {})
+
+    risk_score_result = await _calculate_cvd_risk_scores_impl(
+        age=67,
+        systolic_bp=biomarker_panel.get("bp_systolic_mmhg", 138),
+        total_cholesterol=biomarker_panel.get("total_cholesterol_mg_dl", 195),
+        hdl=biomarker_panel.get("hdl_mg_dl", 58),
+        hscrp=biomarker_panel.get("hscrp_mg_l", 1.8),
+    )
+    xai_collection["cvd_risk_scores"] = risk_score_result.get("xai_metadata", {})
+
+    # Apply inline confidence markers to executive summary
+    executive_summary = [
+        _inline_confidence(executive_summary[0], xai_collection.get("cvd_risk_scores", {})),
+        _inline_confidence(executive_summary[1], xai_collection.get("biomarker_panel", {})),
+    ] + executive_summary[2:]
+
+    # Build evidence table
+    evidence_table_str = _build_evidence_table(xai_collection)
+
+    # Evidence strength summary
+    evidence_strength_summary = {
+        "table_text": evidence_table_str,
+        "confidence_counts": {
+            "high": sum(1 for x in xai_collection.values() if x.get("confidence_level") == "high"),
+            "moderate": sum(1 for x in xai_collection.values() if x.get("confidence_level") == "moderate"),
+            "low": sum(1 for x in xai_collection.values() if x.get("confidence_level") == "low"),
+        },
+        "lowest_confidence_items": [
+            _TOOL_LABELS.get(k, k)
+            for k, v in xai_collection.items()
+            if v.get("confidence_level") == "low"
+        ],
+        "action_required": any(
+            v.get("confidence_level") == "low"
+            for v in xai_collection.values()
+        ),
+    }
+
+    report_xai = _build_xai_metadata(
+        confidence_level="moderate",
+        confidence_note=(
+            "Report aggregates findings of varying confidence. "
+            "See evidence_strength_summary for per-finding breakdown."
+        ),
+        key_drivers=[
+            "See evidence_strength_summary.lowest_confidence_items for items requiring clinical judgment"
+        ],
+        guideline_version="Multiple -- see individual tool citations",
+        evidence_grade="Expert Consensus",
+    )
+
     return {
         "status": "success",
         "patient_id": patient_id,
@@ -335,11 +620,13 @@ async def _generate_preventive_report_impl(
         "priority_actions": priority_actions,
         "monitoring_schedule": monitoring,
         "lifestyle_recommendations": lifestyle,
+        "evidence_strength_summary": evidence_strength_summary,
         "disclaimer": (
             "This AI-generated preventive health summary must be reviewed by your "
             "healthcare team before any treatment decisions. It is not a substitute "
             "for professional medical advice. Not an FDA-cleared medical device."
         ),
+        "xai_metadata": report_xai,
         "dry_run": DRY_RUN,
     }
 
@@ -721,6 +1008,44 @@ async def _assess_pregnancy_complication_cv_risk_impl(
             "Preventive cardiology referral strongly recommended."
         )
 
+    # XAI confidence logic
+    has_preeclampsia = any(c in recognized for c in ("preeclampsia", "eclampsia"))
+    if has_preeclampsia and not double_injury:
+        preg_conf = "high"
+        preg_conf_note = (
+            "Preeclampsia cardiovascular risk multiplier (2x) is a 2025 AHA/ACC Class I "
+            "recommendation grounded in large meta-analyses. High confidence for this complication."
+        )
+    elif double_injury:
+        preg_conf = "moderate"
+        preg_conf_note = (
+            "Preeclampsia multiplier is AHA/ACC Class I (high evidence). The additional "
+            "compounding effect of severe COVID-19 endothelial injury is supported by "
+            "mechanism-based evidence but no combined validated risk calculator exists."
+        )
+    else:
+        preg_conf = "moderate"
+        preg_conf_note = (
+            "Non-preeclampsia adverse pregnancy outcomes carry Class IIa evidence for "
+            "CV risk enhancement. Effect sizes are less precisely characterized than preeclampsia."
+        )
+
+    xai = _build_xai_metadata(
+        confidence_level=preg_conf,
+        confidence_note=preg_conf_note,
+        key_drivers=[
+            f"Complications recognized: {', '.join(recognized)}" if recognized else "No recognized complications",
+            f"Risk enhancement: {category} (CAD multiplier: {max_cad}x)",
+            "Double endothelial injury (preeclampsia + COVID)" if double_injury else None,
+        ],
+        guideline_version="2025 AHA/ACC Hypertension Guideline; 2025 ESC CVD and Pregnancy Guidelines",
+        evidence_grade="Class I (AHA/ACC)" if has_preeclampsia else "Class IIa (AHA/ACC)",
+        counterfactual=(
+            "Without the preeclampsia history, the 2x CAD/stroke risk multiplier "
+            "would not apply and standard risk calculators would be uncorrected."
+        ) if has_preeclampsia else None,
+    )
+
     return {
         "patient_id": patient_id,
         "complications_reported": complications,
@@ -742,6 +1067,7 @@ async def _assess_pregnancy_complication_cv_risk_impl(
             "and RAAS disruption). The combined atherogenic burden is not modeled by any standard "
             "risk calculator. This is a research flag — requires clinician review."
         ) if double_injury else None,
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
@@ -943,6 +1269,40 @@ async def _interpret_lipid_pattern_impl(
             "Statin + lifestyle; consider adding ezetimibe or PCSK9 if needed.",
         ]
 
+    # XAI confidence logic
+    apob_ldl_concordance_status = (
+        apob_ldl_concordance.get("status", "unknown") if apob_ldl_concordance else "not assessed"
+    )
+    if not friedewald_valid:
+        lipid_conf = "low"
+        lipid_conf_note = (
+            "Pattern classification is based on a calculated LDL that may be inaccurate "
+            f"(triglycerides {triglycerides} mg/dL > 200 mg/dL threshold). "
+            "Direct LDL measurement recommended to confirm pattern."
+        )
+    elif ldl_measured_directly and all([ldl_cholesterol, hdl_cholesterol, triglycerides]):
+        lipid_conf = "high"
+        lipid_conf_note = "Complete panel with directly measured LDL. Pattern classification is reliable."
+    else:
+        lipid_conf = "moderate"
+        lipid_conf_note = "Calculated LDL within acceptable range, but panel may be incomplete."
+
+    xai = _build_xai_metadata(
+        confidence_level=lipid_conf,
+        confidence_note=lipid_conf_note,
+        key_drivers=[
+            f"Triglycerides {triglycerides} mg/dL -- drove pattern classification" if triglycerides else None,
+            f"LDL {ldl_cholesterol} mg/dL ({'directly measured' if ldl_measured_directly else 'calculated'})" if ldl_cholesterol else None,
+            f"ApoB/LDL concordance: {apob_ldl_concordance_status}" if apob else None,
+        ],
+        guideline_version="ESC/EAS Dyslipidaemia Guidelines 2023",
+        evidence_grade="Expert Consensus",
+        counterfactual=(
+            f"If triglycerides were <150 mg/dL, pattern would change from '{pattern}' "
+            "to 'isolated_hypercholesterolemia' and Friedewald LDL would be reliable."
+        ) if triglycerides and triglycerides >= 150 else None,
+    )
+
     return {
         "patient_id": patient_id,
         "pattern": pattern,
@@ -954,6 +1314,7 @@ async def _interpret_lipid_pattern_impl(
         "apob_ldl_concordance": apob_ldl_concordance,
         "treatment_implications": implications,
         "clinical_note": "RESEARCH ONLY — NOT FOR CLINICAL USE",
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
@@ -1101,6 +1462,52 @@ async def _calculate_fh_clinical_score_impl(
             "Confirm with cardiologist and insurer."
         )
 
+    # XAI confidence logic
+    assessed_categories = sum([
+        1 if (family_hx_premature_cvd or family_hx_high_ldl or family_hx_tendon_xanthomas) else 0,
+        1 if (personal_premature_cvd or personal_cerebrovascular_disease) else 0,
+        1 if (tendon_xanthomas or corneal_arcus_under_45) else 0,
+        1,  # LDL always assessed
+        1 if genetic_test_performed else 0,
+    ])
+
+    if assessed_categories >= 4 and genetic_test_performed:
+        fh_conf = "high"
+        fh_conf_note = "All or nearly all DLCN categories assessed including genetic test result."
+    elif assessed_categories >= 3:
+        fh_conf = "moderate"
+        fh_conf_note = (
+            f"{assessed_categories} of 5 DLCN categories assessed. "
+            "Physical exam findings and/or genetic test may be missing -- score may be underestimated."
+        )
+    else:
+        fh_conf = "low"
+        fh_conf_note = (
+            "Only LDL and limited history available. Physical exam (xanthomas, corneal arcus) "
+            "and genetic test not provided -- DLCN score is a floor estimate only."
+        )
+
+    top_drivers = sorted([
+        (ldl_points, f"LDL {ldl_cholesterol_mgdl} mg/dL (+{ldl_points} DLCN pts)"),
+        (fam_hx_points, f"Family history (+{fam_hx_points} DLCN pts)"),
+        (clinical_points, f"Clinical CVD history (+{clinical_points} DLCN pts)"),
+        (exam_points, f"Physical exam (+{exam_points} DLCN pts)"),
+        (dna_points, f"DNA/genetic result (+{dna_points} DLCN pts)"),
+    ], reverse=True)
+    top_3_drivers = [d[1] for d in top_drivers if d[0] > 0][:3]
+
+    xai = _build_xai_metadata(
+        confidence_level=fh_conf,
+        confidence_note=fh_conf_note,
+        key_drivers=top_3_drivers if top_3_drivers else [f"LDL {ldl_cholesterol_mgdl} mg/dL (only input provided)"],
+        guideline_version="EAS Familial Hypercholesterolaemia Guidelines 2023; ACC/AHA Cholesterol 2018",
+        evidence_grade="Class I (ESC/EAS)" if total >= 6 else "Expert Consensus",
+        counterfactual=(
+            f"If LDL were <155 mg/dL (0 LDL points), score would be {total - ldl_points} "
+            f"({'Unlikely FH' if (total - ldl_points) < 3 else 'Possible FH'})."
+        ),
+    )
+
     return {
         "patient_id": patient_id,
         "dlcn_score": total,
@@ -1131,6 +1538,7 @@ async def _calculate_fh_clinical_score_impl(
             "research tool — requires clinician review before any diagnostic or "
             "treatment decision."
         ),
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
@@ -1511,6 +1919,36 @@ async def _assess_renal_drug_constraints_impl(
     elif egfr >= 30:
         top_line.append(f"Metformin requires dose reduction at eGFR {egfr}")
 
+    # XAI confidence logic
+    if single_kidney:
+        renal_conf = "moderate"
+        renal_conf_note = (
+            "eGFR-based thresholds are from FDA prescribing information and KDIGO guidelines "
+            "(high evidence). The single-kidney risk modifier is a clinical extrapolation -- "
+            "patients with one functioning kidney are underrepresented in drug safety trials."
+        )
+    else:
+        renal_conf = "high"
+        renal_conf_note = (
+            "Drug thresholds derived directly from FDA prescribing information "
+            "and KDIGO 2024 CKD guidelines."
+        )
+
+    xai = _build_xai_metadata(
+        confidence_level=renal_conf,
+        confidence_note=renal_conf_note,
+        key_drivers=[
+            f"eGFR {egfr} mL/min/1.73m2 (Stage {stage})",
+            f"Functional kidney count: {functional_kidney_count}",
+        ],
+        guideline_version="KDIGO 2024 CKD Guidelines; FDA Prescribing Information",
+        evidence_grade="Class I (AHA/ACC)" if not single_kidney else "Expert Consensus",
+        counterfactual=(
+            f"If eGFR recovers to >90 mL/min/1.73m2, all drugs currently flagged "
+            "'use with monitoring' would return to fully acceptable status."
+        ) if egfr < 90 else None,
+    )
+
     result = {
         "patient_id": patient_id,
         "egfr": egfr,
@@ -1525,6 +1963,7 @@ async def _assess_renal_drug_constraints_impl(
             "clinician review of full medication list, allergies, and individual "
             "risk/benefit assessment."
         ),
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
@@ -1712,6 +2151,27 @@ async def _calculate_lipid_treatment_targets_impl(
             "metabolism, safe at any eGFR)."
         )
 
+    xai = _build_xai_metadata(
+        confidence_level="moderate",
+        confidence_note=(
+            "LDL target thresholds are from ACC/AHA Class I guidelines (high evidence). "
+            "Projected LDL reductions at each therapy step are population averages from "
+            "landmark RCTs (FOURIER, ODYSSEY-OUTCOMES, IMPROVE-IT, 4S). Individual "
+            "response varies +/-15-20%. Actual LDL on therapy requires measurement."
+        ),
+        key_drivers=[
+            f"Starting LDL: {current_ldl} mg/dL",
+            f"Effective risk tier: {effective_tier} (LDL target: {ldl_target} mg/dL)",
+            f"FH status: {fh_status}" + (" -- risk tier upgraded" if fh_upgrade else ""),
+        ],
+        guideline_version="ACC Expert Consensus 2022; ESC Dyslipidaemias 2023",
+        evidence_grade="Class I (AHA/ACC)",
+        counterfactual=(
+            f"If starting LDL were already at {ldl_target} mg/dL (target), "
+            "no additional lipid-lowering therapy would be required for LDL alone."
+        ),
+    )
+
     return {
         "patient_id": patient_id,
         "current_ldl": current_ldl,
@@ -1748,6 +2208,7 @@ async def _calculate_lipid_treatment_targets_impl(
             "population averages from clinical trials. Individual response varies. "
             "Drug selection requires clinician assessment."
         ),
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
@@ -1928,6 +2389,39 @@ async def _assess_postcovid_cv_risk_impl(
         and severity in ("severe", "hospitalized", "icu")
     )
 
+    # XAI confidence logic
+    active_mechanisms = [m["mechanism"] for m in mechanisms if m["present"]]
+    severity_upgrade = _SEVERITY_UPGRADE.get(severity, 0)
+    if severity in ("severe", "hospitalized", "icu"):
+        covid_conf = "moderate"
+        covid_conf_note = (
+            "Risk tier adjustment is based on large observational cohort studies "
+            "(Xie & Al-Aly 2022, N>150,000; Bhatt et al. 2022). However, no "
+            "RCT-validated COVID-19 cardiovascular risk calculator exists."
+        )
+    else:
+        covid_conf = "low"
+        covid_conf_note = (
+            "Limited data exists for mild/moderate COVID-19 cardiovascular risk "
+            "quantification. This is a research estimate only."
+        )
+
+    xai = _build_xai_metadata(
+        confidence_level=covid_conf,
+        confidence_note=covid_conf_note,
+        key_drivers=[
+            f"COVID severity: {severity} (drove {severity_upgrade}-step risk tier change)",
+            f"Double endothelial injury: {'present' if double_injury else 'absent'}",
+            f"Complications: {', '.join(active_mechanisms[:2]) if active_mechanisms else 'none'}",
+        ],
+        guideline_version="Xie & Al-Aly 2022 (Nature Medicine); Bhatt et al. 2022 (Lancet); ACC COVID-19 CV Task Force 2023",
+        evidence_grade="Observational Data",
+        counterfactual=(
+            f"If COVID severity were 'mild', no risk tier upgrade would be applied "
+            f"(baseline tier '{baseline_risk_tier}' would be unchanged)."
+        ),
+    )
+
     return {
         "patient_id": patient_id,
         "covid_severity": severity,
@@ -1941,7 +2435,7 @@ async def _assess_postcovid_cv_risk_impl(
             else "No change"
         ),
         "mechanisms_flagged": mechanisms,
-        "active_mechanisms": [m["mechanism"] for m in mechanisms if m["present"]],
+        "active_mechanisms": active_mechanisms,
         "double_endothelial_injury_present": double_injury,
         "cardiac_workup_recommended": workup,
         "calculator_limitation_note": (
@@ -1962,6 +2456,7 @@ async def _assess_postcovid_cv_risk_impl(
             "RESEARCH ONLY — NOT FOR CLINICAL USE. Risk tier adjustment is a "
             "research estimate. Requires clinician review."
         ),
+        "xai_metadata": xai,
         "dry_run": DRY_RUN,
     }
 
