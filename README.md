@@ -17,43 +17,6 @@
 
 Standard oncology workup (BRCA1/2, HRD panel, tumor genomic panel) generates **no immunotherapy or investigational hypotheses**. For preventive health, standard lipid panels and population genetic screens miss key risk factors. Manual multi-modal analysis across genomics, spatial transcriptomics, and clinical data is clinically impractical -- the platform automates it.
 
-## The Platform
-
-A multi-server MCP architecture orchestrated by AI (Claude + Gemini) executes a 5-stage pipeline:
-
-```mermaid
-flowchart LR
-    Z["0 De-ID<br/>Preprocessing"] --> A["1 Data<br/>Acquisition"]
-    A --> B["2 Spatial<br/>Deconvolution"]
-    B --> C["3 Target<br/>Profiling"]
-    C --> D["4 Causal<br/>Inference"]
-    D --> E["5 Report"]
-
-    subgraph servers [" "]
-        direction TB
-        S0["De-identify · JSON · PDF · DOCX · VCF"]
-        S1["EHR · GEO · TCGA"]
-        S2["Spatial · DeepCell · CIBERSORTx"]
-        S3["OpenTargets · Neoantigen"]
-        S4["Perturbation · Quantum"]
-        S5["Patient Report"]
-    end
-
-    Z --- S0
-    A --- S1
-    B --- S2
-    C --- S3
-    D --- S4
-    E --- S5
-
-    AI(["AI Orchestrator<br/>Claude + Gemini"]) -.-> Z
-    AI -.-> A
-    AI -.-> B
-    AI -.-> C
-    AI -.-> D
-    AI -.-> E
-```
-
 ### Architecture at a glance
 
 ```
