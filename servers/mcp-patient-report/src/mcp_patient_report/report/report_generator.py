@@ -60,6 +60,21 @@ class ReportGenerator:
         template = self.env.get_template("patient_report_full.html.j2")
         return template.render(report=report_data, **extra_context)
 
+    def render_clinical_report(self, report_data: PatientReportData, **extra_context) -> str:
+        """
+        Render a dense, clinician-facing technical report.
+
+        Args:
+            report_data: Validated PatientReportData model
+            **extra_context: Additional template context (e.g. xai_collection,
+                evidence_strength_summary, xai_tool_labels).
+
+        Returns:
+            Rendered HTML string
+        """
+        template = self.env.get_template("clinical_report.html.j2")
+        return template.render(report=report_data, **extra_context)
+
     def render_onepage_summary(self, report_data: PatientReportData, **extra_context) -> str:
         """
         Render a one-page quick reference summary.
@@ -85,7 +100,7 @@ class ReportGenerator:
 
         Args:
             report_data: Validated PatientReportData model
-            report_type: Type of report ("full" or "onepage")
+            report_type: Type of report ("full", "onepage", or "clinical")
             **extra_context: Additional template context forwarded to sub-methods.
 
         Returns:
@@ -98,10 +113,12 @@ class ReportGenerator:
             return self.render_full_report(report_data, **extra_context)
         elif report_type == "onepage":
             return self.render_onepage_summary(report_data, **extra_context)
+        elif report_type == "clinical":
+            return self.render_clinical_report(report_data, **extra_context)
         else:
             raise ValueError(
                 f"Unknown report type: {report_type}. "
-                f"Supported types: full, onepage"
+                f"Supported types: full, onepage, clinical"
             )
 
     def validate_templates(self) -> dict:
@@ -115,6 +132,7 @@ class ReportGenerator:
             "_base.html.j2",
             "patient_report_full.html.j2",
             "patient_report_onepage.html.j2",
+            "clinical_report.html.j2",
         ]
 
         results = {

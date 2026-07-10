@@ -1,0 +1,285 @@
+{
+  "patient_info": {
+    "name": "Sarah Anderson",
+    "age": 58,
+    "sex": "Female",
+    "patient_id": "PAT001-OVC-2025",
+    "diagnosis": "Stage IV High-Grade Serous Ovarian Cancer"
+  },
+  "diagnosis_summary": {
+    "cancer_type": "Ovarian Cancer",
+    "subtype": "High-Grade Serous Carcinoma",
+    "stage": "Stage IV",
+    "grade": "High Grade (Grade 3)",
+    "plain_language_description": "You have an advanced form of ovarian cancer called high-grade serous carcinoma. This type starts in the fallopian tubes or ovaries and has spread to other areas. While this is a serious diagnosis, your genetic profile opens doors to targeted treatments that weren't available a few years ago.",
+    "key_positive_factors": [
+      "Your BRCA1 mutation makes you eligible for PARP inhibitor therapy, which can be very effective",
+      "Your tumor shows moderate immune cell activity, which may help your response to treatment",
+      "You are in good overall health, which helps with treatment tolerance"
+    ],
+    "key_challenges": [
+      "The cancer is now platinum-resistant, meaning some standard chemotherapy options are less effective",
+      "The disease has spread beyond the pelvis (Stage IV)"
+    ]
+  },
+  "genomic_findings": [
+    {
+      "gene": "BRCA1",
+      "variant": "Pathogenic germline mutation",
+      "significance": "Pathogenic",
+      "variant_allele_frequency": 0.48,
+      "plain_language": "You carry a change in the BRCA1 gene (a gene that helps repair DNA in your cells). This change increased your risk of developing ovarian cancer, but it also means your cancer may respond well to a type of treatment called PARP inhibitors. These drugs work by taking advantage of the DNA repair problem in cancer cells.",
+      "actionability": "PARP inhibitors (olaparib, niraparib, rucaparib) are FDA-approved for BRCA-mutant ovarian cancer",
+      "icon": "positive"
+    },
+    {
+      "gene": "TP53",
+      "variant": "R175H missense mutation",
+      "significance": "Pathogenic",
+      "variant_allele_frequency": 0.85,
+      "plain_language": "Your tumor has a change in the TP53 gene, which normally acts as a 'brake' to stop cells from growing out of control. This mutation is very common in high-grade serous ovarian cancer (found in over 95% of cases) and confirms the diagnosis. While there's no specific drug targeting this mutation yet, researchers are actively working on new approaches.",
+      "actionability": null,
+      "icon": "neutral"
+    },
+    {
+      "gene": "PIK3CA",
+      "variant": "E545K activating mutation",
+      "significance": "Pathogenic",
+      "variant_allele_frequency": 0.42,
+      "plain_language": "Your tumor has a change in the PIK3CA gene that makes cancer cells grow faster by activating a growth pathway. This mutation may be targetable with PI3K inhibitors, which are being studied in clinical trials.",
+      "actionability": "PI3K inhibitors (alpelisib) may be available through clinical trials",
+      "icon": "caution"
+    },
+    {
+      "gene": "PTEN",
+      "variant": "R130* nonsense mutation",
+      "significance": "Pathogenic",
+      "variant_allele_frequency": 0.55,
+      "plain_language": "Your tumor has lost function of the PTEN gene, which normally helps control cell growth. This loss works together with the PIK3CA mutation to drive cancer growth, but it may also make the cancer more sensitive to certain targeted therapies.",
+      "actionability": "May enhance response to PI3K/AKT pathway inhibitors",
+      "icon": "caution"
+    }
+  ],
+  "spatial_findings": {
+    "tumor_microenvironment_summary": "Analysis of your tumor tissue shows distinct regions with different characteristics. The tumor core contains actively dividing cancer cells, surrounded by areas of stromal (supporting) tissue and pockets of immune cells trying to fight the cancer. There are also some regions with low oxygen (hypoxic zones), which can make treatment more challenging.",
+    "immune_infiltration": "mixed",
+    "key_spatial_patterns": [
+      "Proliferating tumor cells clustered in the core region (27% of tissue)",
+      "Moderate CD8+ T cell infiltration at tumor margins (17% of tissue)",
+      "Hypoxic regions identified near tumor center (12% of tissue)",
+      "Cancer-associated fibroblasts forming a barrier around tumor nests"
+    ],
+    "plain_language": "Your tumor has a 'mixed' immune status - there are immune cells present and trying to fight the cancer, but they're mostly at the edges rather than inside the tumor. This suggests your immune system is responding, but the cancer has developed some ways to keep immune cells out. Treatments that help immune cells penetrate the tumor (like immunotherapy combinations) might be worth discussing with your care team."
+  },
+  "histology_findings": {
+    "key_observations": [
+      "High-grade serous carcinoma with papillary and solid growth patterns",
+      "Marked nuclear atypia (abnormal-looking cell nuclei)",
+      "High mitotic rate (25 mitoses per 10 high-power fields) indicating rapid growth",
+      "Psammoma bodies present (calcium deposits typical of ovarian cancer)",
+      "Lymphovascular invasion identified"
+    ],
+    "cell_counts": {
+      "tumor_cells": 2234,
+      "immune_cells": 412,
+      "stromal_cells": 891,
+      "proliferating_cells": 961
+    },
+    "plain_language": "Under the microscope, your tumor shows the classic features of high-grade serous ovarian cancer. The cancer cells are actively dividing, which explains the aggressive behavior but also means they may be sensitive to treatments that target rapidly dividing cells. The presence of immune cells is encouraging and supports considering immunotherapy options."
+  },
+  "treatment_options": [
+    {
+      "name": "Olaparib (Lynparza)",
+      "type": "Targeted Therapy (PARP Inhibitor)",
+      "evidence_level": "FDA Approved",
+      "expected_response_rate": "60-70% response rate in BRCA-mutant ovarian cancer",
+      "plain_language_description": "Olaparib is a pill you take twice daily that blocks an enzyme called PARP, which cancer cells with BRCA mutations need to repair their DNA. Without this repair ability, the cancer cells die. This is called 'synthetic lethality' - the drug exploits the weakness created by your BRCA1 mutation.",
+      "common_side_effects": ["Nausea", "Fatigue", "Anemia (low red blood cells)", "Low platelet count"],
+      "why_recommended": "Your BRCA1 mutation makes you an ideal candidate for PARP inhibitor therapy. This drug has shown excellent results in patients with your genetic profile."
+    },
+    {
+      "name": "Bevacizumab (Avastin)",
+      "type": "Targeted Therapy (Anti-angiogenic)",
+      "evidence_level": "NCCN Category 1",
+      "expected_response_rate": "3-4 month improvement in progression-free survival",
+      "plain_language_description": "Bevacizumab is an IV infusion that blocks the blood vessel growth that tumors need to survive and grow. By cutting off the tumor's blood supply, it can slow cancer growth and is often combined with other treatments.",
+      "common_side_effects": ["High blood pressure", "Protein in urine", "Bleeding risk", "Delayed wound healing"],
+      "why_recommended": "Your spatial analysis showed your tumor has areas with low oxygen (hypoxia) and active blood vessel growth (VEGFA expression), suggesting it depends on new blood vessel formation. Blocking this could help control the cancer."
+    },
+    {
+      "name": "Mirvetuximab Soravtansine (Elahere)",
+      "type": "Antibody-Drug Conjugate",
+      "evidence_level": "FDA Approved",
+      "expected_response_rate": "32% overall response rate in platinum-resistant disease",
+      "plain_language_description": "This is a newer type of treatment that delivers chemotherapy directly to cancer cells. It uses an antibody to find cancer cells that have a protein called folate receptor alpha on their surface, then releases chemotherapy inside those cells. It's like a 'guided missile' approach to treatment.",
+      "common_side_effects": ["Vision changes (blurred vision)", "Fatigue", "Nausea", "Nerve tingling"],
+      "why_recommended": "This is FDA-approved for platinum-resistant ovarian cancer like yours. Your care team would test your tumor for folate receptor alpha expression to confirm you're a good candidate."
+    }
+  ],
+  "clinical_trials": [
+    {
+      "nct_id": "NCT04729387",
+      "title": "PARP Inhibitor + Immunotherapy Combination in BRCA-Mutant Ovarian Cancer",
+      "phase": "Phase 2",
+      "status": "Recruiting",
+      "location": "Seattle Cancer Center (15 miles)",
+      "plain_language_why_relevant": "This trial combines a PARP inhibitor (which works well with your BRCA1 mutation) with an immunotherapy drug. Early results suggest this combination may work better than either drug alone. Your BRCA1 mutation and the immune activity we saw in your spatial analysis make you a potentially good fit.",
+      "contact_info": "Call 206-555-TRIAL or email trials@seattlecancer.org"
+    },
+    {
+      "nct_id": "NCT05123456",
+      "title": "PI3K Inhibitor for Ovarian Cancer with PIK3CA Mutations",
+      "phase": "Phase 1/2",
+      "status": "Recruiting",
+      "location": "University of Washington Medical Center (8 miles)",
+      "plain_language_why_relevant": "Your tumor has a PIK3CA mutation, which this trial specifically targets. This is a newer drug that may help control cancer growth driven by this genetic change.",
+      "contact_info": "Call 206-555-UWMC"
+    }
+  ],
+  "monitoring_plan": {
+    "schedule": [
+      {
+        "test_name": "CA-125 Blood Test",
+        "frequency": "Every 3 months",
+        "purpose": "Tracks a protein that can rise when ovarian cancer is active. We use this to monitor how well treatment is working."
+      },
+      {
+        "test_name": "CT Scan (Chest, Abdomen, Pelvis)",
+        "frequency": "Every 3-4 months",
+        "purpose": "Takes detailed pictures to check tumor size and look for any new areas of concern."
+      },
+      {
+        "test_name": "Complete Blood Count (CBC)",
+        "frequency": "Every 2-4 weeks during treatment",
+        "purpose": "Monitors your blood cells, as many cancer treatments can temporarily lower blood counts."
+      },
+      {
+        "test_name": "Kidney and Liver Function Tests",
+        "frequency": "Every 4-6 weeks during treatment",
+        "purpose": "Makes sure your organs are handling the treatment well."
+      }
+    ],
+    "warning_signs": [
+      "Severe or worsening abdominal pain or bloating",
+      "Difficulty breathing or chest pain",
+      "Fever over 100.4\u00b0F (38\u00b0C)",
+      "Unusual bleeding or bruising",
+      "Severe nausea, vomiting, or inability to keep food down",
+      "New or worsening leg swelling",
+      "Confusion or significant changes in thinking"
+    ],
+    "who_to_contact": "Your oncology nurse navigator, Maria Garcia, RN: 206-555-0150 (Mon-Fri 8am-5pm) or the 24-hour oncology line: 206-555-0199"
+  },
+  "family_implications": {
+    "has_germline_findings": true,
+    "germline_findings_plain_language": "Your BRCA1 mutation was inherited (germline), meaning it's present in all your cells, not just the cancer. This has important implications for your family members, who may also carry this mutation and have increased cancer risks.",
+    "recommended_actions": [
+      "Your sister and any daughters should strongly consider genetic testing for BRCA1",
+      "Male relatives (brothers, sons) can also carry and pass on BRCA1 mutations, and have increased risks of prostate and other cancers",
+      "Children have a 50% chance of inheriting the mutation",
+      "Genetic counseling can help family members understand their options for testing and risk management"
+    ],
+    "genetic_counseling_recommended": true
+  },
+  "support_resources": [
+    {
+      "name": "FORCE (Facing Our Risk of Cancer Empowered)",
+      "type": "patient_advocacy",
+      "phone": "866-288-7475",
+      "url": "https://www.facingourrisk.org",
+      "description": "National organization for people with hereditary cancer, including BRCA mutations. Offers peer support, educational resources, and advocacy."
+    },
+    {
+      "name": "Ovarian Cancer Research Alliance",
+      "type": "support_group",
+      "phone": "866-399-6262",
+      "url": "https://ocrahope.org",
+      "description": "Provides support services, educational resources, and connects patients with the latest research advances."
+    },
+    {
+      "name": "Seattle Cancer Center Financial Counseling",
+      "type": "financial_assistance",
+      "phone": "206-555-0175",
+      "url": null,
+      "description": "Our financial counselors can help navigate insurance, identify co-pay assistance programs, and connect you with foundation grants."
+    },
+    {
+      "name": "Cancer Support Community",
+      "type": "mental_health",
+      "phone": "888-793-9355",
+      "url": "https://www.cancersupportcommunity.org",
+      "description": "Free counseling, support groups, and wellness programs for cancer patients and families."
+    }
+  ],
+  "hospital_name": "Seattle Cancer Center",
+  "hospital_logo_path": null,
+  "tmb_data": {
+    "mutations_per_mb": 3.5,
+    "total_mutations": 112,
+    "percentile": "32nd percentile for HGSOC",
+    "category": "Low"
+  },
+  "hrd_data": {
+    "hrd_score": 44,
+    "hrd_positive": true,
+    "loh": 18,
+    "tai": 14,
+    "lst": 12,
+    "brca_status": {"gene": "BRCA1", "status": "mutated"}
+  },
+  "neoantigen_data": {
+    "estimated_neoantigens": 42,
+    "strong_binders": 8,
+    "weak_binders": 17,
+    "top_binding_results": [
+      {
+        "peptide": "HMTEVVRHC",
+        "allele": "HLA-A*02:01",
+        "ic50_nm": 12.4,
+        "percentile_rank": 0.32,
+        "binder_level": "strong_binder",
+        "source_gene": "TP53",
+        "source_mutation": "R175H"
+      }
+    ]
+  },
+  "perturbation_results": [
+    {
+      "treatment": "NNMT+STAT3",
+      "cell_type": "tumor_core",
+      "top_effects": [
+        {"gene": "VEGFA", "direction": "down", "magnitude": -1.85},
+        {"gene": "CD274", "direction": "up", "magnitude": 1.42},
+        {"gene": "CXCL9", "direction": "up", "magnitude": 1.15}
+      ],
+      "interpretation": "Dual perturbation of NNMT and STAT3 is predicted to reduce pro-angiogenic signaling (VEGFA down) while upregulating immune checkpoint (PD-L1/CD274) and T-cell chemokine (CXCL9), potentially sensitizing the tumor to anti-PD-L1 immunotherapy."
+    }
+  ],
+  "open_targets_hits": [
+    {
+      "gene_symbol": "PIK3CA",
+      "overall_score": 0.78,
+      "disease_name": "Ovarian carcinoma",
+      "evidence_count": 142,
+      "tractability": "Small molecule",
+      "known_drugs": ["Alpelisib"]
+    }
+  ],
+  "metadata": {
+    "report_version": "1.0",
+    "report_status": "preliminary",
+    "disclaimer": "This AI-generated summary must be reviewed by your healthcare team before any treatment decisions. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding your medical condition.",
+    "data_sources": [
+      "mcp-epic (clinical FHIR data)",
+      "mcp-fgbio (genomic variant analysis)",
+      "mcp-spatialtools (spatial transcriptomics)",
+      "mcp-openimagedata (histopathology)",
+      "mcp-neoantigen (neoantigen prediction)",
+      "mcp-perturbation (GEARS perturbation)",
+      "mcp-opentargets (drug-target associations)"
+    ],
+    "reading_level_target": "6th-8th grade",
+    "clinician_reviewer": null,
+    "review_date": null
+  }
+}

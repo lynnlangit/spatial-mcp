@@ -14,6 +14,13 @@ from .patient_report import (
     SupportResource,
     ReportMetadata,
     EvidenceLevel,
+    TMBData,
+    HRDData,
+    MHCBindingResult,
+    NeoantigenData,
+    PerturbationEffect,
+    PerturbationResult,
+    OpenTargetsHit,
 )
 
 __all__ = [
@@ -30,4 +37,11 @@ __all__ = [
     "SupportResource",
     "ReportMetadata",
     "EvidenceLevel",
+    "TMBData",
+    "HRDData",
+    "MHCBindingResult",
+    "NeoantigenData",
+    "PerturbationEffect",
+    "PerturbationResult",
+    "OpenTargetsHit",
 ]

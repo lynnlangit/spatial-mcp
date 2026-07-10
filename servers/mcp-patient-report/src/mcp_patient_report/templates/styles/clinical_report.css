@@ -1,0 +1,479 @@
+/* Clinical Report CSS - Dense, clinician-facing technical report */
+
+/* ==========================================================================
+   Variables & Reset
+   ========================================================================== */
+
+:root {
+    --clin-navy: #1a3a5c;
+    --clin-blue: #1e4d7b;
+    --clin-purple: #5b2c8e;
+    --clin-green: #1a7a3d;
+    --clin-red: #c0392b;
+    --clin-orange: #d4790e;
+    --clin-gray: #6b7280;
+    --clin-light-gray: #f3f4f6;
+    --clin-border: #d1d5db;
+    --clin-bg: #ffffff;
+    --clin-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--clin-font);
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #1f2937;
+    background: var(--clin-bg);
+}
+
+/* ==========================================================================
+   DRAFT Banner
+   ========================================================================== */
+
+.draft-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--clin-red);
+    color: #ffffff;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    z-index: 1000;
+}
+
+/* ==========================================================================
+   Report Header
+   ========================================================================== */
+
+.report-header {
+    background: var(--clin-navy);
+    color: #ffffff;
+    padding: 16px 24px;
+    margin-bottom: 0;
+}
+
+.report-header h1 {
+    font-size: 16pt;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.report-header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 9pt;
+    color: #cbd5e1;
+}
+
+.report-header-meta span {
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Page Layout
+   ========================================================================== */
+
+.clinical-page {
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0 24px 24px;
+}
+
+.has-draft-banner .clinical-page {
+    padding-top: 36px;
+}
+
+/* ==========================================================================
+   Section Headers
+   ========================================================================== */
+
+.section-header {
+    background: var(--clin-blue);
+    color: #ffffff;
+    padding: 6px 12px;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.section-header-purple {
+    background: var(--clin-purple);
+    color: #ffffff;
+    padding: 6px 12px;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   Data Tables
+   ========================================================================== */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4px 0 12px;
+    font-size: 10px;
+}
+
+.data-table th {
+    background: var(--clin-light-gray);
+    font-weight: 600;
+    color: var(--clin-navy);
+    padding: 5px 8px;
+    text-align: left;
+    border-bottom: 2px solid var(--clin-border);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.data-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+    font-size: 10px;
+}
+
+.data-table tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.data-table tr:hover {
+    background: #f0f4f8;
+}
+
+/* ==========================================================================
+   Stat Row & Boxes
+   ========================================================================== */
+
+.stat-row {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0 12px;
+    flex-wrap: wrap;
+}
+
+.stat-box {
+    flex: 1;
+    min-width: 140px;
+    background: var(--clin-light-gray);
+    border: 1px solid var(--clin-border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    text-align: center;
+}
+
+.stat-box .stat-value {
+    font-size: 18pt;
+    font-weight: 700;
+    color: var(--clin-navy);
+    line-height: 1.2;
+}
+
+.stat-box .stat-label {
+    font-size: 8pt;
+    color: var(--clin-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
+
+.badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.badge-pathogenic {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-actionable {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.badge-hypermutator {
+    background: #f3e8ff;
+    color: #6b21a8;
+}
+
+.badge-fda-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-platform-only {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.badge-strong-binder {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-weak-binder {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.badge-non-binder {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* ==========================================================================
+   Treatment Hypothesis Cards
+   ========================================================================== */
+
+.treatment-hypothesis {
+    border-left: 4px solid var(--clin-blue);
+    background: #f8fafc;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    page-break-inside: avoid;
+}
+
+.treatment-hypothesis-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.hypothesis-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--clin-blue);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.treatment-hypothesis h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--clin-navy);
+    margin: 0;
+}
+
+.treatment-hypothesis p {
+    font-size: 10px;
+    margin: 2px 0;
+    color: #374151;
+}
+
+/* ==========================================================================
+   Disclaimer Box
+   ========================================================================== */
+
+.disclaimer-box {
+    border: 2px solid var(--clin-border);
+    background: #f9fafb;
+    padding: 10px 14px;
+    margin-top: 16px;
+    font-size: 9pt;
+    color: var(--clin-gray);
+}
+
+.disclaimer-box strong {
+    color: #374151;
+}
+
+/* ==========================================================================
+   HRD Footnote
+   ========================================================================== */
+
+.hrd-footnote {
+    background: #eff6ff;
+    border-left: 3px solid var(--clin-blue);
+    padding: 6px 10px;
+    margin: 6px 0 12px;
+    font-size: 9pt;
+}
+
+/* ==========================================================================
+   Immune Status Indicator
+   ========================================================================== */
+
+.immune-hot {
+    color: var(--clin-green);
+    font-weight: 700;
+}
+
+.immune-cold {
+    color: var(--clin-red);
+    font-weight: 700;
+}
+
+.immune-mixed {
+    color: var(--clin-orange);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   XAI Evidence Chips & Table (reused from patient_report.css colors)
+   ========================================================================== */
+
+.xai-chips {
+    display: flex;
+    gap: 8px;
+    margin: 6px 0 10px;
+    flex-wrap: wrap;
+}
+
+.xai-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.xai-chip--high {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.xai-chip--moderate {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fde047;
+}
+
+.xai-chip--low {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.xai-confidence {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.xai-confidence--high {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.xai-confidence--moderate {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.xai-confidence--low {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.xai-confidence--unknown {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Synthetic data / action required callouts */
+.attention-box {
+    background: #fef2f2;
+    border-left: 4px solid var(--clin-red);
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 9pt;
+}
+
+.attention-box ul {
+    margin: 4px 0 0 16px;
+}
+
+.caution-box {
+    background: #fffbeb;
+    border-left: 4px solid var(--clin-orange);
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 9pt;
+}
+
+.caution-box ul {
+    margin: 4px 0 0 16px;
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    body {
+        background: white;
+    }
+
+    .draft-banner {
+        position: fixed;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .clinical-page {
+        padding: 0 12px;
+        max-width: none;
+    }
+
+    .section-header,
+    .section-header-purple,
+    .report-header {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .badge,
+    .xai-chip,
+    .xai-confidence,
+    .hypothesis-number {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .treatment-hypothesis {
+        page-break-inside: avoid;
+    }
+
+    .data-table {
+        page-break-inside: auto;
+    }
+
+    .data-table tr {
+        page-break-inside: avoid;
+    }
+}

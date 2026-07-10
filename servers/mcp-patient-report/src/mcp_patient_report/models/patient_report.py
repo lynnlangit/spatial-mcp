@@ -236,6 +236,89 @@ class SupportResource(BaseModel):
     description: str = Field(..., description="What this resource provides")
 
 
+# ---------------------------------------------------------------------------
+# Clinical-report-only models (dense, clinician-facing)
+# ---------------------------------------------------------------------------
+
+
+class TMBData(BaseModel):
+    """Tumor Mutational Burden summary."""
+    mutations_per_mb: float = Field(..., ge=0, description="TMB in mutations per megabase")
+    total_mutations: Optional[int] = Field(None, ge=0, description="Total somatic mutations counted")
+    percentile: Optional[str] = Field(None, description="TMB percentile within tumor type")
+    category: Optional[str] = Field(
+        None, description="TMB category (e.g., Low, Intermediate, High, Hypermutator)"
+    )
+
+
+class HRDData(BaseModel):
+    """Homologous Recombination Deficiency score."""
+    hrd_score: int = Field(..., ge=0, description="Combined HRD score")
+    hrd_positive: bool = Field(..., description="Whether HRD-positive (score >= 42 typical)")
+    loh: Optional[int] = Field(None, ge=0, description="Loss of heterozygosity component")
+    tai: Optional[int] = Field(None, ge=0, description="Telomeric allelic imbalance component")
+    lst: Optional[int] = Field(None, ge=0, description="Large-scale state transitions component")
+    brca_status: Optional[dict] = Field(
+        None, description="BRCA1/2 status detail (e.g., {'gene': 'BRCA1', 'status': 'mutated'})"
+    )
+
+
+class MHCBindingResult(BaseModel):
+    """Individual MHC binding prediction for a neoantigen candidate."""
+    peptide: str = Field(..., description="Peptide sequence")
+    allele: str = Field(..., description="HLA allele (e.g., HLA-A*02:01)")
+    ic50_nm: float = Field(..., ge=0, description="Predicted IC50 in nanomolar")
+    percentile_rank: float = Field(..., ge=0, le=100, description="Percentile rank (lower = stronger)")
+    binder_level: str = Field(
+        ..., description="Binding strength: strong_binder, weak_binder, or non_binder"
+    )
+    source_gene: str = Field(..., description="Gene harboring the source mutation")
+    source_mutation: str = Field(..., description="Mutation generating this neoantigen")
+
+
+class NeoantigenData(BaseModel):
+    """Neoantigen burden and top binding results."""
+    estimated_neoantigens: int = Field(..., ge=0, description="Total predicted neoantigens")
+    strong_binders: int = Field(..., ge=0, description="Count of strong MHC binders (IC50 < 50 nM)")
+    weak_binders: int = Field(default=0, ge=0, description="Count of weak MHC binders (50-500 nM)")
+    top_binding_results: list[MHCBindingResult] = Field(
+        default_factory=list, description="Top MHC binding predictions"
+    )
+
+
+class PerturbationEffect(BaseModel):
+    """Single gene-level effect from a perturbation prediction."""
+    gene: str = Field(..., description="Affected gene symbol")
+    direction: str = Field(..., description="up or down")
+    magnitude: Optional[float] = Field(None, description="Log2 fold-change magnitude")
+
+
+class PerturbationResult(BaseModel):
+    """GEARS perturbation prediction result for one treatment context."""
+    treatment: str = Field(..., description="Treatment or perturbation applied (e.g., 'NNMT+STAT3')")
+    cell_type: str = Field(..., description="Cell type context (e.g., 'tumor_core')")
+    top_effects: list[PerturbationEffect] = Field(
+        default_factory=list, description="Top predicted gene-level effects"
+    )
+    interpretation: Optional[str] = Field(
+        None, description="Clinical interpretation of the perturbation result"
+    )
+
+
+class OpenTargetsHit(BaseModel):
+    """Open Targets drug-target association hit."""
+    gene_symbol: str = Field(..., description="Gene symbol (e.g., PIK3CA)")
+    overall_score: float = Field(..., ge=0, le=1, description="Overall association score (0-1)")
+    disease_name: Optional[str] = Field(None, description="Disease name from Open Targets")
+    evidence_count: Optional[int] = Field(None, ge=0, description="Number of evidence items")
+    tractability: Optional[str] = Field(
+        None, description="Tractability assessment (e.g., 'Small molecule', 'Antibody')"
+    )
+    known_drugs: list[str] = Field(
+        default_factory=list, description="Known drugs targeting this gene"
+    )
+
+
 class ReportMetadata(BaseModel):
     """Report metadata and provenance."""
     generated_at: datetime = Field(
@@ -331,6 +414,25 @@ class PatientReportData(BaseModel):
     hospital_logo_path: Optional[str] = Field(
         None,
         description="Path to hospital logo image"
+    )
+
+    # Clinical-report-only fields (optional, no effect on patient-facing reports)
+    tmb_data: Optional[TMBData] = Field(
+        None, description="Tumor Mutational Burden data (clinical report only)"
+    )
+    hrd_data: Optional[HRDData] = Field(
+        None, description="Homologous Recombination Deficiency data (clinical report only)"
+    )
+    neoantigen_data: Optional[NeoantigenData] = Field(
+        None, description="Neoantigen burden and binding predictions (clinical report only)"
+    )
+    perturbation_results: list[PerturbationResult] = Field(
+        default_factory=list,
+        description="GEARS perturbation predictions (clinical report only)"
+    )
+    open_targets_hits: list[OpenTargetsHit] = Field(
+        default_factory=list,
+        description="Open Targets drug-target associations (clinical report only)"
     )
 
     class Config:

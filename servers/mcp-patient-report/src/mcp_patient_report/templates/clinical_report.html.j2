@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Report - {{ report.patient_info.patient_id }}</title>
+    <style>
+    {% include 'styles/clinical_report.css' %}
+    </style>
+</head>
+<body{% if report.metadata.report_status == 'preliminary' %} class="has-draft-banner"{% endif %}>
+
+{# ── DRAFT Banner ── #}
+{% if report.metadata.report_status == 'preliminary' %}
+<div class="draft-banner">DRAFT -- NOT FOR CLINICAL USE</div>
+{% endif %}
+
+{# ── Report Header ── #}
+<div class="report-header">
+    <h1>Clinical Genomic Report</h1>
+    <div class="report-header-meta">
+        <span><strong>Patient ID:</strong> {{ report.patient_info.patient_id }}</span>
+        <span><strong>Age/Sex:</strong> {{ report.patient_info.age }}{{ report.patient_info.sex[0] if report.patient_info.sex else '' }}</span>
+        {% if report.diagnosis_summary.cancer_type %}
+        <span><strong>Cancer Type:</strong> {{ report.diagnosis_summary.cancer_type }}{% if report.diagnosis_summary.subtype %} ({{ report.diagnosis_summary.subtype }}){% endif %}</span>
+        {% endif %}
+        {% if report.diagnosis_summary.stage %}
+        <span><strong>Stage:</strong> {{ report.diagnosis_summary.stage }}</span>
+        {% endif %}
+        <span><strong>Generated:</strong> {{ report.metadata.generated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        <span><strong>Version:</strong> {{ report.metadata.report_version }}</span>
+    </div>
+</div>
+
+<div class="clinical-page">
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 1: Genomic Profile
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if report.genomic_findings %}
+<div class="section-header">1. Genomic Profile</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Gene</th>
+            <th>Variant</th>
+            <th>VAF</th>
+            <th>Significance</th>
+            <th>Actionability</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for finding in report.genomic_findings %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ finding.gene }}</strong></td>
+            <td>{{ finding.variant }}</td>
+            <td>{% if finding.variant_allele_frequency is not none %}{{ "%.0f"|format(finding.variant_allele_frequency * 100) }}%{% else %}&mdash;{% endif %}</td>
+            <td>
+                {% if finding.significance == 'Pathogenic' %}
+                <span class="badge badge-pathogenic">{{ finding.significance }}</span>
+                {% else %}
+                {{ finding.significance }}
+                {% endif %}
+            </td>
+            <td>
+                {% if finding.actionability %}
+                <span class="badge badge-actionable">Actionable</span>
+                {{ finding.actionability }}
+                {% else %}
+                &mdash;
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% if report.hrd_data %}
+<div class="hrd-footnote">
+    <strong>HRD Status:</strong> Score {{ report.hrd_data.hrd_score }}
+    ({% if report.hrd_data.hrd_positive %}Positive{% else %}Negative{% endif %})
+    {% if report.hrd_data.loh is not none %} | LOH {{ report.hrd_data.loh }}{% endif %}
+    {% if report.hrd_data.tai is not none %} | TAI {{ report.hrd_data.tai }}{% endif %}
+    {% if report.hrd_data.lst is not none %} | LST {{ report.hrd_data.lst }}{% endif %}
+</div>
+{% endif %}
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 2: TMB & Neoantigen Burden
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if report.tmb_data or report.neoantigen_data %}
+<div class="section-header">2. TMB &amp; Neoantigen Burden</div>
+
+<div class="stat-row">
+    {% if report.tmb_data %}
+    <div class="stat-box">
+        <div class="stat-value">{{ report.tmb_data.mutations_per_mb }}</div>
+        <div class="stat-label">Mutations / Mb</div>
+    </div>
+    {% if report.tmb_data.total_mutations is not none %}
+    <div class="stat-box">
+        <div class="stat-value">{{ report.tmb_data.total_mutations }}</div>
+        <div class="stat-label">Total Mutations</div>
+    </div>
+    {% endif %}
+    {% if report.tmb_data.category %}
+    <div class="stat-box">
+        <div class="stat-value">
+            {% if report.tmb_data.category == 'Hypermutator' %}
+            <span class="badge badge-hypermutator">{{ report.tmb_data.category }}</span>
+            {% else %}
+            {{ report.tmb_data.category }}
+            {% endif %}
+        </div>
+        <div class="stat-label">TMB Category</div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if report.neoantigen_data %}
+    <div class="stat-box">
+        <div class="stat-value">{{ report.neoantigen_data.estimated_neoantigens }}</div>
+        <div class="stat-label">Est. Neoantigens</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ report.neoantigen_data.strong_binders }}</div>
+        <div class="stat-label">Strong Binders</div>
+    </div>
+    {% endif %}
+</div>
+
+{% if report.neoantigen_data and report.neoantigen_data.top_binding_results %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Peptide</th>
+            <th>HLA Allele</th>
+            <th>IC50 (nM)</th>
+            <th>%ile Rank</th>
+            <th>Binding</th>
+            <th>Source</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for result in report.neoantigen_data.top_binding_results %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><code>{{ result.peptide }}</code></td>
+            <td>{{ result.allele }}</td>
+            <td>{{ "%.1f"|format(result.ic50_nm) }}</td>
+            <td>{{ "%.2f"|format(result.percentile_rank) }}</td>
+            <td>
+                {% if result.binder_level == 'strong_binder' %}
+                <span class="badge badge-strong-binder">Strong</span>
+                {% elif result.binder_level == 'weak_binder' %}
+                <span class="badge badge-weak-binder">Weak</span>
+                {% else %}
+                <span class="badge badge-non-binder">Non</span>
+                {% endif %}
+            </td>
+            <td>{{ result.source_gene }} {{ result.source_mutation }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 3: Spatial Transcriptomics
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if report.spatial_findings %}
+<div class="section-header">3. Spatial Transcriptomics</div>
+
+<p>{{ report.spatial_findings.tumor_microenvironment_summary }}</p>
+
+<p><strong>Immune Status:</strong>
+{% if report.spatial_findings.immune_infiltration.value == 'hot' %}
+<span class="immune-hot">HOT</span> &mdash; High immune infiltration
+{% elif report.spatial_findings.immune_infiltration.value == 'cold' %}
+<span class="immune-cold">COLD</span> &mdash; Low immune infiltration
+{% elif report.spatial_findings.immune_infiltration.value == 'mixed' %}
+<span class="immune-mixed">MIXED</span> &mdash; Heterogeneous infiltration
+{% else %}
+UNKNOWN
+{% endif %}
+</p>
+
+{% if report.spatial_findings.key_spatial_patterns %}
+<ul>
+{% for pattern in report.spatial_findings.key_spatial_patterns %}
+    <li>{{ pattern }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 4: GEARS Perturbation Predictions
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if report.perturbation_results %}
+<div class="section-header-purple">4. GEARS Perturbation Predictions</div>
+
+{% for result in report.perturbation_results %}
+<p><strong>Treatment:</strong> {{ result.treatment }} | <strong>Cell type:</strong> {{ result.cell_type }}</p>
+
+{% if result.top_effects %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Gene</th>
+            <th>Direction</th>
+            <th>Magnitude (log2FC)</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for effect in result.top_effects %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ effect.gene }}</strong></td>
+            <td>{{ effect.direction }}</td>
+            <td>{% if effect.magnitude is not none %}{{ "%.2f"|format(effect.magnitude) }}{% else %}&mdash;{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if result.interpretation %}
+<p><em>{{ result.interpretation }}</em></p>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 5: Treatment Hypotheses
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if report.treatment_options %}
+<div class="section-header">5. Treatment Hypotheses</div>
+
+{% for treatment in report.treatment_options %}
+<div class="treatment-hypothesis">
+    <div class="treatment-hypothesis-header">
+        <span class="hypothesis-number">{{ loop.index }}</span>
+        <h4>{{ treatment.name }}</h4>
+        {% if treatment.evidence_level.value == 'FDA Approved' %}
+        <span class="badge badge-fda-approved">{{ treatment.evidence_level.value }}</span>
+        {% else %}
+        <span class="badge badge-platform-only">{{ treatment.evidence_level.value }}</span>
+        {% endif %}
+    </div>
+    <p><strong>Type:</strong> {{ treatment.type }}
+    {% if treatment.expected_response_rate %} | <strong>Response:</strong> {{ treatment.expected_response_rate }}{% endif %}
+    </p>
+    <p><strong>Rationale:</strong> {{ treatment.why_recommended }}</p>
+</div>
+{% endfor %}
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 6: Open Targets Drug-Target Associations
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if report.open_targets_hits %}
+<div class="section-header">6. Open Targets Drug-Target Associations</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Gene</th>
+            <th>Overall Score</th>
+            <th>Disease</th>
+            <th>Evidence</th>
+            <th>Tractability</th>
+            <th>Known Drugs</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for hit in report.open_targets_hits %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ hit.gene_symbol }}</strong></td>
+            <td>{{ "%.2f"|format(hit.overall_score) }}</td>
+            <td>{{ hit.disease_name or '&mdash;' }}</td>
+            <td>{{ hit.evidence_count if hit.evidence_count is not none else '&mdash;' }}</td>
+            <td>{{ hit.tractability or '&mdash;' }}</td>
+            <td>{{ hit.known_drugs | join(', ') if hit.known_drugs else '&mdash;' }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════
+   Section 7: XAI Evidence Strength Summary
+   ══════════════════════════════════════════════════════════════════════════ #}
+{% if evidence_strength_summary and xai_collection %}
+<div class="section-header">7. XAI Evidence Strength Summary</div>
+
+{% if evidence_strength_summary.confidence_counts %}
+<div class="xai-chips">
+    <span class="xai-chip xai-chip--high">
+        HIGH {{ evidence_strength_summary.confidence_counts.high }}
+    </span>
+    <span class="xai-chip xai-chip--moderate">
+        MODERATE {{ evidence_strength_summary.confidence_counts.moderate }}
+    </span>
+    <span class="xai-chip xai-chip--low">
+        LOW {{ evidence_strength_summary.confidence_counts.low }}
+    </span>
+</div>
+{% endif %}
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Analysis Component</th>
+            <th>Confidence</th>
+            <th>Evidence Grade</th>
+            <th>Note</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for key, xai in xai_collection.items()|sort %}
+        {% if xai %}
+        <tr>
+            <td>{{ xai_tool_labels.get(key, key) if xai_tool_labels else key }}</td>
+            <td>
+                {% set level = xai.get("confidence_level", "unknown") %}
+                <span class="xai-confidence xai-confidence--{{ level }}">
+                    {{ level|upper }}
+                </span>
+            </td>
+            <td>{{ xai.get("evidence_grade", "") }}</td>
+            <td>{{ xai.get("confidence_note", "") }}</td>
+        </tr>
+        {% endif %}
+    {% endfor %}
+    </tbody>
+</table>
+
+{% if evidence_strength_summary.synthetic_data_items %}
+<div class="attention-box">
+    <strong>Synthetic Data Warning:</strong> The following analyses used
+    synthetic or simulated data and carry <strong>no clinical validity</strong>:
+    <ul>
+    {% for item in evidence_strength_summary.synthetic_data_items %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if evidence_strength_summary.action_required %}
+<div class="caution-box">
+    <strong>Action Required:</strong> This report contains
+    {{ evidence_strength_summary.lowest_confidence_items|length }}
+    low-confidence item{{ "s" if evidence_strength_summary.lowest_confidence_items|length != 1 }}
+    requiring clinical review:
+    <ul>
+    {% for item in evidence_strength_summary.lowest_confidence_items %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endif %}
+
+{# ── Medical Disclaimer ── #}
+<div class="disclaimer-box">
+    <strong>Medical Disclaimer:</strong>
+    {{ report.metadata.disclaimer }}
+    <br>
+    <strong>Data Sources:</strong> {{ report.metadata.data_sources | join(', ') if report.metadata.data_sources else 'Not specified' }}
+    | <strong>Report Version:</strong> {{ report.metadata.report_version }}
+    | <strong>Generated:</strong> {{ report.metadata.generated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+    {% if report.metadata.clinician_reviewer %}
+    | <strong>Reviewed by:</strong> {{ report.metadata.clinician_reviewer }}
+    {% endif %}
+</div>
+
+</div><!-- /.clinical-page -->
+</body>
+</html>

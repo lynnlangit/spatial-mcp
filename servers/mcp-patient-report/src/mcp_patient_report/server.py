@@ -275,6 +275,7 @@ async def generate_patient_report(
         report_type: Type of report to generate:
             - "full": Comprehensive multi-page report (default)
             - "onepage": Quick reference one-page summary
+            - "clinical": Dense, clinician-facing technical report
 
         output_format: Output format:
             - "pdf": PDF document (default, requires WeasyPrint)
@@ -412,6 +413,11 @@ async def generate_patient_report(
                     "has_spatial": report_data.spatial_findings is not None,
                     "has_histology": report_data.histology_findings is not None,
                     "has_family_implications": report_data.family_implications is not None,
+                    "has_tmb_data": report_data.tmb_data is not None,
+                    "has_hrd_data": report_data.hrd_data is not None,
+                    "has_neoantigen_data": report_data.neoantigen_data is not None,
+                    "perturbation_results": len(report_data.perturbation_results),
+                    "open_targets_hits": len(report_data.open_targets_hits),
                 },
                 "evidence_strength_summary": evidence_summary,
                 "xai_metadata": report_xai,
