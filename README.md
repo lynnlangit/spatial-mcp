@@ -49,7 +49,7 @@ Standard oncology workup (BRCA1/2, HRD panel, tumor genomic panel) generates **n
    +---------------------------------------------------------------+
 ```
 
-All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant. Current server and tool counts: **[Server Registry](docs/reference/shared/server-registry.md)**.
+All tools accessible via natural language. Every AI result requires **clinician APPROVE/REVISE/REJECT**. HIPAA-compliant. 11 servers return per-tool **XAI metadata** (confidence levels, evidence grades, counterfactuals). Current server and tool counts: **[Server Registry](docs/reference/shared/server-registry.md)**.
 
 ## The Results
 
