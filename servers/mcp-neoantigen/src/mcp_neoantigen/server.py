@@ -59,6 +59,38 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="NEOANTIGEN_DRY_RUN")
 
 
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual: Optional[str] = None,
+) -> dict:
+    """Standardized XAI metadata for all mcp-neoantigen tool outputs.
+
+    evidence_grade values:
+      "Computational Prediction — Research Only"  -- Algorithm output; no clinical validation
+      "Algorithm-Predicted — Not Clinical Grade"   -- Algorithmic result; not lab-confirmed
+      "Research Only — Novel Method"               -- Novel composite score; no peer review
+    """
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    # Filter None from key_drivers
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Parameter coercion (FastMCP 2.x JSON-string fallback)
 # ---------------------------------------------------------------------------
@@ -236,6 +268,42 @@ async def _predict_mhc1_binding_impl(
         )
         strong = sum(1 for p in predictions if p["binder_level"] == "strong")
         weak = sum(1 for p in predictions if p["binder_level"] == "weak")
+        # XAI: MODERATE if strong binders exist or HLA partially typed, LOW otherwise
+        has_strong = strong > 0
+        partially_typed = len(normalized) < 6
+        if has_strong:
+            mhc1_conf = "moderate"
+            mhc1_note = (
+                f"{strong} strong binder(s) found (IC50 <50 nM). "
+                "Prediction accuracy ~70-85% for NetMHCpan on known alleles."
+            )
+        elif partially_typed:
+            mhc1_conf = "moderate"
+            mhc1_note = (
+                "HLA partially typed; predictions limited to provided alleles. "
+                "Additional alleles may reveal strong binders."
+            )
+        else:
+            mhc1_conf = "low"
+            mhc1_note = (
+                "No strong binders found across all tested alleles. "
+                "Low confidence in neoantigen vaccine candidacy."
+            )
+        xai = _build_xai_metadata(
+            confidence_level=mhc1_conf,
+            confidence_note=mhc1_note,
+            key_drivers=[
+                f"strong_binders={strong}",
+                f"method={method}",
+                f"alleles_tested={len(normalized)}",
+            ],
+            guideline_version="IEDB NetMHCpan 4.1 / 2023",
+            evidence_grade="Computational Prediction \u2014 Research Only",
+            counterfactual=(
+                "If no strong binders exist, peptide vaccine approaches "
+                "are unlikely to generate cytotoxic T-cell responses."
+            ),
+        )
         return add_dry_run_warning({
             "status": "success",
             "method": method,
@@ -244,6 +312,7 @@ async def _predict_mhc1_binding_impl(
             "strong_binders": strong,
             "weak_binders": weak,
             "total_peptides": len(predictions),
+            "xai_metadata": xai,
         })
 
     # Production: call IEDB API
@@ -293,6 +362,42 @@ async def _predict_mhc1_binding_impl(
         elif level == "weak":
             weak_count += 1
 
+    # XAI: MODERATE if strong binders exist or HLA partially typed, LOW otherwise
+    has_strong = strong_count > 0
+    partially_typed = len(normalized) < 6
+    if has_strong:
+        mhc1_conf = "moderate"
+        mhc1_note = (
+            f"{strong_count} strong binder(s) found (IC50 <50 nM). "
+            "Prediction accuracy ~70-85% for NetMHCpan on known alleles."
+        )
+    elif partially_typed:
+        mhc1_conf = "moderate"
+        mhc1_note = (
+            "HLA partially typed; predictions limited to provided alleles. "
+            "Additional alleles may reveal strong binders."
+        )
+    else:
+        mhc1_conf = "low"
+        mhc1_note = (
+            "No strong binders found across all tested alleles. "
+            "Low confidence in neoantigen vaccine candidacy."
+        )
+    xai = _build_xai_metadata(
+        confidence_level=mhc1_conf,
+        confidence_note=mhc1_note,
+        key_drivers=[
+            f"strong_binders={strong_count}",
+            f"method={method}",
+            f"alleles_tested={len(normalized)}",
+        ],
+        guideline_version="IEDB NetMHCpan 4.1 / 2023",
+        evidence_grade="Computational Prediction \u2014 Research Only",
+        counterfactual=(
+            "If no strong binders exist, peptide vaccine approaches "
+            "are unlikely to generate cytotoxic T-cell responses."
+        ),
+    )
     return {
         "status": "success",
         "method": method,
@@ -301,6 +406,7 @@ async def _predict_mhc1_binding_impl(
         "strong_binders": strong_count,
         "weak_binders": weak_count,
         "total_peptides": len(predictions),
+        "xai_metadata": xai,
     }
 
 
@@ -336,6 +442,28 @@ async def _predict_mhc2_binding_impl(
     except ValueError as e:
         return {"status": "error", "message": str(e)}
 
+    # MHC II always LOW confidence — prediction accuracy substantially lower than MHC I
+    mhc2_xai = _build_xai_metadata(
+        confidence_level="low",
+        confidence_note=(
+            "MHC class II binding prediction accuracy is substantially lower "
+            "than MHC class I (~50-65% vs ~70-85%). Open binding groove allows "
+            "variable peptide register, reducing prediction reliability."
+        ),
+        key_drivers=[
+            f"method={method}",
+            f"alleles_tested={len(normalized)}",
+            "mhc_class=II",
+        ],
+        guideline_version="IEDB NetMHCIIpan 4.0 / 2023",
+        evidence_grade="Computational Prediction \u2014 Research Only",
+        counterfactual=(
+            "If MHC II predictions were as accurate as MHC I, confidence "
+            "would be moderate. CD4+ helper T-cell activation assessment "
+            "requires experimental validation."
+        ),
+    )
+
     if DRY_RUN:
         predictions = _build_mock_binding_predictions(
             peptides, normalized, MOCK_MHC2_PREDICTIONS,
@@ -350,6 +478,7 @@ async def _predict_mhc2_binding_impl(
             "strong_binders": strong,
             "weak_binders": weak,
             "total_peptides": len(predictions),
+            "xai_metadata": mhc2_xai,
         })
 
     results = await predict_mhc_class_ii(
@@ -395,6 +524,7 @@ async def _predict_mhc2_binding_impl(
         "strong_binders": strong_count,
         "weak_binders": weak_count,
         "total_peptides": len(predictions),
+        "xai_metadata": mhc2_xai,
     }
 
 

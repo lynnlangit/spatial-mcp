@@ -60,6 +60,30 @@ def _to_python(obj):
     return obj
 
 
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual=None,
+) -> dict:
+    """Standardized XAI metadata for mcp-quantum-celltype-fidelity tool outputs."""
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # Initialize FastMCP server
 mcp = FastMCP("quantum-celltype-fidelity")
 
@@ -536,6 +560,31 @@ def compute_cell_type_fidelity(
             results["pairwise_fidelities"] = pairwise_fidelities
             results["with_uncertainty"] = with_uncertainty
 
+        is_mock = getattr(embedding, 'is_mock', False)
+        mean_fid = results.get("summary_stats", {}).get("mean_fidelity") if compute_matrix else None
+        results["xai_metadata"] = _build_xai_metadata(
+            confidence_level="moderate",
+            confidence_note=(
+                "Cell type fidelity score uses a quantum-enhanced kernel method applied "
+                "to spatial transcriptomics. The approach is published but lacks "
+                "head-to-head benchmarking against standard methods (RCTD, BayesSpace) "
+                "in uveal melanoma specifically. "
+                + ("Mock embedding used (DRY_RUN). " if is_mock else "")
+                + "Results should be compared with conventional deconvolution for consistency."
+            ),
+            key_drivers=[
+                f"Overall fidelity: {mean_fid:.3f}" if mean_fid is not None else f"Cells analyzed: {len(cell_indices)}",
+                f"Embedding: {embedding_id}",
+                f"Input: {'mock (dry run)' if is_mock else 'real spatial data'}",
+            ],
+            guideline_version="Quantum Kernel Methods for Spatial Biology (research preprint); squidpy v1.x",
+            evidence_grade="Research Only — Novel Method",
+            counterfactual=(
+                "Comparison with RCTD deconvolution on the same data is recommended to "
+                "assess concordance before treating quantum fidelity scores as primary evidence."
+            ),
+        )
+
         return _to_python(results)
 
     except Exception as e:
@@ -679,7 +728,28 @@ def identify_immune_evasion_states(
             "n_evading_cells": len(evading_cells),
             "evading_cells": evading_cells,
             "evasion_threshold": evasion_threshold,
-            "immune_cell_types": immune_cell_types
+            "immune_cell_types": immune_cell_types,
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="low",
+                confidence_note=(
+                    "Immune evasion state identification combines gene expression patterns "
+                    "(checkpoint markers, MHC I pathway downregulation proxies) with "
+                    "quantum-enhanced clustering. Predicted evasion states are hypotheses about "
+                    "immune exclusion mechanisms. No validated clinical threshold exists in "
+                    "uveal melanoma. Protein-level validation (IHC, flow cytometry) required."
+                ),
+                key_drivers=[
+                    f"Evading cells: {len(evading_cells)}/{len(evasion_results)}",
+                    f"Evasion threshold: {evasion_threshold}",
+                    f"Immune cell types: {', '.join(immune_cell_types[:2])}",
+                ],
+                guideline_version="TIDE (Jiang 2018, Nature Medicine); CYT score (Rooney 2015); quantum method: research",
+                evidence_grade="Research Only — Novel Method",
+                counterfactual=(
+                    "If MHC I downregulation were confirmed by protein-level HLA/B2M IHC loss, "
+                    "this would constitute a mechanism of resistance to T-cell-based immunotherapy."
+                ),
+            ),
         })
 
     except Exception as e:
@@ -803,12 +873,29 @@ def predict_perturbation_effect(
                 "effect_direction": "increase" if avg_change > 0 else "decrease"
             })
 
+        top_effect = perturbation_effects[0] if perturbation_effects else None
         return _to_python({
             "success": True,
             "perturbation_type": perturbation_type,
             "perturbation_strength": perturbation_strength,
             "n_cell_types_affected": len(perturbation_effects),
-            "effects": perturbation_effects
+            "effects": perturbation_effects,
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="low",
+                confidence_note=(
+                    f"Quantum-assisted perturbation effect prediction ({perturbation_type}). "
+                    "This combines quantum kernel methods with transcriptional perturbation "
+                    "modeling. The method is experimental and lacks wet lab or clinical "
+                    "validation in any tumor type. Predicted effects are speculative hypotheses only."
+                ),
+                key_drivers=[
+                    f"Perturbation type: {perturbation_type}",
+                    f"Target cell types: {', '.join(target_cell_types[:2])}",
+                    f"Strength: {perturbation_strength}",
+                ],
+                guideline_version="Quantum perturbation methods: research preprint; CPA (Lotfollahi 2021) — classical baseline",
+                evidence_grade="Research Only — Novel Method",
+            ),
         })
 
     except Exception as e:
@@ -925,7 +1012,30 @@ def analyze_tls_quantum_signature(
             "clustering_params": {
                 "min_cluster_size": min_cluster_size,
                 "max_distance": max_distance
-            }
+            },
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="low",
+                confidence_note=(
+                    "Tertiary lymphoid structure (TLS) quantum signature is a research-grade "
+                    "composite score derived from co-localization of B-cell, T follicular helper, "
+                    "and dendritic cell gene expression patterns in spatial coordinates. "
+                    "This quantum-enhanced score has no peer-reviewed validation cohort in "
+                    "uveal melanoma. TLS presence in UVM liver metastasis is biologically "
+                    "plausible but poorly characterized."
+                ),
+                key_drivers=[
+                    f"TLS candidates identified: {len(tls_candidates)}",
+                    f"Marker types: {', '.join(tls_marker_types[:3])}",
+                    f"Min cluster size: {min_cluster_size}",
+                ],
+                guideline_version="Sautes-Fridman et al. 2022 (Nature Reviews Cancer) — TLS biology; quantum method: unpublished",
+                evidence_grade="Research Only — Novel Method",
+                counterfactual=(
+                    "If TLS were confirmed by CD20 IHC or spatial proteomics, it would indicate "
+                    "a favorable immune microenvironment potentially associated with checkpoint "
+                    "inhibitor response."
+                ),
+            ),
         })
 
     except Exception as e:

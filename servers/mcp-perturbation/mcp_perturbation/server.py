@@ -66,6 +66,30 @@ def add_dry_run_warning(result, *, forced: bool = False):
     )
 
 
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual=None,
+) -> dict:
+    """Standardized XAI metadata for mcp-perturbation tool outputs."""
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # Canonical PAT001 dry-run payload for perturbation_predict_response.
 # Matches the Stage IV Ovarian Cancer PatientOne demo scenario.
 _PAT001_PREDICT_DRY_RUN = {
@@ -469,6 +493,23 @@ def _predict_response_impl(
     # Explicit dry_run always returns the canonical payload.
     if dry_run:
         payload = {"status": "success", **_PAT001_PREDICT_DRY_RUN}
+        payload["xai_metadata"] = _build_xai_metadata(
+            confidence_level="low",
+            confidence_note=(
+                "Drug response predicted using GEARS GNN (in silico perturbation). "
+                "DRY_RUN mode: returning canonical synthetic payload. "
+                "In silico perturbation response models have not been validated in "
+                "clinical cohorts. Predicted effects are hypothesis-generating only."
+            ),
+            key_drivers=["Perturbation: NNMT+STAT3", "Model: GEARS GNN", "Mode: DRY_RUN"],
+            guideline_version="CPA: Lotfollahi 2021 (Molecular Systems Biology); GEARS: Roohani 2023 (Nature Biotechnology)",
+            evidence_grade="Computational Prediction — Research Only",
+            counterfactual=(
+                "If confirmed in a patient-derived organoid (PDO) or ex vivo tumor "
+                "fragment assay, predicted drug response would be upgradeable to "
+                "'moderate' confidence."
+            ),
+        )
         return add_dry_run_warning(payload, forced=True)
 
     # If env-var DRY_RUN is on and we don't have a trained model, also return
@@ -481,6 +522,23 @@ def _predict_response_impl(
         payload = {"status": "success", **_PAT001_PREDICT_DRY_RUN}
         if dataset_id:
             payload["dataset_id_hint"] = dataset_id
+        payload["xai_metadata"] = _build_xai_metadata(
+            confidence_level="low",
+            confidence_note=(
+                "Drug response predicted using GEARS GNN (in silico perturbation). "
+                "In silico perturbation response models are trained on cell line or "
+                "organoid data and have not been validated in clinical cohorts. "
+                "Predicted gene expression changes are hypothesis-generating only."
+            ),
+            key_drivers=["Perturbation: NNMT+STAT3", "Model: GEARS GNN"],
+            guideline_version="CPA: Lotfollahi 2021 (Molecular Systems Biology); GEARS: Roohani 2023 (Nature Biotechnology)",
+            evidence_grade="Computational Prediction — Research Only",
+            counterfactual=(
+                "If confirmed in a patient-derived organoid (PDO) or ex vivo tumor "
+                "fragment assay, predicted drug response would be upgradeable to "
+                "'moderate' confidence."
+            ),
+        )
         return add_dry_run_warning(payload)
 
     # --- Dataset-id fallback hint ---
@@ -505,6 +563,22 @@ def _predict_response_impl(
             ),
             **_PAT001_PREDICT_DRY_RUN,
         }
+        payload["xai_metadata"] = _build_xai_metadata(
+            confidence_level="low",
+            confidence_note=(
+                "Drug response predicted using GEARS GNN (in silico perturbation). "
+                "No trained model available — returning synthetic preview. "
+                "Predicted effects are hypothesis-generating only."
+            ),
+            key_drivers=["Perturbation: NNMT+STAT3", "Model: GEARS GNN (not trained)"],
+            guideline_version="CPA: Lotfollahi 2021 (Molecular Systems Biology); GEARS: Roohani 2023 (Nature Biotechnology)",
+            evidence_grade="Computational Prediction — Research Only",
+            counterfactual=(
+                "If confirmed in a patient-derived organoid (PDO) or ex vivo tumor "
+                "fragment assay, predicted drug response would be upgradeable to "
+                "'moderate' confidence."
+            ),
+        )
         return add_dry_run_warning(payload, forced=True)
 
     # --- Real GEARS inference path ---
@@ -557,6 +631,27 @@ def _predict_response_impl(
         "cell_type": cell_type_to_predict,
         "effect_magnitude": float(np.linalg.norm(pert_effect)),
         "n_cells_predicted": int(predicted_adata.n_obs) if predicted_adata else 0,
+        "xai_metadata": _build_xai_metadata(
+            confidence_level="low",
+            confidence_note=(
+                f"Drug response predicted using GEARS GNN for {cell_type_to_predict}. "
+                "In silico perturbation response models are trained on cell line or "
+                "organoid data and have not been validated in clinical cohorts. "
+                "Predicted gene expression changes are hypothesis-generating only."
+            ),
+            key_drivers=[
+                f"Perturbation: {', '.join(perturbations)}",
+                f"Cell type: {cell_type_to_predict}",
+                f"Effect magnitude: {float(np.linalg.norm(pert_effect)):.3f}",
+            ],
+            guideline_version="CPA: Lotfollahi 2021 (Molecular Systems Biology); GEARS: Roohani 2023 (Nature Biotechnology)",
+            evidence_grade="Computational Prediction — Research Only",
+            counterfactual=(
+                "If confirmed in a patient-derived organoid (PDO) or ex vivo tumor "
+                "fragment assay, predicted drug response would be upgradeable to "
+                "'moderate' confidence."
+            ),
+        ),
     }
 
 
@@ -638,9 +733,28 @@ async def perturbation_differential_expression(params: str) -> str:
             method=params.method
         )
 
+        n_sig = len(de_results) if isinstance(de_results, list) else 0
+        top_gene = de_results[0].get("gene", "N/A") if isinstance(de_results, list) and de_results else "N/A"
+
         return json.dumps({
             "status": "success",
-            "differential_expression": de_results
+            "differential_expression": de_results,
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    "Differential expression from perturbation model output uses standard "
+                    "pseudobulk statistics. Confidence reflects the statistical method, not "
+                    "the underlying perturbation prediction (which is always low confidence "
+                    "— see perturbation_predict_response)."
+                ),
+                key_drivers=[
+                    f"Method: {params.method}",
+                    f"Top DEGs returned: {n_sig}",
+                    f"Top gene: {top_gene}" if top_gene != "N/A" else None,
+                ],
+                guideline_version="DESeq2 (Love 2014); perturbation DE standards from Lotfollahi 2021",
+                evidence_grade="Computational Prediction — Research Only",
+            ),
         }, indent=2)
 
     except Exception as e:

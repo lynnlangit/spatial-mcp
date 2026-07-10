@@ -38,6 +38,30 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="GENOMIC_RESULTS_DRY_RUN")
 
 
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual=None,
+) -> dict:
+    """Standardized XAI metadata for mcp-genomic-results tool outputs."""
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Phase 8a.6 Fix 4 — Pathogenic effect allowlist (SnpEff / VEP synonyms)
 # ---------------------------------------------------------------------------
@@ -405,6 +429,13 @@ async def _parse_somatic_variants_impl(
         payload = _patient_somatic_payload(patient_id)
         payload["vcf_path"] = vcf_path
         payload["patient_id_hint"] = patient_id
+        payload["xai_metadata"] = _build_xai_metadata(
+            confidence_level="moderate",
+            confidence_note="DRY_RUN mode: returning synthetic patient-specific fixture data, not real sequencing.",
+            key_drivers=[f"Patient: {patient_id}", "Data source: synthetic DRY_RUN fixture"],
+            guideline_version="AMP/ASCO/CAP Variant Interpretation 2022",
+            evidence_grade="Computational Prediction — Research Only",
+        )
         return add_dry_run_warning(payload)
     variants = _parse_vcf_file(vcf_path, min_af=min_allele_frequency)
 
@@ -448,6 +479,27 @@ async def _parse_somatic_variants_impl(
             )
             actionable.append(m)
 
+    # XAI metadata
+    min_vaf = min((m.get("allele_frequency", 1.0) for m in somatic_mutations), default=1.0) if somatic_mutations else 0
+    all_pathogenic = all(m.get("classification", "").lower() in ("pathogenic", "likely pathogenic") for m in somatic_mutations) if somatic_mutations else False
+
+    xai = _build_xai_metadata(
+        confidence_level="moderate",
+        confidence_note=(
+            "VCF parsed from file with pathogenic-effect filtering. "
+            "Source platform provenance not tracked in current pipeline — "
+            "variant calls may be from certified panel or reconstructed data."
+        ),
+        key_drivers=[
+            f"Total somatic mutations: {len(somatic_mutations)}",
+            f"Actionable findings: {len(actionable)}",
+            f"Lowest VAF: {min_vaf:.1%}" if somatic_mutations else None,
+        ],
+        guideline_version="AMP/ASCO/CAP Variant Interpretation 2022; ESMO Precision Oncology 2020",
+        evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+        counterfactual=None,
+    )
+
     result = {
         "vcf_path": vcf_path,
         "total_variants": len(variants),
@@ -459,6 +511,7 @@ async def _parse_somatic_variants_impl(
         "wild_type": [v["gene"] for v in wild_type],
         "actionable_count": len(actionable),
         "actionable_findings": actionable,
+        "xai_metadata": xai,
     }
     if skipped_effects:
         result["skipped_effects"] = skipped_effects
@@ -482,6 +535,13 @@ async def _parse_somatic_variants_impl(
             fallback["raw_variant_count"] = len(variants)
             if skipped_effects:
                 fallback["skipped_effects"] = skipped_effects
+            fallback["xai_metadata"] = _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=f"No variants matched pathogenic allowlist; returning {patient_id} synthetic fallback.",
+                key_drivers=[f"Patient: {patient_id}", f"Raw variants parsed: {len(variants)}"],
+                guideline_version="AMP/ASCO/CAP Variant Interpretation 2022",
+                evidence_grade="Computational Prediction — Research Only",
+            )
             return add_dry_run_warning(fallback)
 
     return add_dry_run_warning(result)
@@ -502,8 +562,29 @@ async def _parse_cnv_calls_impl(
             "amplification": amp_log2_threshold,
             "deletion": del_log2_threshold,
         }
+        is_synthetic = patient_id.startswith("SYNTH") or patient_id == "UNKNOWN"
+        payload["xai_metadata"] = _build_xai_metadata(
+            confidence_level="low" if is_synthetic else "moderate",
+            confidence_note="DRY_RUN mode: synthetic CNV fixture." if is_synthetic else "DRY_RUN mode: patient-specific CNV fixture.",
+            key_drivers=[f"Patient: {patient_id}", "CNV data source: DRY_RUN fixture"],
+            guideline_version="TCGA SKCM/UVM CNV Reference 2017",
+            evidence_grade="Computational Prediction — Research Only",
+        )
         return add_dry_run_warning(payload)
     result = _parse_cns_file(cns_path, amp_threshold=amp_log2_threshold, del_threshold=del_log2_threshold)
+
+    cnv_gene_count = len(result["amplifications"]) + len(result["deletions"])
+    xai = _build_xai_metadata(
+        confidence_level="moderate",
+        confidence_note="CNV calls from CNVkit segmentation. Panel-based CNV has limited resolution for arm-level events.",
+        key_drivers=[
+            f"Amplifications: {len(result['amplifications'])}",
+            f"Deletions: {len(result['deletions'])}",
+            f"Total segments: {result['total_segments']}",
+        ],
+        guideline_version="TCGA SKCM/UVM CNV Reference 2017; Onken et al. 2010",
+        evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+    )
 
     return add_dry_run_warning({
         "cns_path": cns_path,
@@ -512,6 +593,7 @@ async def _parse_cnv_calls_impl(
         "deletions": result["deletions"],
         "neutral_count": len(result["neutral"]),
         "total_segments": result["total_segments"],
+        "xai_metadata": xai,
     })
 
 
@@ -529,6 +611,16 @@ async def _calculate_hrd_impl(
         payload["vcf_path"] = vcf_path
         payload["cns_path"] = cns_path
         payload["patient_id_hint"] = patient_id
+        payload["xai_metadata"] = _build_xai_metadata(
+            confidence_level="moderate",
+            confidence_note=(
+                "HRD score is an algorithmic estimate (LOH + TAI + LST). Not Myriad myChoice CDx "
+                "(the only FDA-approved HRD assay). DRY_RUN fixture data."
+            ),
+            key_drivers=[f"Patient: {patient_id}", f"HRD score: {payload.get('hrd_score', 'N/A')}"],
+            guideline_version="Pennington et al. 2016 (JCO); Myriad Genomics myChoice CDx labeling",
+            evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+        )
         return add_dry_run_warning(payload)
     # Parse VCF for BRCA status
     variants = _parse_vcf_file(vcf_path, min_af=0.0)
@@ -586,6 +678,27 @@ async def _calculate_hrd_impl(
         )
         parp_eligible = False
 
+    is_synthetic = patient_id.startswith("SYNTH") if 'patient_id' in dir() else False
+    xai = _build_xai_metadata(
+        confidence_level="moderate",
+        confidence_note=(
+            f"HRD score ({hrd_score}) is an algorithmic estimate (LOH + TAI + LST genomic scar proxy). "
+            "The only FDA-approved HRD assay is Myriad myChoice CDx. "
+            "This simplified scoring is not CAP/CLIA validated."
+        ),
+        key_drivers=[
+            f"HRD score: {hrd_score} (threshold >= 42)",
+            f"BRCA status: {'mutated' if brca_mutated else 'wild_type'}",
+            f"Genomic scars: LOH={loh_score}, TAI={tai_score}, LST={lst_score}",
+        ],
+        guideline_version="Pennington et al. 2016 (JCO); Myriad Genomics myChoice CDx labeling",
+        evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+        counterfactual=(
+            f"If confirmed by Myriad myChoice CDx (score >= 42), HRD positivity would qualify for "
+            "PARP inhibitor consideration."
+        ) if hrd_score >= 42 else None,
+    )
+
     return add_dry_run_warning({
         "vcf_path": vcf_path,
         "cns_path": cns_path,
@@ -596,6 +709,7 @@ async def _calculate_hrd_impl(
         "parp_eligible": parp_eligible,
         "confidence": "Low - simplified POC scoring, not clinical-grade",
         "recommendation": recommendation,
+        "xai_metadata": xai,
     })
 
 
@@ -636,6 +750,13 @@ async def _generate_report_impl(
                     "HER2-targeted therapy - ERBB2 amplification",
                     "CDK4/6 inhibitor - CCND1 amplification + ER+ context",
                 ],
+                "xai_metadata": _build_xai_metadata(
+                    confidence_level="moderate",
+                    confidence_note="Genomic report aggregates inputs of varying confidence. DRY_RUN fixture data.",
+                    key_drivers=["DRY_RUN: synthetic PAT002 fixture", "Actionable findings: 2"],
+                    guideline_version="Multiple -- see individual tool citations",
+                    evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+                ),
             })
         # Default to PAT001 ovarian payload for PAT001 and UNKNOWN
         return add_dry_run_warning({
@@ -661,6 +782,13 @@ async def _generate_report_impl(
                 "PI3K/AKT pathway inhibition - PIK3CA + PTEN + AKT2 convergence",
                 "Clinical trial enrollment - APR-246 for TP53-mutant HGSOC",
             ],
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note="Genomic report aggregates inputs of varying confidence. DRY_RUN fixture data.",
+                key_drivers=["DRY_RUN: synthetic PAT001 fixture", "Actionable findings: 5"],
+                guideline_version="Multiple -- see individual tool citations",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+            ),
         })
     vcf_result = await _parse_somatic_variants_impl(vcf_path=vcf_path)
     cnv_result = await _parse_cnv_calls_impl(cns_path=cns_path)

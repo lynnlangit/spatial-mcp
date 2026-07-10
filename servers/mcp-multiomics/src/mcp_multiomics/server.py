@@ -95,6 +95,46 @@ All findings must be:
     return result
 
 
+# ---------------------------------------------------------------------------
+# XAI metadata helpers
+# ---------------------------------------------------------------------------
+
+
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual: Optional[str] = None,
+) -> dict:
+    """Standardized XAI metadata for all mcp-multiomics tool outputs.
+
+    evidence_grade values:
+      "Deterministic Computation" -- Mathematical transform; result is exact given inputs
+      "Curated Database"          -- Enrichment against curated TF/kinase databases (DoRothEA, CollecTRI)
+      "Network Inference"         -- Computationally inferred regulatory network; higher uncertainty
+      "Statistical Test"          -- Hypothesis test with defined FDR control
+      "Heuristic QC"              -- Quality heuristics; thresholds are convention-based
+      "Research Only"             -- Platform-specific research estimate; no external guideline
+    """
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    # Filter None from key_drivers
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # ============================================================================
 # PARAMETER COERCION HELPERS (FastMCP 2.x JSON-string fallback)
 # ============================================================================
@@ -197,6 +237,41 @@ def integrate_omics_data(
     """
     logger.info(f"integrate_omics_data called with rna_path={rna_path}")
 
+    # Determine confidence: DRY_RUN is always synthetic -> LOW;
+    # real mode is MODERATE (all data paths are real files).
+    modalities_present = ["RNA"] + (["Protein"] if protein_path else []) + (
+        ["Phospho"] if phospho_path else []
+    )
+    if config.dry_run:
+        conf = "low"
+        conf_note = (
+            "DRY_RUN mode returns synthetic data. Confidence is low because "
+            "no real sample alignment or normalization was performed."
+        )
+    else:
+        conf = "moderate"
+        conf_note = (
+            "Integration used real data files. Confidence is moderate because "
+            "cross-modality alignment depends on sample naming conventions and "
+            "normalization assumptions."
+        )
+
+    xai = _build_xai_metadata(
+        confidence_level=conf,
+        confidence_note=conf_note,
+        key_drivers=[
+            f"Modalities integrated: {', '.join(modalities_present)}",
+            f"Normalization: {'z-score' if normalize else 'none'}",
+            f"Missing-value filter threshold: {filter_missing}",
+        ],
+        guideline_version="Best-practice multi-omics integration (Argelaguet et al. 2020 Nat Methods)",
+        evidence_grade="Research Only",
+        counterfactual=(
+            "If all modalities used matched sample IDs and batch-corrected "
+            "inputs, integration confidence would increase to high."
+        ) if len(modalities_present) < 3 else None,
+    )
+
     if config.dry_run:
         # Mock response for testing
         return add_dry_run_warning({
@@ -222,6 +297,7 @@ def integrate_omics_data(
                 "samples_filtered": 0,
                 "features_filtered": {"rna": 50, "protein": 20, "phospho": 15},
             },
+            "xai_metadata": xai,
             "status": "success (DRY_RUN mode)",
         })
 
@@ -234,6 +310,7 @@ def integrate_omics_data(
         normalize=normalize,
         filter_missing=filter_missing,
     )
+    result["xai_metadata"] = xai
     return add_research_disclaimer(result, "multi-omics data integration")
 
 

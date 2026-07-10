@@ -58,6 +58,36 @@ def add_dry_run_warning(result):
 
 
 # ---------------------------------------------------------------------------
+# XAI metadata helpers
+# ---------------------------------------------------------------------------
+
+# Known uveal melanoma driver genes — get HIGH confidence when score >= 0.7
+_UVEAL_MELANOMA_DRIVERS = {"GNA11", "GNAQ", "BAP1", "SF3B1", "EIF1AX"}
+
+
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual: Optional[str] = None,
+) -> dict:
+    """Build a standardised XAI metadata block."""
+    assert confidence_level in ("high", "moderate", "low")
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Helper to resolve symbol or ensembl_id
 # ---------------------------------------------------------------------------
 

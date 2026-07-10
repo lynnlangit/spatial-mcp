@@ -44,6 +44,30 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="SPATIAL_DRY_RUN")
 
 
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual=None,
+) -> dict:
+    """Standardized XAI metadata for tool outputs."""
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # Configuration
 DATA_DIR = Path(os.getenv("SPATIAL_DATA_DIR", "/workspace/data"))
 CACHE_DIR = Path(os.getenv("SPATIAL_CACHE_DIR", "/workspace/cache"))
@@ -882,7 +906,17 @@ async def calculate_spatial_autocorrelation(
             "method": method,
             "genes_analyzed": 0,
             "results": [],
-            "message": "DRY_RUN mode enabled. Set SPATIAL_DRY_RUN=false for real analysis."
+            "message": "DRY_RUN mode enabled. Set SPATIAL_DRY_RUN=false for real analysis.",
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="low",
+                confidence_note=(
+                    "DRY_RUN mode: no real spatial autocorrelation computed. "
+                    "Synthetic/empty result returned."
+                ),
+                key_drivers=["DRY_RUN mode -- no real data processed"],
+                guideline_version="Moran's I (Moran 1950); spatial statistics",
+                evidence_grade="Computational Prediction — Research Only",
+            ),
         })
 
     try:

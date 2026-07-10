@@ -51,6 +51,30 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="IMAGE_DRY_RUN")
 
 
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual=None,
+) -> dict:
+    """Standardized XAI metadata for mcp-openimagedata tool outputs."""
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 # Configuration
 IMAGE_DIR = Path(os.getenv("IMAGE_DATA_DIR", "/workspace/images"))
 CACHE_DIR = Path(os.getenv("IMAGE_CACHE_DIR", "/workspace/cache/images"))
@@ -144,7 +168,22 @@ async def fetch_histology_image(
                 "magnification": "20x" if resolution == "high" else "10x",
                 "format": "TIFF",
                 "mode": "dry_run"
-            }
+            },
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="high",
+                confidence_note=(
+                    "Image retrieval from data store. No inference performed. "
+                    "Image quality (stain quality, section artifacts) should be "
+                    "assessed visually before downstream AI analysis."
+                ),
+                key_drivers=[
+                    f"Image type: {stain_type.upper()}",
+                    f"Source: DRY_RUN mock image",
+                    f"Resolution: {resolution}",
+                ],
+                guideline_version="Digital pathology standards: CAP Digital Pathology Guidelines 2022",
+                evidence_grade="Visualization Only",
+            ),
         }
 
     try:
@@ -177,7 +216,22 @@ async def fetch_histology_image(
                 "magnification": magnification,
                 "format": image_path.suffix.lstrip(".").upper(),
                 "color_mode": img.mode
-            }
+            },
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="high",
+                confidence_note=(
+                    "Image retrieval from data store. No inference performed. "
+                    "Image quality (stain quality, section artifacts) should be "
+                    "assessed visually before downstream AI analysis."
+                ),
+                key_drivers=[
+                    f"Image type: {stain_type.upper()}",
+                    f"Source: {image_path.name}",
+                    f"Resolution: {resolution}",
+                ],
+                guideline_version="Digital pathology standards: CAP Digital Pathology Guidelines 2022",
+                evidence_grade="Visualization Only",
+            ),
         }
     except Exception as e:
         logger.error(f"Error loading image: {e}", exc_info=True)
@@ -253,7 +307,21 @@ async def register_image_to_spatial(
                 "matched_points": 450,
                 "method": registration_method
             },
-            "mode": "dry_run"
+            "mode": "dry_run",
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    f"Image-to-spatial registration using {registration_method}. "
+                    "DRY_RUN: mock registration quality metrics. "
+                    "Registration quality depends on tissue morphology preservation."
+                ),
+                key_drivers=[
+                    f"Method: {registration_method}",
+                    "Registration error: 1.85 (mock)",
+                ],
+                guideline_version="PASTE (Zeira 2022, Nature Methods); STalign (Clifton 2023)",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+            ),
         }
 
     img_path = Path(image_path)
@@ -374,7 +442,23 @@ async def register_image_to_spatial(
                 "method": registration_method,
                 "total_spots": int(len(spot_x)),
                 "processing_time_seconds": round(time.time() - start, 2)
-            }
+            },
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    f"Image-to-spatial registration using {registration_method}. "
+                    f"Registration error: {rmse:.1f}. "
+                    "Registration quality depends on tissue morphology preservation "
+                    "and landmark availability."
+                ),
+                key_drivers=[
+                    f"Method: {registration_method}",
+                    f"Registration error (RMSE): {rmse}",
+                    f"Landmarks used: {int(matched)}",
+                ],
+                guideline_version="PASTE (Zeira 2022, Nature Methods); STalign (Clifton 2023)",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+            ),
         }
     except (IOError, ValueError) as e:
         logger.error(f"Registration input error: {e}")
@@ -443,7 +527,22 @@ async def extract_image_features(
                 "min": 0.05,
                 "max": 0.95
             },
-            "mode": "dry_run"
+            "mode": "dry_run",
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    f"Image features extracted using {feature_type} method. "
+                    "DRY_RUN: mock feature values. Feature extraction is deterministic "
+                    "given a trained model, but features are latent representations "
+                    "without direct biological interpretability."
+                ),
+                key_drivers=[
+                    f"Feature type: {feature_type}",
+                    f"Feature dimension: {num_features}",
+                ],
+                guideline_version="UNI (Chen 2024, Nature Medicine); CTransPath (Wang 2022, MedIA)",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+            ),
         }
 
     img_path = Path(image_path)
@@ -504,7 +603,24 @@ async def extract_image_features(
                 "std": round(float(np.std(flat)), 4),
                 "min": round(float(np.min(flat)), 4),
                 "max": round(float(np.max(flat)), 4)
-            }
+            },
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    f"Image features extracted using {feature_type} method. "
+                    "Feature extraction is deterministic given a trained model, but "
+                    "features are latent representations without direct biological "
+                    "interpretability. Downstream analysis quality depends on whether "
+                    "training distribution included the relevant tumor type."
+                ),
+                key_drivers=[
+                    f"Feature type: {feature_type}",
+                    f"Feature dimension: {len(feat_names)}",
+                    f"ROI count: {len(regions)}",
+                ],
+                guideline_version="UNI (Chen 2024, Nature Medicine); CTransPath (Wang 2022, MedIA)",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+            ),
         }
     except (IOError, ValueError) as e:
         logger.error(f"Feature extraction input error: {e}")
@@ -858,12 +974,29 @@ async def generate_he_annotation(
         ... )
     """
     if DRY_RUN:
+        necro_count = len(necrotic_regions) if necrotic_regions else 0
+        cell_count = len(high_cellularity_regions) if high_cellularity_regions else 0
         return add_dry_run_warning({
             "output_file": str(OUTPUT_DIR / "visualizations" / "he_annotation_dryrun.png"),
-            "necrotic_regions_count": len(necrotic_regions) if necrotic_regions else 0,
-            "cellularity_regions_count": len(high_cellularity_regions) if high_cellularity_regions else 0,
+            "necrotic_regions_count": necro_count,
+            "cellularity_regions_count": cell_count,
             "description": "DRY_RUN: Would generate H&E annotation",
-            "message": "Set IMAGE_DRY_RUN=false to generate real visualizations"
+            "message": "Set IMAGE_DRY_RUN=false to generate real visualizations",
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    "H&E annotation using rule-based region overlay. "
+                    "DRY_RUN: mock annotation. Annotations should be reviewed "
+                    "by a pathologist before clinical use."
+                ),
+                key_drivers=[
+                    f"Necrotic regions: {necro_count}",
+                    f"High cellularity regions: {cell_count}",
+                ],
+                guideline_version="PathAI PathExplore; CAP Digital Pathology Guidelines 2022",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+                counterfactual="Pathologist review of annotations is required before clinical reporting.",
+            ),
         })
 
     try:
@@ -968,7 +1101,23 @@ async def generate_he_annotation(
             "description": description,
             "visualization_type": "he_morphology_annotation",
             "necrotic_color": necrotic_color,
-            "cellularity_color": cellularity_color
+            "cellularity_color": cellularity_color,
+            "xai_metadata": _build_xai_metadata(
+                confidence_level="moderate",
+                confidence_note=(
+                    "H&E annotation using region overlay. "
+                    "Deep learning annotation models are validated for common tumor types "
+                    "but uveal melanoma has limited representation in published training datasets. "
+                    "Annotations should be reviewed by a pathologist before clinical use."
+                ),
+                key_drivers=[
+                    f"Necrotic regions: {necrotic_count}",
+                    f"High cellularity regions: {cellularity_count}",
+                ],
+                guideline_version="PathAI PathExplore; CONCH (Chen 2024, Nature Medicine); TCGA digital pathology",
+                evidence_grade="Algorithm-Predicted — Not Clinical Grade",
+                counterfactual="Pathologist review of annotations is required before clinical reporting.",
+            ),
         }
 
     except Exception as e:

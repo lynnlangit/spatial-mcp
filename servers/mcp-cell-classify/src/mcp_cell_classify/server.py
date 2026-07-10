@@ -44,6 +44,49 @@ def add_dry_run_warning(result):
     return _shared_add_dry_run_warning(result, dry_run=DRY_RUN, env_var="CELL_CLASSIFY_DRY_RUN")
 
 
+# ---------------------------------------------------------------------------
+# XAI metadata helper
+# ---------------------------------------------------------------------------
+
+# Well-established cell markers with strong literature support (TCGA/GEP validated)
+_ESTABLISHED_MARKERS = frozenset({
+    "CD3", "CD4", "CD8", "CD19", "CD56", "CD68", "CD138",
+    "FoxP3", "Ki67",
+})
+
+
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual: Optional[str] = None,
+) -> dict:
+    """Standardized XAI metadata for all mcp-cell-classify tool outputs.
+
+    evidence_grade values:
+      "Tier 1 Evidence (TCGA/GEP)"                -- Well-established marker panel
+      "Algorithm-Predicted -- Not Clinical Grade"  -- Algorithmic result; not lab-confirmed
+      "Visualization Only"                         -- No inference; display only
+    """
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    # Filter None from key_drivers
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
 OUTPUT_DIR = Path(os.getenv("CELL_CLASSIFY_OUTPUT_DIR", "/workspace/output"))
 
 def _ensure_output_dir() -> None:
