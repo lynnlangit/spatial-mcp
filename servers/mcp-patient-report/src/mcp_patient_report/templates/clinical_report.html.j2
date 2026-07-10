@@ -8,7 +8,7 @@
     {% include 'styles/clinical_report.css' %}
     </style>
 </head>
-<body{% if report.metadata.report_status == 'preliminary' %} class="has-draft-banner"{% endif %}>
+<body>
 
 {# ── DRAFT Banner ── #}
 {% if report.metadata.report_status == 'preliminary' %}
