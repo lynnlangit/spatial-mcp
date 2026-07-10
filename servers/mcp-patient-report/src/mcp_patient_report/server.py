@@ -420,7 +420,13 @@ async def generate_patient_report(
 
         # Generate HTML report
         generator = _get_report_generator()
-        html_content = generator.render(report_data, report_type)
+        html_content = generator.render(
+            report_data,
+            report_type,
+            evidence_strength_summary=evidence_summary,
+            xai_collection=xai_collection,
+            xai_tool_labels=ONCOLOGY_TOOL_LABELS,
+        )
 
         # Generate PDF or HTML output
         pdf_generator = _get_pdf_generator()

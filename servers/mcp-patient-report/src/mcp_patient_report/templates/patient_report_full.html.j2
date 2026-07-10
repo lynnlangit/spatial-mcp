@@ -300,6 +300,88 @@
 </section>
 {% endif %}
 
+<!-- Evidence Strength Summary (XAI) -->
+{% if evidence_strength_summary and xai_collection %}
+<section class="section">
+    <h2>Evidence Strength Summary</h2>
+
+    <p>Each analysis in this report carries a confidence level based on the data
+    quality, algorithm validation, and clinical evidence behind it.</p>
+
+    <!-- Confidence chips -->
+    {% if evidence_strength_summary.confidence_counts %}
+    <div class="xai-chips">
+        <span class="xai-chip xai-chip--high">
+            HIGH {{ evidence_strength_summary.confidence_counts.high }}
+        </span>
+        <span class="xai-chip xai-chip--moderate">
+            MODERATE {{ evidence_strength_summary.confidence_counts.moderate }}
+        </span>
+        <span class="xai-chip xai-chip--low">
+            LOW {{ evidence_strength_summary.confidence_counts.low }}
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- Evidence table -->
+    <table class="xai-table">
+        <thead>
+            <tr>
+                <th>Analysis Component</th>
+                <th>Confidence</th>
+                <th>Evidence Grade</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for key, xai in xai_collection.items()|sort %}
+            {% if xai %}
+            <tr>
+                <td>{{ xai_tool_labels.get(key, key) if xai_tool_labels else key }}</td>
+                <td>
+                    {% set level = xai.get("confidence_level", "unknown") %}
+                    <span class="xai-confidence xai-confidence--{{ level }}">
+                        {{ level|upper }}
+                    </span>
+                </td>
+                <td>{{ xai.get("evidence_grade", "") }}</td>
+                <td>{{ xai.get("confidence_note", "") }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Synthetic data warning -->
+    {% if evidence_strength_summary.synthetic_data_items %}
+    <div class="attention-box">
+        <strong>Synthetic Data Warning:</strong> The following analyses used
+        synthetic or simulated data and carry <strong>no clinical validity</strong>:
+        <ul>
+        {% for item in evidence_strength_summary.synthetic_data_items %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Action required callout -->
+    {% if evidence_strength_summary.action_required %}
+    <div class="caution-box">
+        <strong>Action Required:</strong> This report contains
+        {{ evidence_strength_summary.lowest_confidence_items|length }}
+        low-confidence item{{ "s" if evidence_strength_summary.lowest_confidence_items|length != 1 }}
+        that should be reviewed with your care team before any clinical decisions:
+        <ul>
+        {% for item in evidence_strength_summary.lowest_confidence_items %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
 <!-- Final Disclaimer -->
 <section class="section">
     <div class="disclaimer">

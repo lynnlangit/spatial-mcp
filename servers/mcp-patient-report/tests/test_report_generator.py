@@ -108,6 +108,72 @@ class TestReportGenerator:
         assert "&lt;script&gt;" in html
 
 
+class TestXAIContext:
+    """Tests for XAI evidence strength summary in rendered reports."""
+
+    def test_full_report_with_xai_context(self, report_generator, pat001_data):
+        """XAI section renders when extra context is provided."""
+        xai_collection = {
+            "somatic_variants": {
+                "confidence_level": "high",
+                "confidence_note": "Validated somatic calls",
+                "evidence_grade": "ACMG Tier I",
+                "key_drivers": ["FoundationOne CDx"],
+            },
+            "spatial_autocorrelation": {
+                "confidence_level": "moderate",
+                "confidence_note": "Computational prediction",
+                "evidence_grade": "Algorithm-predicted",
+                "key_drivers": ["Moran's I"],
+            },
+            "cell_type_fidelity": {
+                "confidence_level": "low",
+                "confidence_note": "SYNTHETIC simulation only",
+                "evidence_grade": "Research-only",
+                "key_drivers": ["Quantum sim"],
+            },
+        }
+        evidence_strength_summary = {
+            "confidence_counts": {"high": 1, "moderate": 1, "low": 1},
+            "lowest_confidence_items": ["Quantum Cell-Type Fidelity"],
+            "synthetic_data_items": ["Quantum Cell-Type Fidelity"],
+            "action_required": True,
+            "table_text": "",
+        }
+        xai_tool_labels = {
+            "somatic_variants": "Somatic Variant Calls",
+            "spatial_autocorrelation": "Spatial Autocorrelation (Moran's I)",
+            "cell_type_fidelity": "Quantum Cell-Type Fidelity",
+        }
+
+        html = report_generator.render_full_report(
+            pat001_data,
+            evidence_strength_summary=evidence_strength_summary,
+            xai_collection=xai_collection,
+            xai_tool_labels=xai_tool_labels,
+        )
+
+        assert "Evidence Strength Summary" in html
+        assert "HIGH" in html
+        assert "MODERATE" in html
+        assert "LOW" in html
+        assert "Somatic Variant Calls" in html
+        assert "Quantum Cell-Type Fidelity" in html
+        assert "Synthetic Data Warning" in html
+        assert "Action Required" in html
+
+    def test_full_report_without_xai_context(self, report_generator, pat001_data):
+        """XAI section does NOT render when no extra context is provided."""
+        html = report_generator.render_full_report(pat001_data)
+
+        # The <h2> heading and rendered table should be absent.
+        # (CSS class names like xai-chip--high appear in the inlined
+        # stylesheet, so only check for rendered section content.)
+        assert "<h2>Evidence Strength Summary</h2>" not in html
+        assert "Synthetic Data Warning" not in html
+        assert "Action Required" not in html
+
+
 class TestHealthLiteracy:
     """Tests for health literacy compliance."""
 

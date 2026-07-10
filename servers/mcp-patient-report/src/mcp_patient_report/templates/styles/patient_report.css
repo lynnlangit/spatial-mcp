@@ -601,3 +601,103 @@ li {
 .next-steps-list li {
     color: #1a5f2a;
 }
+
+/* ==========================================================================
+   XAI Evidence Strength Summary
+   ========================================================================== */
+
+.xai-chips {
+    display: flex;
+    gap: 0.75em;
+    margin: 1em 0;
+    flex-wrap: wrap;
+}
+
+.xai-chip {
+    display: inline-block;
+    padding: 0.35em 0.9em;
+    border-radius: 20px;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.xai-chip--high {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.xai-chip--moderate {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fde047;
+}
+
+.xai-chip--low {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.xai-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 11pt;
+}
+
+.xai-table th {
+    background: var(--color-surface);
+    font-weight: 600;
+    color: var(--color-primary);
+    padding: 0.75em;
+    text-align: left;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.xai-table td {
+    padding: 0.65em 0.75em;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+}
+
+.xai-table tr:hover {
+    background: var(--color-surface);
+}
+
+.xai-confidence {
+    display: inline-block;
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    font-size: 10pt;
+    font-weight: 700;
+}
+
+.xai-confidence--high {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.xai-confidence--moderate {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.xai-confidence--low {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.xai-confidence--unknown {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+@media print {
+    .xai-chip,
+    .xai-confidence {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

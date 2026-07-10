@@ -45,36 +45,40 @@ class ReportGenerator:
 
         logger.info(f"ReportGenerator initialized with templates from: {self.templates_dir}")
 
-    def render_full_report(self, report_data: PatientReportData) -> str:
+    def render_full_report(self, report_data: PatientReportData, **extra_context) -> str:
         """
         Render a comprehensive multi-page patient report.
 
         Args:
             report_data: Validated PatientReportData model
+            **extra_context: Additional template context (e.g. xai_collection,
+                evidence_strength_summary, xai_tool_labels).
 
         Returns:
             Rendered HTML string
         """
         template = self.env.get_template("patient_report_full.html.j2")
-        return template.render(report=report_data)
+        return template.render(report=report_data, **extra_context)
 
-    def render_onepage_summary(self, report_data: PatientReportData) -> str:
+    def render_onepage_summary(self, report_data: PatientReportData, **extra_context) -> str:
         """
         Render a one-page quick reference summary.
 
         Args:
             report_data: Validated PatientReportData model
+            **extra_context: Additional template context.
 
         Returns:
             Rendered HTML string
         """
         template = self.env.get_template("patient_report_onepage.html.j2")
-        return template.render(report=report_data)
+        return template.render(report=report_data, **extra_context)
 
     def render(
         self,
         report_data: PatientReportData,
-        report_type: str = "full"
+        report_type: str = "full",
+        **extra_context,
     ) -> str:
         """
         Render a patient report of the specified type.
@@ -82,6 +86,7 @@ class ReportGenerator:
         Args:
             report_data: Validated PatientReportData model
             report_type: Type of report ("full" or "onepage")
+            **extra_context: Additional template context forwarded to sub-methods.
 
         Returns:
             Rendered HTML string
@@ -90,9 +95,9 @@ class ReportGenerator:
             ValueError: If report_type is not recognized
         """
         if report_type == "full":
-            return self.render_full_report(report_data)
+            return self.render_full_report(report_data, **extra_context)
         elif report_type == "onepage":
-            return self.render_onepage_summary(report_data)
+            return self.render_onepage_summary(report_data, **extra_context)
         else:
             raise ValueError(
                 f"Unknown report type: {report_type}. "
