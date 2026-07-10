@@ -21,7 +21,7 @@ Three 90-minute lectures covering precision oncology, hands-on analysis, and eth
 2. **Genomic instability: HRD and TMB** (10 min)
    - What HRD scores measure (LOH, TAI, LST)
    - Tumor mutational burden and its clinical significance
-   - PAT001 values: HRD = 72, TMB = 4.2 mut/Mb
+   - PAT001 values: HRD = 54, TMB = 4.2 mut/Mb
 
 3. **Spatial biology and the tumor microenvironment** (10 min)
    - Visium spatial transcriptomics workflow
@@ -82,7 +82,7 @@ cd servers/mcp-genomic-results && uv sync && uv run pytest -v
 
 2. **Step 1: Genomic instability (HRD + TMB)** (15 min)
    - Run genomic-results cells
-   - Interpret HRD = 72: PARP inhibitor candidacy
+   - Interpret HRD = 54: PARP inhibitor candidacy
    - Discuss TMB = 4.2: below pan-cancer TMB-high threshold but relevant in HGSOC context
 
 3. **Step 2: Neoantigen prediction** (15 min)
@@ -114,7 +114,7 @@ cd servers/mcp-genomic-results && uv sync && uv run pytest -v
 - [PAT001 walkthrough notebook](PAT001_walkthrough.ipynb)
 
 **Hands-on exercise:**
-Modify one PAT001 parameter (e.g., set HRD = 35 instead of 72) and discuss how the therapeutic hypothesis changes. Does PARP inhibitor candidacy still hold? Write a 1-paragraph argument.
+Modify one PAT001 parameter (e.g., set HRD = 35 instead of 54) and discuss how the therapeutic hypothesis changes. Does PARP inhibitor candidacy still hold? Write a 1-paragraph argument.
 
 ---
 

@@ -48,7 +48,7 @@ jobs:
           echo "## PAT001 Regression Checkpoint" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Expected |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| HRD score | 72 |" >> $GITHUB_STEP_SUMMARY
+          echo "| HRD score | 54 |" >> $GITHUB_STEP_SUMMARY
           echo "| TMB | 4.2 mut/Mb |" >> $GITHUB_STEP_SUMMARY
           echo "| IC50 (RMPEAAPPV) | 7.8 nM |" >> $GITHUB_STEP_SUMMARY
           echo "| Spatial spots | 300 |" >> $GITHUB_STEP_SUMMARY
