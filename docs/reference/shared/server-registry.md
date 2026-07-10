@@ -68,6 +68,10 @@
 - **Treatment**: mcp-perturbation (GEARS prediction), mcp-quantum-celltype-fidelity (quantum fidelity)
 - **Cardiovascular**: mcp-cardiometabolic (CVD risk scoring, biomarker panels, preventive health)
 - **Reports**: mcp-patient-report (patient-facing summaries)
+### By XAI Metadata Support
+- **Per-tool XAI metadata**: mcp-genomic-results, mcp-neoantigen, mcp-spatialtools, mcp-multiomics, mcp-cell-classify, mcp-opentargets, mcp-perturbation, mcp-openimagedata, mcp-quantum-celltype-fidelity, mcp-cardiometabolic
+- **XAI aggregation (evidence strength summary)**: mcp-patient-report
+
 ### By Production Readiness
 - **Ready for Research**: mcp-fgbio, mcp-multiomics, mcp-spatialtools, mcp-perturbation, mcp-quantum-celltype-fidelity, mcp-deepcell, mcp-cell-classify, mcp-epic, mcp-openimagedata, mcp-patient-report, mcp-genomic-results, mcp-geodownload, mcp-opentargets, mcp-cibersortx, mcp-neoantigen, mcp-cardiometabolic
 - **Not Ready**: mcp-mocktcga (synthetic data)

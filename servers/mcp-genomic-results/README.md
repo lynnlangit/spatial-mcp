@@ -11,6 +11,19 @@ MCP server for parsing somatic variant (VCF) and copy number (CNS) results with 
 | `calculate_hr_deficiency_score` | Estimate HRD score from LOH/TAI/LST + BRCA status (simplified, non-clinical) |
 | `generate_genomic_report` | Comprehensive report combining VCF + CNV + HRD analysis with therapy recommendations |
 
+## XAI Metadata
+
+Every tool returns an `xai_metadata` field with explainability information:
+
+| Field | Description |
+|-------|-------------|
+| `confidence_level` | `high`, `moderate`, or `low` — how reliable the result is given the inputs |
+| `confidence_note` | Why this confidence level was assigned |
+| `key_drivers` | 1-3 inputs that most influenced the result |
+| `guideline_version` | Specific guideline or algorithm reference |
+| `evidence_grade` | Clinical Grade (CAP/CLIA) or Algorithm-Predicted — Not Clinical Grade |
+| `counterfactual` | What would change if a key input were different |
+
 ## Quick Start
 
 **Requires:** Python 3.11+

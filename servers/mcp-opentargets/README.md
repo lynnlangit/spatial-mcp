@@ -13,6 +13,19 @@ MCP server for querying the [Open Targets Platform](https://platform.opentargets
 | `get_target_safety` | Safety and adverse event profiles |
 | `batch_score_targets` | Score multiple genes against a disease in batch |
 
+## XAI Metadata
+
+Every tool returns an `xai_metadata` field with explainability information:
+
+| Field | Description |
+|-------|-------------|
+| `confidence_level` | `high`, `moderate`, or `low` — how reliable the result is given the inputs |
+| `confidence_note` | Why this confidence level was assigned |
+| `key_drivers` | 1-3 inputs that most influenced the result |
+| `guideline_version` | Open Targets Platform version and data sources |
+| `evidence_grade` | Database Curated (OT Score) |
+| `counterfactual` | What would change if a key input were different |
+
 ## Environment Variables
 
 | Variable | Default | Description |

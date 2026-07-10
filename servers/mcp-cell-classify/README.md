@@ -92,6 +92,21 @@ Generate a side-by-side visualization coloring cells by marker expression (posit
 
 ---
 
+## XAI Metadata
+
+Every tool returns an `xai_metadata` field with explainability information:
+
+| Field | Description |
+|-------|-------------|
+| `confidence_level` | `high`, `moderate`, or `low` — how reliable the result is given the inputs |
+| `confidence_note` | Why this confidence level was assigned |
+| `key_drivers` | 1-3 inputs that most influenced the result |
+| `guideline_version` | Specific algorithm or method reference |
+| `evidence_grade` | Algorithm-Predicted — Not Clinical Grade |
+| `counterfactual` | What would change if a key input were different |
+
+---
+
 ## Data Contract
 
 ### Input from mcp-deepcell

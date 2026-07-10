@@ -225,6 +225,19 @@ Export embeddings for downstream analysis.
 **Output:**
 - `exported_files`: List of exported file paths
 
+## XAI Metadata
+
+Every tool returns an `xai_metadata` field with explainability information:
+
+| Field | Description |
+|-------|-------------|
+| `confidence_level` | `high`, `moderate`, or `low` — how reliable the result is given the inputs |
+| `confidence_note` | Why this confidence level was assigned |
+| `key_drivers` | 1-3 inputs that most influenced the result |
+| `guideline_version` | QuCoWE-style PQC framework reference |
+| `evidence_grade` | Research Only — Novel Method |
+| `counterfactual` | What would change if a key input were different |
+
 ## Server Availability and Graceful Degradation
 
 The quantum simulation backend requires a running server process. If the server is unavailable at pipeline execution time:

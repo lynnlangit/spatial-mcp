@@ -89,6 +89,10 @@ Get the full JSON schema for `PatientReportData`.
 
 Check if PDF generation is available.
 
+## XAI Metadata
+
+`generate_patient_report` accepts an optional `xai_collection_json` parameter containing per-tool XAI metadata from upstream oncology servers. When provided, the report includes an `evidence_strength_summary` with a formatted evidence table, confidence counts, lowest-confidence flags, and action-required items.
+
 ## PatientReportData Schema
 
 The LLM constructs this JSON from conversation context:

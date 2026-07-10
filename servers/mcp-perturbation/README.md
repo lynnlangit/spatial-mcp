@@ -273,6 +273,21 @@ Generate PCA/UMAP plots of baseline vs. predicted.
 
 ---
 
+## XAI Metadata
+
+Every tool returns an `xai_metadata` field with explainability information:
+
+| Field | Description |
+|-------|-------------|
+| `confidence_level` | `high`, `moderate`, or `low` — how reliable the result is given the inputs |
+| `confidence_note` | Why this confidence level was assigned |
+| `key_drivers` | 1-3 inputs that most influenced the result |
+| `guideline_version` | CPA (Lotfollahi 2021) or GEARS (Roohani 2023) |
+| `evidence_grade` | Computational Prediction — Research Only |
+| `counterfactual` | What would change if a key input were different |
+
+---
+
 ## Primary Dataset: GSE184880
 
 **Synthetic HGSOC-modeled Perturb-seq data** for GEARS training.
