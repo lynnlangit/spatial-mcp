@@ -51,7 +51,7 @@ Generate a patient-facing summary report from analysis results.
 ```python
 result = await generate_patient_report(
     report_data_json='{"patient_info": {...}, ...}',
-    report_type="full",      # "full" or "onepage"
+    report_type="full",      # "full", "onepage", or "clinical"
     output_format="pdf"      # "pdf" or "html"
 )
 ```
