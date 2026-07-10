@@ -18,7 +18,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastmcp import FastMCP
 from pydantic import ValidationError
@@ -43,6 +43,168 @@ TEMPLATES_DIR = os.getenv("PATIENT_REPORT_TEMPLATES_DIR", None)
 
 # Ensure output directory exists
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ---------------------------------------------------------------------------
+# XAI metadata helpers
+# ---------------------------------------------------------------------------
+
+
+def _build_xai_metadata(
+    confidence_level: str,
+    confidence_note: str,
+    key_drivers: list,
+    guideline_version: str,
+    evidence_grade: str,
+    counterfactual=None,
+) -> dict:
+    """Standardized XAI metadata for mcp-patient-report tool outputs."""
+    assert confidence_level in ("high", "moderate", "low"), \
+        f"confidence_level must be 'high', 'moderate', or 'low' -- got: {confidence_level}"
+    key_drivers = [d for d in key_drivers if d is not None]
+    assert 1 <= len(key_drivers) <= 3, \
+        f"key_drivers must contain 1-3 items -- got: {len(key_drivers)}"
+    return {
+        "confidence_level": confidence_level,
+        "confidence_note": confidence_note,
+        "key_drivers": key_drivers,
+        "counterfactual": counterfactual,
+        "guideline_version": guideline_version,
+        "evidence_grade": evidence_grade,
+    }
+
+
+ONCOLOGY_TOOL_LABELS = {
+    "somatic_variants":             "Somatic Variant Calls",
+    "cnv_calls":                    "Copy Number Variants",
+    "hrd_score":                    "HR Deficiency Score",
+    "genomic_report":               "Genomic Summary Report",
+    "hla_typing":                   "HLA Typing",
+    "mhc1_binding":                 "MHC I Neoantigen Binding",
+    "mhc2_binding":                 "MHC II Neoantigen Binding",
+    "neoantigen_burden":            "Neoantigen Burden",
+    "pvacseq":                      "pVACseq Pipeline",
+    "antigen_presentation":         "Antigen Presentation Pathway",
+    "spatial_data":                 "Spatial Transcriptomics Data",
+    "spatial_autocorrelation":      "Spatial Autocorrelation (Moran's I)",
+    "cell_type_deconvolution":      "Cell-Type Deconvolution",
+    "differential_expression":      "Spatial Differential Expression",
+    "pathway_enrichment":           "Pathway Enrichment",
+    "multiomics_integration":       "Multi-Omics Integration",
+    "upstream_regulators":          "Upstream Regulator Prediction",
+    "multiomics_pca":               "Multi-Omics PCA",
+    "cell_state_classification":    "Cell State Classification",
+    "multi_marker_classification":  "Multi-Marker Classification",
+    "target_associations":          "Target-Disease Associations (OT)",
+    "target_drugs":                 "Approved/Trial Drugs (OT)",
+    "target_batch_scores":          "Batch Target Scoring",
+    "perturbation_response":        "Drug Perturbation Response",
+    "perturbation_de":              "Perturbation Differential Expression",
+    "histology_image":              "Histology Image",
+    "he_annotation":                "H&E AI Annotation",
+    "image_features":               "Histology Feature Extraction",
+    "image_registration":           "Image-to-Spatial Registration",
+    "cell_type_fidelity":           "Quantum Cell-Type Fidelity",
+    "tls_signature":                "TLS Quantum Signature",
+    "immune_evasion":               "Immune Evasion State Analysis",
+    "quantum_perturbation":         "Quantum Perturbation Prediction",
+}
+
+
+def _build_evidence_table(
+    xai_collection: Dict[str, dict],
+    tool_labels: Dict[str, str],
+) -> str:
+    """Build a formatted evidence strength summary table from xai_collection.
+
+    Returns a multi-line string table suitable for inclusion in reports.
+    """
+    if not xai_collection:
+        return "(No XAI metadata collected for this report.)"
+
+    divider = "=" * 120
+    header = f"{'Analysis Component':<50} {'Confidence':<12} {'Evidence Grade':<40} {'Note'}"
+    lines = [
+        divider,
+        "EVIDENCE STRENGTH SUMMARY",
+        divider,
+        header,
+        "-" * 120,
+    ]
+
+    for key, xai in sorted(xai_collection.items()):
+        if not xai:
+            continue
+        label = tool_labels.get(key, key)
+        level = xai.get("confidence_level", "unknown")
+        grade = xai.get("evidence_grade", "")
+        note = xai.get("confidence_note", "")
+        # Truncate note for table display
+        short_note = (note[:60] + "...") if len(note) > 63 else note
+        marker = ""
+        if level == "low":
+            marker = "LOW"
+        elif level == "moderate":
+            marker = "moderate"
+        else:
+            marker = "HIGH"
+        lines.append(
+            f"{label:<50} {marker:<12} {grade:<40} {short_note}"
+        )
+
+    lines += [
+        divider,
+        "Items with moderate confidence are computational predictions requiring clinical correlation.",
+        "LOW confidence items are research estimates or SYNTHETIC data -- no clinical inference permitted.",
+        "DRAFT -- NOT FOR CLINICAL USE. All findings require clinician review.",
+        divider,
+    ]
+    return "\n".join(lines)
+
+
+def _build_evidence_strength_summary(
+    xai_collection: Dict[str, dict],
+) -> dict:
+    """Build the evidence_strength_summary dict from collected XAI metadata."""
+    table_text = _build_evidence_table(xai_collection, ONCOLOGY_TOOL_LABELS)
+
+    confidence_counts = {
+        "high": sum(
+            1 for x in xai_collection.values()
+            if x.get("confidence_level") == "high"
+        ),
+        "moderate": sum(
+            1 for x in xai_collection.values()
+            if x.get("confidence_level") == "moderate"
+        ),
+        "low": sum(
+            1 for x in xai_collection.values()
+            if x.get("confidence_level") == "low"
+        ),
+    }
+
+    lowest_confidence_items = [
+        ONCOLOGY_TOOL_LABELS.get(k, k)
+        for k, v in xai_collection.items()
+        if v.get("confidence_level") == "low"
+    ]
+
+    synthetic_data_items = [
+        ONCOLOGY_TOOL_LABELS.get(k, k)
+        for k, v in xai_collection.items()
+        if "synthetic" in v.get("confidence_note", "").lower()
+        or "SYNTHETIC" in v.get("confidence_note", "")
+    ]
+
+    action_required = len(lowest_confidence_items) > 0
+
+    return {
+        "table_text": table_text,
+        "confidence_counts": confidence_counts,
+        "lowest_confidence_items": lowest_confidence_items,
+        "synthetic_data_items": synthetic_data_items,
+        "action_required": action_required,
+    }
 
 
 # --- HTTP download endpoint for generated reports ---
@@ -86,6 +248,7 @@ async def generate_patient_report(
     report_data_json: str,
     report_type: str = "full",
     output_format: str = "pdf",
+    xai_collection_json: Optional[str] = None,
 ) -> dict:
     """
     Generate a patient-facing summary report from analysis results.
@@ -97,6 +260,7 @@ async def generate_patient_report(
     - Treatment options with evidence levels
     - Monitoring plan and warning signs
     - Support resources
+    - Evidence Strength Summary table (when xai_collection_json is provided)
 
     The LLM should construct the PatientReportData JSON from conversation context,
     following health literacy guidelines (6th-8th grade reading level).
@@ -116,6 +280,11 @@ async def generate_patient_report(
             - "pdf": PDF document (default, requires WeasyPrint)
             - "html": HTML file (fallback if PDF not available)
 
+        xai_collection_json: Optional JSON string mapping tool keys to their
+            xai_metadata dicts. When provided, the report includes an Evidence
+            Strength Summary table and per-finding confidence markers.
+            Example: '{"somatic_variants": {"confidence_level": "moderate", ...}}'
+
     Returns:
         Dictionary with:
         - status: "success" or "error"
@@ -125,6 +294,9 @@ async def generate_patient_report(
         - is_draft: Whether report has draft watermark
         - patient_id: Patient identifier from report
         - message: Human-readable status message
+        - evidence_strength_summary: Per-finding confidence breakdown (if xai_collection provided)
+        - xai_metadata: Report-level XAI metadata
+        - watermark: "DRAFT -- NOT FOR CLINICAL USE"
 
     Example:
         >>> result = await generate_patient_report(
@@ -136,6 +308,17 @@ async def generate_patient_report(
         /reports/PAT001-OVC-2025_full_report_DRAFT_20260207.pdf
     """
     try:
+        # Parse xai_collection if provided
+        xai_collection: Dict[str, dict] = {}
+        if xai_collection_json:
+            try:
+                xai_collection = json.loads(xai_collection_json)
+                if not isinstance(xai_collection, dict):
+                    xai_collection = {}
+            except (json.JSONDecodeError, TypeError):
+                logger.warning("Invalid xai_collection_json — ignoring")
+                xai_collection = {}
+
         # Parse and validate JSON
         try:
             report_dict = json.loads(report_data_json)
@@ -185,6 +368,27 @@ async def generate_patient_report(
                 ),
             }
 
+        # Build evidence strength summary from xai_collection
+        evidence_summary = _build_evidence_strength_summary(xai_collection)
+
+        # Identify low-confidence items for the report-level XAI note
+        low_items = evidence_summary.get("lowest_confidence_items", [])
+        low_items_str = ", ".join(low_items[:3]) if low_items else "none"
+
+        report_xai = _build_xai_metadata(
+            confidence_level="moderate",
+            confidence_note=(
+                "Report aggregates findings of varying confidence. "
+                f"Key low-confidence items: {low_items_str}. "
+                "See evidence_strength_summary for per-finding breakdown."
+            ),
+            key_drivers=[
+                "See evidence_strength_summary.lowest_confidence_items",
+            ],
+            guideline_version="Multiple -- see individual tool citations",
+            evidence_grade="Algorithm-Predicted -- Not Clinical Grade",
+        )
+
         # DRY_RUN mode - return synthetic response
         if DRY_RUN:
             file_name = f"{report_data.patient_info.patient_id}_{report_type}_report_DRAFT.pdf"
@@ -208,7 +412,10 @@ async def generate_patient_report(
                     "has_spatial": report_data.spatial_findings is not None,
                     "has_histology": report_data.histology_findings is not None,
                     "has_family_implications": report_data.family_implications is not None,
-                }
+                },
+                "evidence_strength_summary": evidence_summary,
+                "xai_metadata": report_xai,
+                "watermark": "DRAFT -- NOT FOR CLINICAL USE",
             }
 
         # Generate HTML report
@@ -249,7 +456,10 @@ async def generate_patient_report(
                 "treatment_options": len(report_data.treatment_options),
                 "clinical_trials": len(report_data.clinical_trials),
                 "support_resources": len(report_data.support_resources),
-            }
+            },
+            "evidence_strength_summary": evidence_summary,
+            "xai_metadata": report_xai,
+            "watermark": "DRAFT -- NOT FOR CLINICAL USE",
         }
 
     except FileNotFoundError as e:
