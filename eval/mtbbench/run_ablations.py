@@ -10,6 +10,7 @@ Flags:
 
 Output:
     eval/mtbbench/results/ablations/  — one JSON per patient (all conditions)
+    eval/mtbbench/results/transcripts/ — full_platform transcripts (for Table A)
     eval/mtbbench/results/ablation_summary.json — aggregate stats
 
 Design:
@@ -33,11 +34,13 @@ from eval.mtbbench.metrics.ablations import TABLE_C_CONDITIONS, run_table_c_case
 from eval.mtbbench.metrics.accuracy import compute_accuracy_metrics
 from eval.mtbbench.metrics.governance import compute_governance_metrics
 from eval.mtbbench.metrics.table_c import case_result_to_dict
+from eval.mtbbench.run_cohort import transcript_to_dict
 
 
 DATA_PATH = Path(__file__).parent / "data" / "questions_msk_bench.json"
 RESULTS_DIR = Path(__file__).parent / "results"
 ABLATIONS_DIR = RESULTS_DIR / "ablations"
+TRANSCRIPTS_DIR = RESULTS_DIR / "transcripts"
 
 
 def run_ablation_cohort(dry_run: bool = True) -> list[dict]:
@@ -48,6 +51,7 @@ def run_ablation_cohort(dry_run: bool = True) -> list[dict]:
         sys.exit(1)
 
     ABLATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
 
     cases = load_mtbbench_cohort(str(DATA_PATH))
     print(f"Loaded {len(cases)} cases from {DATA_PATH.name}")
@@ -80,10 +84,17 @@ def run_ablation_cohort(dry_run: bool = True) -> list[dict]:
         )
         all_results.append(case_result)
 
-        # Save individual case result
+        # Save individual case result (ablations)
         out_path = ABLATIONS_DIR / f"{case.case_id}.json"
         with open(out_path, "w") as f:
             json.dump(case_result, f, indent=2, default=str)
+
+        # Also save full_platform transcript for Table A computation
+        full_td = transcript_to_dict(condition_transcripts["full_platform"])
+        full_td["case_metadata"] = case_metadata
+        t_path = TRANSCRIPTS_DIR / f"{case.case_id}.json"
+        with open(t_path, "w") as f:
+            json.dump(full_td, f, indent=2, default=str)
 
         elapsed = (time.monotonic() - case_start) * 1000
 

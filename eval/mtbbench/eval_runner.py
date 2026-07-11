@@ -682,7 +682,7 @@ def _claude_answer(
         req = urllib.request.Request(
             "https://api.anthropic.com/v1/messages",
             data=json.dumps({
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-haiku-4-5",
                 "max_tokens": 10,
                 "messages": [{"role": "user", "content": prompt}],
             }).encode(),
