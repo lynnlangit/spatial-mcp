@@ -272,13 +272,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 ```
 
-**2.3 Create Virtual Environment**
+**2.3 Install Dependencies**
 
 ```bash
 cd servers/mcp-metabolomics
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -e ".[dev]"
+uv sync --dev
 ```
 
 ### Phase 3: Core Implementation (3-5 hours)
@@ -626,7 +624,8 @@ COPY servers/mcp-metabolomics/ /app/servers/mcp-metabolomics/
 
 # Install dependencies
 WORKDIR /app/servers/mcp-metabolomics
-RUN pip install --no-cache-dir -e .
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+RUN uv sync --no-dev
 
 # Set environment
 ENV MCP_TRANSPORT=sse
@@ -743,7 +742,7 @@ FastMCP automatically generates docstrings into MCP tool schemas. Ensure:
 
 ### Local Development (Claude Desktop)
 
-1. Install server: `pip install -e servers/mcp-metabolomics`
+1. Install server: `cd servers/mcp-metabolomics && uv sync`
 2. Add to `claude_desktop_config.json`
 3. Set `DRY_RUN=true` initially
 4. Restart Claude Desktop

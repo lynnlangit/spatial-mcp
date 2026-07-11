@@ -28,7 +28,7 @@ The precision-medicine-mcp platform consists of 5 architectural layers:
                      ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                  AI ORCHESTRATION LAYER                       │
-│         Claude API (Anthropic Sonnet 4.5)                    │
+│         Claude API (Anthropic Sonnet 4.6)                    │
 │         • Natural language query parsing                      │
 │         • Multi-server workflow orchestration                │
 │         • Result synthesis and reporting                     │
@@ -301,7 +301,7 @@ Claude synthesizes: Immune contexture and treatment implications
 |-------|-----------|---------|
 | **UI** | Streamlit | Web-based chat interface |
 | **UI** | Jupyter Notebook | Data science workflows |
-| **AI** | Claude API (Sonnet 4.5) | Natural language orchestration |
+| **AI** | Claude API (Sonnet 4.6) | Natural language orchestration |
 | **Protocol** | MCP (Model Context Protocol) | AI-tool integration standard |
 | **Framework** | FastMCP (Python) | Build MCP servers |
 | **Transport** | STDIO (local) / SSE (cloud) | MCP communication |

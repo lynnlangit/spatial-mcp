@@ -38,7 +38,7 @@
 
 ## Step 1: Search Internal Servers
 
-Check the [Server Registry](../reference/shared/server-registry.md) — the canonical list of all 17 internal servers (97 tools total).
+Check the [Server Registry](../reference/shared/server-registry.md) — the canonical list of all internal servers and tools.
 
 ### Quick Find by Analysis Type
 
@@ -49,7 +49,7 @@ Check the [Server Registry](../reference/shared/server-registry.md) — the cano
 | **Somatic variants, CNV, HRD** | mcp-genomic-results | 4 | Production |
 | **TCGA cohort comparison** | mcp-mocktcga | 5 | Mock |
 | **RNA/Protein/Phospho integration** | mcp-multiomics | 10 | Production |
-| **Spatial transcriptomics** | mcp-spatialtools | 14 | Production |
+| **Spatial transcriptomics** | mcp-spatialtools | 16 | Production |
 | **Histology, image registration** | mcp-openimagedata | 5 | Production |
 | **Cell segmentation** | mcp-deepcell | 3 | Production |
 | **Cell phenotype classification** | mcp-cell-classify | 3 | Production |
@@ -60,6 +60,8 @@ Check the [Server Registry](../reference/shared/server-registry.md) — the cano
 | **Drug-target associations** | mcp-opentargets | 6 | Production |
 | **Immune deconvolution** | mcp-cibersortx | 5 | Production |
 | **Neoantigen prediction & HLA** | mcp-neoantigen | 6 | Production |
+| **CVD risk scoring & preventive health** | mcp-cardiometabolic | 14 | Production |
+| **HIPAA Safe Harbor de-identification** | mcp-deidentify | 6 | Production |
 
 If you find a match, you're done — use that server directly. If a server partially covers your need, consider adding a tool to it (see Step 3).
 
@@ -148,6 +150,8 @@ Before building, answer these four questions (from the [New Modality Server Guid
 | Query drug-target evidence | mcp-opentargets | — | Different target DB needed |
 | Deconvolve immune cell types | mcp-cibersortx | — | Different deconvolution method |
 | Predict neoantigens & HLA binding | mcp-neoantigen | — | Different binding prediction model |
+| Score CVD risk & preventive health | mcp-cardiometabolic | — | Non-CVD preventive scoring |
+| De-identify PHI (Safe Harbor) | mcp-deidentify | — | Different de-identification method |
 
 ---
 

@@ -1,6 +1,6 @@
 # FastMCP Patterns for This Project
 
-Shared patterns and conventions used across all 17 custom MCP servers.
+Shared patterns and conventions used across all custom MCP servers (see [Server Registry](../reference/shared/server-registry.md) for current counts).
 
 ---
 

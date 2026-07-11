@@ -21,7 +21,7 @@ graph LR
 
 ---
 
-> **v17 update (April 2026):** Server #19 (`mcp-cardiometabolic`) added.
+> **v17 update (April 2026):** `mcp-cardiometabolic` added (see [Server Registry](../reference/shared/server-registry.md)).
 > Introduces non-oncology server pattern: no omics matrices, biomarker dict inputs,
 > three CVD risk equations, ACC/AHA statin decision logic.
 > Good reference implementation for preventive health use cases.
@@ -69,12 +69,19 @@ graph LR
 - **[SEARCH_VS_BUILD.md](SEARCH_VS_BUILD.md)** - Should you search for an existing server or build a new one?
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture overview (data flow, integration)
 - **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Cheat sheet for common tasks
+- **[FASTMCP_PATTERNS.md](FASTMCP_PATTERNS.md)** - Shared FastMCP conventions (DRY_RUN, error schema, versioning)
 
 ### Building New Servers
 - **[ADD_NEW_MODALITY_SERVER.md](ADD_NEW_MODALITY_SERVER.md)** - Comprehensive guide (planning → deployment)
 
-### Contributing
+### Operations & Security
+- **[security.md](security.md)** - API key management, GCP Secret Manager, incident response
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - PR guidelines, coding standards, review process
+
+### Automation Guides
+- **[AUTOMATED_PATIENT_REPORTS.md](automation-guides/AUTOMATED_PATIENT_REPORTS.md)** - One-command clinical analysis reports
+- **[GENERATE_PATIENT_SUMMARIES.md](automation-guides/GENERATE_PATIENT_SUMMARIES.md)** - LLM-based patient-friendly translations
+- **[Prompt Templates](automation-guides/prompts/)** - Three fill-in-the-blank LLM templates
 
 ---
 

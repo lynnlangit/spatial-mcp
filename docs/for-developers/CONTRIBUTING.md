@@ -35,7 +35,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 - Trolling or deliberately derailing discussions
 - Publishing others' private information without consent
 
-**Report issues to:** [maintainer email placeholder]
+**Report issues to:** Open a [GitHub Issue](https://github.com/lynnlangit/precision-medicine-mcp/issues)
 
 ---
 
@@ -63,15 +63,13 @@ git remote add upstream https://github.com/lynnlangit/precision-medicine-mcp.git
 ### Development Setup
 
 ```bash
-# Create virtual environment
-python3.11 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install development dependencies
-pip install -e "servers/mcp-{server}[dev]"
-
-# Run tests to verify setup
-pytest tests/unit/mcp-{server} -v
+# Install server dependencies and run tests to verify setup
+cd servers/mcp-{server}
+uv sync --dev
+uv run pytest tests/ -v
 ```
 
 ---
@@ -561,7 +559,7 @@ PatientOne integration example
 
 ---
 
-**Thank you for contributing to precision medicine! 🎉**
+**Thank you for contributing to precision medicine!**
 
 ---
 

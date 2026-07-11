@@ -10,7 +10,7 @@
 
 ## Overview
 
-This example shows the complete workflow from technical molecular analysis to patient-friendly summary for PatientOne, the demonstration case in the spatial-mcp repository.
+This example shows the complete workflow from technical molecular analysis to patient-friendly summary for PatientOne, the demonstration case in the precision-medicine-mcp repository.
 
 **Workflow Steps:**
 1. Generate technical report using automated report generator

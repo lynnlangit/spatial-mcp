@@ -22,7 +22,7 @@ precision-medicine-mcp/
 │   ├── mcp-deepcell/            # Cell segmentation (3 tools)
 │   ├── mcp-cell-classify/       # Cell phenotype classification (3 tools)
 │   ├── mcp-geodownload/         # GEO/SRA dataset download (6 tools)
-│   ├── mcp-cardiometabolic/     # CVD risk scoring & preventive health (5 tools)
+│   ├── mcp-cardiometabolic/     # CVD risk scoring & preventive health (14 tools)
 │   ├── mcp-deidentify/          # HIPAA Safe Harbor de-identification (6 tools)
 │   ├── mcp-epic/                # Real Epic FHIR (local-only, 4 tools)
 │   ├── mcp-mockepic/            # Synthetic FHIR for demos (3 tools)
@@ -68,16 +68,15 @@ precision-medicine-mcp/
 git clone https://github.com/lynnlangit/precision-medicine-mcp.git
 cd precision-medicine-mcp
 
-# Create virtual environment
-python3.11 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install server for development
 cd servers/mcp-{server}
-pip install -e ".[dev]"
+uv sync --dev
 
 # Verify installation
-python -m mcp_{server} --help
+uv run python -m mcp_{server} --help
 ```
 
 ### Running Servers
