@@ -13,6 +13,11 @@ This runner:
   3. Captures every tool call and its response (the "transcript")
   4. Returns the transcript + final recommendation for scoring
 
+Modes:
+  - dry_run=True (default): Synthetic responses, no external calls. Fast.
+  - dry_run=False: Real MCP server calls + Claude API for answer generation.
+    Requires MCP servers running and ANTHROPIC_API_KEY set.
+
 Security:
   - DEIDENTIFY_DRY_RUN=true always
   - No real patient data processed
@@ -22,12 +27,16 @@ Cite: Jain et al., MTBBench, NeurIPS 2024, github.com/bunnelab/mtbbench
 """
 
 import json
+import logging
 import os
+import subprocess
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
 from eval.mtbbench.case_adapter import MTBCase, mtbcase_to_platform_context
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -58,15 +67,15 @@ class EvalTranscript:
     # Each: {question: str, predicted: str, ground_truth: str, correct: bool}
 
 
-def _simulate_tool_call(
+def _call_mcp_tool(
     server: str, tool: str, params: dict, dry_run: bool = True
 ) -> ToolCall:
     """
-    Simulate an MCP tool call in DRY_RUN mode.
+    Call an MCP server tool, either in DRY_RUN or live mode.
 
-    In production (dry_run=False), this would use the MCP client to make
-    real tool calls. For Milestone 1, we return synthetic DRY_RUN responses
-    that match the expected response schema.
+    DRY_RUN (default): Returns synthetic responses matching server schemas.
+    Live mode: Shells out to `uv run python -m mcp_<name>` via subprocess
+    to call the actual MCP server. Requires the server to be installed.
     """
     start = time.monotonic()
 
@@ -85,11 +94,7 @@ def _simulate_tool_call(
             },
         }
     else:
-        # TODO (Milestone 2): Real MCP client calls
-        raise NotImplementedError(
-            "Real MCP tool calls require MCP client setup. "
-            "Use dry_run=True for Milestone 1."
-        )
+        response = _live_tool_call(server, tool, params)
 
     duration_ms = (time.monotonic() - start) * 1000
 
@@ -101,6 +106,120 @@ def _simulate_tool_call(
         duration_ms=duration_ms,
         xai_metadata=response.get("xai_metadata", {}),
     )
+
+
+def _live_tool_call(server: str, tool: str, params: dict) -> dict:
+    """
+    Execute a real MCP tool call via subprocess.
+
+    Uses the server's module entry point with a JSON-RPC-style invocation.
+    Falls back to DRY_RUN synthetic response if the server is not available.
+    """
+    module_name = server.replace("-", "_").replace("mcp_", "mcp-")
+    server_dir = os.path.join(
+        os.path.dirname(__file__), "..", "..", "servers", server
+    )
+    server_dir = os.path.normpath(server_dir)
+
+    if not os.path.isdir(server_dir):
+        logger.warning(
+            "Server directory %s not found, falling back to synthetic response",
+            server_dir,
+        )
+        return {
+            "status": "FALLBACK",
+            "message": f"Server {server} not found at {server_dir}",
+            "data": _synthetic_response(server, tool, params),
+            "xai_metadata": {
+                "confidence_level": "low",
+                "confidence_note": f"Server {server} not available — used fallback",
+                "key_drivers": ["server_unavailable"],
+                "guideline_version": "N/A",
+                "evidence_grade": "simulated",
+                "counterfactual": None,
+            },
+        }
+
+    # Build a minimal script that imports and calls the tool function
+    call_script = (
+        f"import asyncio, json, sys; "
+        f"sys.path.insert(0, '{server_dir}/src'); "
+        f"from {server.replace('-', '_')}.server import mcp; "
+        f"params = json.loads(sys.stdin.read()); "
+        f"result = asyncio.run(mcp.call_tool('{tool}', params)); "
+        f"print(json.dumps(result, default=str))"
+    )
+
+    try:
+        result = subprocess.run(
+            ["uv", "run", "python", "-c", call_script],
+            input=json.dumps(params),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=server_dir,
+        )
+        if result.returncode != 0:
+            logger.warning(
+                "Server %s.%s failed (rc=%d): %s",
+                server, tool, result.returncode, result.stderr[:500],
+            )
+            return {
+                "status": "ERROR",
+                "message": result.stderr[:500],
+                "data": _synthetic_response(server, tool, params),
+                "xai_metadata": {
+                    "confidence_level": "low",
+                    "confidence_note": f"Tool call failed: {result.stderr[:200]}",
+                    "key_drivers": ["tool_error"],
+                    "guideline_version": "N/A",
+                    "evidence_grade": "simulated",
+                    "counterfactual": None,
+                },
+            }
+
+        data = json.loads(result.stdout)
+        return {
+            "status": "OK",
+            "data": data,
+            "xai_metadata": data.get("xai_metadata", {
+                "confidence_level": "medium",
+                "confidence_note": "Live tool call — no XAI metadata returned",
+                "key_drivers": ["live_call"],
+                "guideline_version": "N/A",
+                "evidence_grade": "tool_output",
+                "counterfactual": None,
+            }),
+        }
+    except subprocess.TimeoutExpired:
+        logger.warning("Server %s.%s timed out after 120s", server, tool)
+        return {
+            "status": "TIMEOUT",
+            "data": _synthetic_response(server, tool, params),
+            "xai_metadata": {
+                "confidence_level": "low",
+                "confidence_note": "Tool call timed out",
+                "key_drivers": ["timeout"],
+                "guideline_version": "N/A",
+                "evidence_grade": "simulated",
+                "counterfactual": None,
+            },
+        }
+    except Exception as e:
+        logger.warning("Server %s.%s error: %s", server, tool, e)
+        return {
+            "status": "ERROR",
+            "message": str(e),
+            "data": _synthetic_response(server, tool, params),
+            "xai_metadata": {
+                "confidence_level": "low",
+                "confidence_note": f"Unexpected error: {e}",
+                "key_drivers": ["exception"],
+                "guideline_version": "N/A",
+                "evidence_grade": "simulated",
+                "counterfactual": None,
+            },
+        }
 
 
 def _synthetic_response(server: str, tool: str, params: dict) -> dict:
@@ -165,7 +284,7 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     context = mtbcase_to_platform_context(case)
 
     # Step 1: Parse genomic data
-    tc = _simulate_tool_call(
+    tc = _call_mcp_tool(
         "mcp-genomic-results",
         "parse_somatic_variants",
         {"variants": context["somatic_variants"], "patient_id": context["patient_id"]},
@@ -174,7 +293,7 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     transcript.tool_calls.append(tc)
 
     # Step 2: Neoantigen analysis
-    tc = _simulate_tool_call(
+    tc = _call_mcp_tool(
         "mcp-neoantigen",
         "predict_mhc1_binding",
         {"variants": context["somatic_variants"], "patient_id": context["patient_id"]},
@@ -183,7 +302,7 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     transcript.tool_calls.append(tc)
 
     # Step 3: Open Targets drug lookup
-    tc = _simulate_tool_call(
+    tc = _call_mcp_tool(
         "mcp-opentargets",
         "search_targets_by_disease",
         {"disease": context["cancer_type"], "patient_id": context["patient_id"]},
@@ -192,7 +311,7 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     transcript.tool_calls.append(tc)
 
     # Step 4: Generate clinical report (captures XAI Evidence Summary)
-    tc = _simulate_tool_call(
+    tc = _call_mcp_tool(
         "mcp-patient-report",
         "generate_patient_report",
         {"patient_id": context["patient_id"], "report_type": "clinical"},
@@ -204,7 +323,7 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     transcript.xai_evidence_summary = report_data.get("evidence_strength_summary", {})
 
     # Step 5: De-id validation
-    tc = _simulate_tool_call(
+    tc = _call_mcp_tool(
         "mcp-deidentify",
         "validate_deidentification",
         {"report_path": transcript.report_path},
@@ -215,7 +334,7 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     transcript.deid_validated = deid_result.get("passed", False)
 
     # Step 6: HITL gate
-    tc = _simulate_tool_call(
+    tc = _call_mcp_tool(
         "mcp-patient-report",
         "approve_patient_report",
         {"report_path": transcript.report_path, "reviewer": "eval_harness"},
@@ -226,9 +345,10 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     transcript.hitl_triggered = hitl_result.get("gate_triggered", False)
 
     # Step 7: Generate answers for each MTBBench question
-    # In DRY_RUN, produce synthetic answers based on available data
+    # In DRY_RUN, produce deterministic pseudo-random answers (not majority-class)
+    tool_results = [tc.response for tc in transcript.tool_calls]
     for q in case.questions:
-        predicted = _generate_answer(q, context, dry_run=dry_run)
+        predicted = _generate_answer(q, context, tool_results, dry_run=dry_run)
         correct = _check_answer(predicted, q["answer"])
         transcript.answers.append({
             "question": q["question"],
@@ -246,18 +366,100 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
     return transcript
 
 
-def _generate_answer(question: dict, context: dict, dry_run: bool = True) -> str:
+def _generate_answer(
+    question: dict, context: dict, tool_results: list | None = None,
+    dry_run: bool = True,
+) -> str:
     """
     Generate a predicted answer for an MTBBench question.
 
-    In DRY_RUN, returns a synthetic answer. In production (Milestone 2+),
-    this would use Claude to synthesize an answer from tool call results.
+    DRY_RUN: Deterministic pseudo-random coin-flip (avoids trivially
+    matching the 56% majority-class baseline).
+
+    Live mode: Calls Claude API with patient context + tool results,
+    asks it to answer the binary question. Requires ANTHROPIC_API_KEY.
     """
     if dry_run:
-        # DRY_RUN: always predict "A) Yes" as a baseline
-        # (Real implementation will use Claude reasoning over tool outputs)
-        return "A) Yes"
-    raise NotImplementedError("Real answer generation requires Claude API (Milestone 2)")
+        import hashlib
+        key = f"{context.get('patient_id', '')}:{question.get('question', '')}"
+        digest = hashlib.sha256(key.encode()).hexdigest()
+        return "A) Yes" if int(digest, 16) % 2 == 0 else "B) No"
+
+    return _claude_answer(question, context, tool_results or [])
+
+
+def _claude_answer(
+    question: dict, context: dict, tool_results: list,
+) -> str:
+    """
+    Call Claude API to generate an answer from tool outputs + patient context.
+
+    Uses the Anthropic Python SDK if available, falls back to urllib.
+    Returns "A) Yes" or "B) No".
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        logger.warning("ANTHROPIC_API_KEY not set — falling back to coin-flip")
+        import hashlib
+        key = f"{context.get('patient_id', '')}:{question.get('question', '')}"
+        digest = hashlib.sha256(key.encode()).hexdigest()
+        return "A) Yes" if int(digest, 16) % 2 == 0 else "B) No"
+
+    # Build the prompt
+    tool_summary = "\n".join(
+        f"- {r.get('message', 'tool call')}: {json.dumps(r.get('data', {}), default=str)[:500]}"
+        for r in tool_results
+        if isinstance(r, dict)
+    )
+
+    prompt = (
+        f"You are a clinical oncology AI assistant evaluating a patient case.\n\n"
+        f"PATIENT CONTEXT:\n"
+        f"- Patient ID: {context.get('patient_id', 'N/A')}\n"
+        f"- Cancer type: {context.get('cancer_type', 'N/A')}\n"
+        f"- Stage: {context.get('stage', 'N/A')}\n"
+        f"- TMB: {context.get('tmb_mut_per_mb', 'N/A')} mut/Mb\n"
+        f"- MSI: {context.get('msi_type', 'N/A')} (score: {context.get('msi_score', 'N/A')})\n"
+        f"- Treatment history: {context.get('treatment_history', [])}\n\n"
+        f"TOOL ANALYSIS RESULTS:\n{tool_summary}\n\n"
+        f"QUESTION:\n{question.get('question', '')}\n\n"
+        f"Answer ONLY with 'A) Yes' or 'B) No'. Base your answer on the "
+        f"clinical evidence above. If uncertain, make your best clinical judgment."
+    )
+
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=json.dumps({
+                "model": "claude-sonnet-4-20250514",
+                "max_tokens": 10,
+                "messages": [{"role": "user", "content": prompt}],
+            }).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+            },
+        )
+        resp = urllib.request.urlopen(req, timeout=30)
+        result = json.loads(resp.read())
+        answer_text = result.get("content", [{}])[0].get("text", "").strip()
+
+        # Parse the answer
+        if answer_text.startswith("A") or "yes" in answer_text.lower()[:10]:
+            return "A) Yes"
+        elif answer_text.startswith("B") or "no" in answer_text.lower()[:10]:
+            return "B) No"
+        else:
+            logger.warning("Unparseable Claude answer: %s", answer_text)
+            return "A) Yes"  # Default if unparseable
+    except Exception as e:
+        logger.warning("Claude API call failed: %s — falling back to coin-flip", e)
+        import hashlib
+        key = f"{context.get('patient_id', '')}:{question.get('question', '')}"
+        digest = hashlib.sha256(key.encode()).hexdigest()
+        return "A) Yes" if int(digest, 16) % 2 == 0 else "B) No"
 
 
 def _check_answer(predicted: str, ground_truth: str) -> bool:

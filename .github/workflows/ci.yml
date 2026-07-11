@@ -75,5 +75,5 @@ jobs:
           CARDIOMETABOLIC_DRY_RUN: "true"
           SYNTHETIC_DATA: "true"
         run: |
-          python -m pytest eval/test_milestone_1.py -v -m integration \
-            --tb=short --timeout=120
+          python -m pytest eval/test_milestone_1.py eval/test_milestone_2.py \
+            -v -m integration --tb=short --timeout=120

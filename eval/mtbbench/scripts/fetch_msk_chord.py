@@ -240,17 +240,24 @@ def generate_questions(patient_clinical, sample_clinical, all_timelines, all_mut
         cancer_type = specimen.get("CANCER_TYPE_DETAILED", "cancer")
         gender = patient_clinical.get(pid, {}).get("SEX", "")
         race = patient_clinical.get(pid, {}).get("RACE", "")
+        ethnicity = patient_clinical.get(pid, {}).get("ETHNICITY", "")
 
         for idx, ((start, end), questions) in enumerate(DATAPOINTS[pid]):
             # Context
             if idx == 0:
+                eth_str = f" of {ethnicity} ethnicity" if ethnicity else ""
                 context = (
-                    f"The patient is a {start}-year-old {race} {gender.lower()} "
-                    f"with a diagnosis of {cancer_type.lower()}. "
-                    f"Comprehensive patient history is available for ages {start} to {end}."
+                    f"The patient is a {start}-year-old {race} {gender.lower()}"
+                    f"{eth_str} with a diagnosis of {cancer_type.lower()}. "
+                    f"Comprehensive patient history, including details of diagnosis, "
+                    f"treatments, and lab tests, is available for the period between "
+                    f"the ages of {start} and {end} years."
                 )
             else:
-                context = f"Additional history is documented for ages {start} to {end}."
+                context = (
+                    f"Additional patient history is documented for the period between "
+                    f"the ages of {start} and {end} years."
+                )
             dataset[pid].append({"context": context})
 
             # Timeline
@@ -267,7 +274,9 @@ def generate_questions(patient_clinical, sample_clinical, all_timelines, all_mut
                 file_data["specimen.txt"] = json.dumps(specimen)
                 if pid_samples and pid_samples[0] in all_mutations:
                     file_data["mutation.csv"] = all_mutations[pid_samples[0]]
-            dataset[pid].append({"file_paths": list(file_data.keys())})
+                if pid_samples and pid_samples[0] in all_cna:
+                    file_data["cna.csv"] = all_cna[pid_samples[0]]
+            dataset[pid].append({"file_data": file_data})
 
             # Questions
             for q in questions:
