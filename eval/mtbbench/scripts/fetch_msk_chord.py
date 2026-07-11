@@ -22,6 +22,8 @@ Cite:
   - MTBBench: Jain et al., NeurIPS 2024, github.com/bunnelab/mtbbench
 """
 
+from __future__ import annotations
+
 import json
 import os
 import time
@@ -29,6 +31,7 @@ import urllib.request
 import urllib.error
 from collections import Counter
 from pathlib import Path
+from typing import Union
 
 BASE = "https://www.cbioportal.org/api"
 STUDY = "msk_chord_2024"

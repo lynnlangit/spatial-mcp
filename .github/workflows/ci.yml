@@ -76,4 +76,4 @@ jobs:
           SYNTHETIC_DATA: "true"
         run: |
           python -m pytest eval/test_milestone_1.py eval/test_milestone_2.py \
-            -v -m integration --tb=short --timeout=120
+            eval/test_milestone_3.py -v -m integration --tb=short --timeout=120

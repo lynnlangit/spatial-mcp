@@ -198,6 +198,150 @@ def _extract_demographics(context: str, local_vars: dict) -> None:
         local_vars["race"] = race_match.group(1).capitalize()
 
 
+def load_mtbbench_cohort(cohort_json_path: str) -> list[MTBCase]:
+    """
+    Load all MTBBench cases from questions_msk_bench.json (cohort format).
+
+    The cohort format is: {patient_id: [items]} where items are dicts with
+    one of: 'context' (str), 'file_data' (dict), or 'question'+'answer' (str).
+
+    Returns list of MTBCase objects, one per patient.
+    """
+    with open(cohort_json_path) as f:
+        cohort = json.load(f)
+
+    cases = []
+    for patient_id, items in cohort.items():
+        case = _parse_cohort_patient(patient_id, items)
+        cases.append(case)
+    return cases
+
+
+def _parse_cohort_patient(patient_id: str, items: list) -> MTBCase:
+    """Parse one patient's item list into an MTBCase."""
+    import re
+
+    cancer_type = ""
+    stage = ""
+    age_at_diagnosis = 0.0
+    gender = ""
+    race = ""
+    tmb_mut_per_mb = 0.0
+    msi_score = 0.0
+    msi_type = "Stable"
+    tumor_purity = 0.0
+    somatic_variants: list = []
+    cnv_calls: list = []
+    treatment_history: list = []
+    questions: list = []
+    timelines: list = []
+    specimen_data: dict = {}
+    timeline_idx = 0
+
+    for item in items:
+        if "context" in item:
+            ctx = item["context"]
+            # Parse demographics from first context
+            if not gender:
+                age_match = re.search(r"(\d+[\.\d]*)-year-old", ctx)
+                if age_match:
+                    age_at_diagnosis = float(age_match.group(1))
+                gender_match = re.search(r"\b(male|female)\b", ctx, re.IGNORECASE)
+                if gender_match:
+                    gender = gender_match.group(1).capitalize()
+                race_match = re.search(
+                    r"(White|Black|Asian|Hispanic|Latino|Other)", ctx, re.IGNORECASE
+                )
+                if race_match:
+                    race = race_match.group(1).capitalize()
+            # Parse cancer type from context
+            if not cancer_type:
+                ct_match = re.search(
+                    r"diagnosis of (.+?)(?:\.|,| Comprehensive)", ctx, re.IGNORECASE
+                )
+                if ct_match:
+                    cancer_type = ct_match.group(1).strip()
+
+        elif "file_data" in item:
+            for filename, content in item["file_data"].items():
+                if filename.startswith("timeline"):
+                    timelines.append({"index": timeline_idx, "content": content})
+                    timeline_idx += 1
+                    # Extract treatment agents
+                    if isinstance(content, str):
+                        for line in content.split("\n"):
+                            if "AGENT:" in line:
+                                parts = line.split("AGENT:")
+                                if len(parts) > 1:
+                                    agent = parts[1].split(",")[0].strip()
+                                    if agent and agent not in treatment_history:
+                                        treatment_history.append(agent)
+                elif filename == "specimen.txt":
+                    if isinstance(content, str):
+                        specimen_data = json.loads(content)
+                    else:
+                        specimen_data = content
+                    cancer_type = specimen_data.get(
+                        "CANCER_TYPE_DETAILED",
+                        specimen_data.get("CANCER_TYPE", cancer_type),
+                    )
+                    stage = specimen_data.get("AJCC", stage)
+                    tmb_mut_per_mb = float(
+                        specimen_data.get("TMB_NONSYNONYMOUS", tmb_mut_per_mb)
+                    )
+                    msi_score = float(specimen_data.get("MSI_SCORE", msi_score))
+                    msi_type = specimen_data.get("MSI_TYPE", msi_type)
+                    tumor_purity = float(
+                        specimen_data.get("TUMOR_PURITY", tumor_purity)
+                    )
+                elif filename == "mutation.csv":
+                    if isinstance(content, list):
+                        somatic_variants = content
+                elif filename == "cna.csv":
+                    if isinstance(content, list):
+                        cnv_calls = content
+
+        elif "question" in item:
+            q_text = item["question"]
+            answer = item["answer"]
+            qtype = "unknown"
+            months = 0
+            if "recurrence" in q_text.lower():
+                qtype = "recurrence"
+            elif "alive" in q_text.lower():
+                qtype = "survival"
+            elif "progress" in q_text.lower():
+                qtype = "progression"
+            m = re.search(r"next (\d+) months", q_text)
+            if m:
+                months = int(m.group(1))
+            questions.append({
+                "question": q_text,
+                "answer": answer,
+                "type": qtype,
+                "months": months,
+            })
+
+    return MTBCase(
+        case_id=patient_id,
+        cancer_type=cancer_type,
+        somatic_variants=somatic_variants,
+        cnv_calls=cnv_calls,
+        tmb_mut_per_mb=tmb_mut_per_mb,
+        msi_score=msi_score,
+        msi_type=msi_type,
+        tumor_purity=tumor_purity,
+        stage=stage,
+        age_at_diagnosis=age_at_diagnosis,
+        gender=gender,
+        race=race,
+        treatment_history=treatment_history,
+        questions=questions,
+        timelines=timelines,
+        specimen_data=specimen_data,
+    )
+
+
 def mtbcase_to_platform_context(case: MTBCase) -> dict:
     """
     Convert MTBCase to the context dict expected by generate_patient_report.
