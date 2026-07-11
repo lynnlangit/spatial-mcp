@@ -231,6 +231,7 @@ _shared_temp/
 # Patient analysis outputs from CitL workflows and test scenarios
 results/
 eval/mtbbench/results/
+eval/case_study/results/
 
 # MTBBench MSK-CHORD data (CC BY-NC-ND 4.0 — do not redistribute)
 eval/mtbbench/data/
