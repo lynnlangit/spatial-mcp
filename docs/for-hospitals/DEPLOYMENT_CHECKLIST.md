@@ -89,7 +89,7 @@ Step-by-step checklist for deploying the Precision Medicine MCP Platform at your
 
 ### Monitoring & Logging
 - [ ] Create Cloud Monitoring dashboard: "MCP Platform Health"
-- [ ] Configure uptime checks for all 3 servers
+- [ ] Configure uptime checks for all 4 deployed servers
 - [ ] Set up log-based metrics: error rate, latency p95
 - [ ] Create alert policies: server down, error spike, high cost
 - [ ] Test alert routing to on-call email/Slack

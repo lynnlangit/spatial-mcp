@@ -29,8 +29,8 @@ Each analysis completed in under five minutes per patient, fully automated, with
 Full runbook: docs/for-hospitals/POC_RUNBOOK.md
 
 ## What it costs
-Compute: approximately 97 GB RAM, 52 CPU cores (on-premise).
-API: approximately $1-2 per full 19-server analysis (Claude API).
+Compute: approximately 93 GB RAM, 50 CPU cores (on-premise).
+API: approximately $1-2 per full 20-server analysis (Claude API).
 Personnel: approximately 78 hours setup, 25 hours per month ongoing.
 Full estimates: docs/for-hospitals/RESOURCE_ESTIMATES.md
 
@@ -40,8 +40,9 @@ Full estimates: docs/for-hospitals/RESOURCE_ESTIMATES.md
 - Access to 10 de-identified retrospective cases from the tumor board (HGSOC preferred for initial POC; ER+ breast cancer and preventive CVD use cases available for parallel tracks)
 
 ## Contact
-{{CONTACT_NAME}}
-{{CONTACT_EMAIL}}
+*[Insert contact name and email before distribution]*
 
 ---
 *Open-source. Apache 2.0 license. https://github.com/lynnlangit/precision-medicine-mcp*
+
+**Last Updated:** 2026-02-19

@@ -387,174 +387,16 @@ plt.savefig("spatial_heatmap.png", dpi=300, bbox_inches="tight")
 
 ## Common Workflows
 
-### Workflow 1: Patient Clinical Overview
+Prompt examples for each workflow are shown in [Streamlit Chat UI](#example-queries) (natural language) and [Jupyter Notebooks](#example-workflows) (Python) above.
 
-**Goal:** Get basic clinical information for a patient
-
-**Streamlit:**
-```
-For patient RESEARCH-PAT001, provide:
-- Demographics (age, gender)
-- Primary diagnosis
-- Stage and grade
-- Current medications
-- Recent CA-125 values
-```
-
-**Expected Output:**
-- Patient demographics (de-identified)
-- Ovarian cancer diagnosis details
-- List of current medications
-- Lab value trends
-
-**Use Case:** Clinicians preparing for tumor board, reviewing patient status
-
----
-
-### Workflow 2: Spatial Cell Type Analysis
-
-**Goal:** Understand cell populations in tumor
-
-**Streamlit:**
-```
-For patient RESEARCH-PAT001:
-1. Load spatial transcriptomics data
-2. Perform cell type deconvolution
-3. Identify major cell populations
-4. Report percentages of each cell type
-5. Highlight any unusual patterns
-```
-
-**Expected Output:**
-- Cell type composition (e.g., 40% tumor cells, 30% immune cells, 20% stroma, 10% other)
-- Spatial distribution patterns
-- Notable findings
-
-**Use Case:** Understanding tumor microenvironment composition
-
----
-
-### Workflow 3: Differential Expression Analysis
-
-**Goal:** Find genes differentially expressed between tumor regions
-
-**Streamlit:**
-```
-For patient RESEARCH-PAT001:
-1. Identify tumor core vs. margin regions
-2. Run differential expression analysis
-3. Report top 20 upregulated genes in core vs. margin
-4. Highlight any treatment-relevant markers
-```
-
-**Expected Output:**
-- List of differentially expressed genes
-- Fold changes and p-values
-- Biological interpretation
-- Treatment implications
-
-**Use Case:** Identifying regional heterogeneity, resistance markers
-
----
-
-### Workflow 4: Multi-Omics Integration
-
-**Goal:** Integrate RNA, protein, phospho data
-
-**Jupyter:**
-```python
-result = client.call_servers(
-    prompt="""
-    For patient RESEARCH-PAT001:
-    1. Load RNA-seq, proteomics, phosphoproteomics
-    2. Normalize each dataset
-    3. Run HAllA multi-omics association analysis
-    4. Identify significant correlations between datasets
-    5. Report top 10 multi-omics associations
-    6. Highlight any pathway-level patterns
-    """,
-    servers=["multiomics"],
-    max_tokens=4096
-)
-```
-
-**Expected Output:**
-- RNA-protein correlations
-- Protein-phospho relationships
-- Multi-omics pathway associations
-- Potential drug targets
-
-**Use Case:** Comprehensive molecular profiling
-
----
-
-### Workflow 5: Pathway Enrichment
-
-**Goal:** Understand biological pathways affected
-
-**Streamlit:**
-```
-I have these upregulated genes from RESEARCH-PAT001:
-TP53, BRCA1, MYC, KRAS, PTEN, AKT1, PIK3CA, EGFR, ERBB2, VEGFA
-
-Please:
-1. Perform GO_BP pathway enrichment
-2. Filter for p-value < 0.05
-3. Report top 10 pathways
-4. Explain clinical relevance for ovarian cancer
-```
-
-**Expected Output:**
-- Enriched Gene Ontology pathways
-- P-values and gene counts
-- Clinical interpretation
-- Potential therapeutic targets
-
-**Use Case:** Understanding molecular mechanisms, identifying drug targets
-
----
-
-### Workflow 6: Batch Patient Analysis
-
-**Goal:** Analyze multiple patients systematically
-
-**Jupyter:**
-```python
-# Batch analysis
-patient_ids = [
-    "RESEARCH-PAT001", "RESEARCH-PAT002", "RESEARCH-PAT003",
-    "RESEARCH-PAT004", "RESEARCH-PAT005"
-]
-
-summary_df = []
-
-for patient_id in patient_ids:
-    result = client.call_servers(
-        prompt=f"""
-        For {patient_id}:
-        1. Get clinical stage and grade
-        2. Get primary treatment received
-        3. Analyze spatial transcriptomics
-        4. Report tumor purity estimate
-        5. Identify top 3 overexpressed genes
-        """,
-        servers=["epic", "spatialtools"]
-    )
-
-    # Parse result and add to summary
-    # (You'll need to parse the actual text response)
-    summary_df.append({
-        "patient_id": patient_id,
-        "response": result["response"]
-    })
-
-# Create comparison table
-import pandas as pd
-df = pd.DataFrame(summary_df)
-df.to_excel("patient_comparison.xlsx", index=False)
-```
-
-**Use Case:** Cohort analysis, finding patterns across patients
+| Workflow | Best interface | Servers | Use case |
+|----------|---------------|---------|----------|
+| Patient clinical overview | Streamlit | epic | Tumor board prep, patient status review |
+| Spatial cell type analysis | Streamlit | spatialtools | Tumor microenvironment composition |
+| Differential expression | Streamlit | spatialtools | Regional heterogeneity, resistance markers |
+| Multi-omics integration | Jupyter | multiomics | Comprehensive molecular profiling, drug targets |
+| Pathway enrichment | Streamlit | spatialtools | Molecular mechanisms, therapeutic targets |
+| Batch patient analysis | Jupyter | epic, spatialtools | Cohort analysis, cross-patient patterns |
 
 ---
 
@@ -760,19 +602,19 @@ A: Python 3.11 with standard data science packages (pandas, numpy, matplotlib, s
 ### Support Tiers
 
 **Tier 1: Hospital IT Help Desk**
-- Email: help@hospital.org
-- Phone: (555) 123-4567
+- Email: *[hospital IT help desk email]*
+- Phone: *[hospital IT help desk phone]*
 - Hours: 24/7
 - For: Login issues, VPN problems, Azure AD access
 
 **Tier 2: Development Team**
-- Email: mcp-support@devteam.com
+- Email: *[development team email]*
 - Hours: Mon-Fri 9 AM - 5 PM PT
 - Response: Within 4 hours
 - For: Server errors, query issues, bugs
 
 **Tier 3: On-Call Engineer**
-- Email: oncall-mcp@devteam.com
+- Email: *[on-call engineer email]*
 - Hours: 24/7 (emergencies only)
 - Response: Within 1 hour for P0/P1
 - For: System down, critical issues only
@@ -811,7 +653,7 @@ I've tried:
 Have an idea to improve the system?
 
 **Submit via:**
-- Email: mcp-support@devteam.com
+- Email: *[development team email]*
 - Subject: "Feature Request: [brief description]"
 
 **Include:**
@@ -829,7 +671,7 @@ Have an idea to improve the system?
 
 **Document History:**
 - v1.0 (2025-12-30): Initial user guide for production deployment
-- Next Review: 2026-01-30 (monthly based on user feedback)
+- v1.1 (2026-02-25): Updated model names, workflow deduplication, placeholder contacts
 
 **Quick Links:**
 - [Security Overview](SECURITY_OVERVIEW.md) - For IT staff

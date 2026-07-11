@@ -80,3 +80,7 @@ Quarterly audits track three metrics per demographic subgroup:
 ---
 
 **See also:** [HIPAA Summary](../../reference/shared/hipaa-summary.md) | [Value Proposition](../../reference/shared/value-proposition.md)
+
+---
+
+**Last Updated:** 2026-02-19

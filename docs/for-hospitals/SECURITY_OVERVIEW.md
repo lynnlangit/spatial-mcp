@@ -80,3 +80,7 @@ graph TB
 ---
 
 **See also:** [compliance/hipaa.md](compliance/hipaa.md) | [HIPAA Summary](../reference/shared/hipaa-summary.md) | [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+
+---
+
+**Last Updated:** 2026-02-19
