@@ -1,34 +1,50 @@
 """
 Table C: Ablation runner.
 
-Conditions:
-- No HITL gate: Remove approve_patient_report call
-- No XAI layer: Omit evidence_strength_summary from report
-- No de-id check: Skip validate_deidentification
-- Base LLM (no tools): Same cases, zero tool calls
-- Majority-class baseline: Always predicts majority answer (reference floor)
-- Random baseline: Coin-flip prediction (expected ~50%)
+Two sets of conditions:
 
-Each ablation re-runs the case with one component removed, then computes
-the delta vs. the full platform run.
+  ABLATION_CONDITIONS (M2 — backward compat):
+    7 conditions including majority_class and random_baseline for Table A.
+
+  TABLE_C_CONDITIONS (M4 — governance ablations):
+    5 conditions where exactly one governance component is removed.
+    Used for the paired ablation study (Table C in the paper).
+
+    | Condition         | Removes                        | Primary delta            |
+    |-------------------|--------------------------------|--------------------------|
+    | full_platform     | (nothing — reference)          | —                        |
+    | no_hitl           | approve_patient_report         | HITL catch → 0%          |
+    | no_xai            | evidence_strength_summary      | Calibration undefined    |
+    | no_deid           | validate_deidentification      | De-id integrity → 0%    |
+    | base_llm_no_tools | ALL MCP tool calls             | Accuracy + governance ↓  |
+
+Efficiency:
+  run_table_c_case() runs full_platform ONCE per case, then derives the 3
+  governance ablations from deep copies of the same transcript (they modify
+  governance fields only, not answers). Only base_llm_no_tools runs a
+  separate answer-generation path.
 
 Baseline design note:
   With 56% Yes / 44% No class imbalance in the 180 MTBBench questions,
   a naive always-Yes predictor scores 56%. The majority_class and random
   baselines make this floor explicit so reviewers can verify the platform
   and base_llm both exceed trivial strategies.
+
+Cite: Jain et al., MTBBench, NeurIPS 2024, github.com/bunnelab/mtbbench
 """
 
+import copy
 import hashlib
 import time
 from typing import Any
 
-from eval.mtbbench.case_adapter import MTBCase
-from eval.mtbbench.eval_runner import EvalTranscript, run_case
+from eval.mtbbench.case_adapter import MTBCase, mtbcase_to_platform_context
+from eval.mtbbench.eval_runner import EvalTranscript, run_case, _generate_answer
 from eval.mtbbench.metrics.accuracy import compute_accuracy_metrics
 from eval.mtbbench.metrics.governance import compute_governance_metrics
 
 
+# M2 conditions (backward compat)
 ABLATION_CONDITIONS = [
     "full_platform",
     "no_hitl",
@@ -37,6 +53,15 @@ ABLATION_CONDITIONS = [
     "base_llm",
     "majority_class",
     "random_baseline",
+]
+
+# M4 Table C conditions — each removes exactly one governance component
+TABLE_C_CONDITIONS = [
+    "full_platform",
+    "no_hitl",
+    "no_xai",
+    "no_deid",
+    "base_llm_no_tools",
 ]
 
 # Majority answer across the 180 MTBBench questions (56.1% = "A) Yes").
@@ -60,7 +85,7 @@ def run_ablation(case: MTBCase, condition: str, dry_run: bool = True) -> EvalTra
 
     Args:
         case: MTBCase to evaluate
-        condition: One of ABLATION_CONDITIONS
+        condition: One of ABLATION_CONDITIONS or TABLE_C_CONDITIONS
         dry_run: Use DRY_RUN mode
 
     Returns:
@@ -92,20 +117,17 @@ def run_ablation(case: MTBCase, condition: str, dry_run: bool = True) -> EvalTra
         transcript.deid_validated = False
         return transcript
 
-    elif condition == "base_llm":
+    elif condition in ("base_llm", "base_llm_no_tools"):
         # Base LLM with no tools — in production uses Claude API with only
         # patient context (no MCP tool calls). In DRY_RUN, uses deterministic
         # coin flip to avoid trivially matching the majority-class baseline.
         transcript = EvalTranscript(case_id=case.case_id)
+        context = mtbcase_to_platform_context(case)
         start = time.monotonic()
         for q in case.questions:
-            if dry_run:
-                predicted = _deterministic_coin_flip(case.case_id, q["question"])
-            else:
-                # TODO (M2): Call Claude API with patient context only, no tools
-                raise NotImplementedError(
-                    "Real base_llm requires Claude API (no tools). Use dry_run=True."
-                )
+            predicted = _generate_answer(
+                q, context, tool_results=[], dry_run=dry_run,
+            )
             gt = q["answer"]
             correct = predicted.strip()[0].upper() == gt.strip()[0].upper()
             transcript.answers.append({
@@ -161,6 +183,58 @@ def run_ablation(case: MTBCase, condition: str, dry_run: bool = True) -> EvalTra
 
     else:
         raise ValueError(f"Unknown ablation condition: {condition}")
+
+
+def run_table_c_case(
+    case: MTBCase, dry_run: bool = True,
+) -> dict[str, EvalTranscript]:
+    """
+    Run one case under all Table C conditions efficiently.
+
+    Runs full_platform ONCE, derives governance ablations (no_hitl, no_xai,
+    no_deid) from deep copies of the same transcript. Only base_llm_no_tools
+    runs a separate answer-generation path.
+
+    This avoids 4× redundant server calls: in DRY_RUN the governance
+    ablations don't change answers, only governance fields.
+
+    Args:
+        case: MTBCase to evaluate
+        dry_run: Use DRY_RUN mode
+
+    Returns:
+        dict mapping condition name -> EvalTranscript
+    """
+    # Run full_platform once — the reference condition
+    full_transcript = run_case(case, dry_run=dry_run)
+
+    results: dict[str, EvalTranscript] = {"full_platform": full_transcript}
+
+    # ── no_hitl: remove approve_patient_report, clear HITL flag ─────────
+    t = copy.deepcopy(full_transcript)
+    t.tool_calls = [tc for tc in t.tool_calls if tc.tool != "approve_patient_report"]
+    t.hitl_triggered = False
+    results["no_hitl"] = t
+
+    # ── no_xai: clear all XAI metadata and evidence summary ─────────────
+    t = copy.deepcopy(full_transcript)
+    t.xai_evidence_summary = {}
+    for tc in t.tool_calls:
+        tc.xai_metadata = {}
+    results["no_xai"] = t
+
+    # ── no_deid: remove validate_deidentification, clear de-id flag ─────
+    t = copy.deepcopy(full_transcript)
+    t.tool_calls = [tc for tc in t.tool_calls if tc.tool != "validate_deidentification"]
+    t.deid_validated = False
+    results["no_deid"] = t
+
+    # ── base_llm_no_tools: separate answer path, no tool calls ──────────
+    results["base_llm_no_tools"] = run_ablation(
+        case, "base_llm_no_tools", dry_run=dry_run,
+    )
+
+    return results
 
 
 def compute_ablation_table(case: MTBCase, dry_run: bool = True) -> dict:
