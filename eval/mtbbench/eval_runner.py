@@ -351,23 +351,35 @@ def _call_mcp_tool(
             "data": _synthetic_response(server, tool, params),
         }
 
-    # Apply per-patient calibrated confidence based on biomarkers.
+    # ── Confidence-level provenance (important for paper description) ──
+    # confidence_level comes from _calibrated_confidence() in the eval
+    # harness, NOT from the MCP server's own xai_metadata.  The harness
+    # maps each (server, tool) pair to a confidence level conditioned on
+    # the patient's TMB and MSI biomarkers:
+    #   TMB ≥ 10 or MSI-H → "high" on genomic tools, "medium" on neoantigen
+    #   TMB < 10 and MSS  → "medium" on genomic tools, "low" on neoantigen
     # This is the primary source of inter-case variance for Table B CIs.
-    # Real server data may or may not include xai_metadata; we always
-    # overlay the calibrated version which depends on patient TMB/MSI.
+    #
+    # Other XAI fields (confidence_note, key_drivers, guideline_version,
+    # counterfactual) are taken from the real server response when present,
+    # falling back to the calibrated defaults when the server omits them.
+    #
+    # In the paper, describe this as: "Confidence levels were assigned by
+    # the evaluation harness based on each patient's TMB and MSI status,
+    # reflecting the expected clinical interpretability of each tool's
+    # output for the given biomarker profile."
+    # ────────────────────────────────────────────────────────────────────
     confidence = _calibrated_confidence(server, tool, case_context)
     server_xai = response.get("xai_metadata", {})
 
-    # Merge: use server's note/counterfactual if available, but calibrate
-    # confidence_level from patient biomarkers
     xai_metadata = {
-        "confidence_level": confidence["level"],
+        "confidence_level": confidence["level"],           # harness-assigned
         "confidence_note": server_xai.get("confidence_note", confidence["note"]),
         "key_drivers": server_xai.get("key_drivers", confidence["drivers"]),
         "guideline_version": server_xai.get(
             "guideline_version", confidence["guideline"]
         ),
-        "evidence_grade": confidence["grade"],
+        "evidence_grade": confidence["grade"],             # harness-assigned
         "counterfactual": server_xai.get("counterfactual"),
     }
     response["xai_metadata"] = xai_metadata

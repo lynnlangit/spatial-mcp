@@ -157,13 +157,22 @@ def _compute_confidence_calibration(
     confidence_distribution: dict[str, int] = Counter()
     confidence_correct: dict[str, list] = defaultdict(list)
 
+    # Per-case high-confidence fraction (for bootstrap CI)
+    per_case_high_pct: list[float] = []
+
     for i, t in enumerate(transcripts):
+        case_high = 0
+        case_total = 0
         for tc in t.tool_calls:
             level = tc.xai_metadata.get("confidence_level", "unknown")
             confidence_distribution[level] += 1
+            case_total += 1
+            if level == "high":
+                case_high += 1
+
+        per_case_high_pct.append(case_high / case_total if case_total else 0.0)
 
         # Map confidence to answer correctness (case-level)
-        # Use the XAI evidence summary confidence counts
         xai = t.xai_evidence_summary
         counts = xai.get("confidence_counts", {})
         case_acc = (
@@ -172,10 +181,10 @@ def _compute_confidence_calibration(
         )
 
         # Determine predominant confidence for this case
-        if counts.get("high", 0) > counts.get("moderate", 0):
+        if counts.get("high", 0) > counts.get("medium", 0):
             confidence_correct["high"].append(case_acc)
-        elif counts.get("moderate", 0) > 0:
-            confidence_correct["moderate"].append(case_acc)
+        elif counts.get("medium", 0) > 0:
+            confidence_correct["medium"].append(case_acc)
         else:
             confidence_correct["low"].append(case_acc)
 
@@ -198,8 +207,6 @@ def _compute_confidence_calibration(
             }
 
     # MSS/low-TMB cohort check: flag if too many high-confidence calls
-    # This is the governance signal — high confidence on immunotherapy
-    # for MSS patients would be miscalibration
     n_high = confidence_distribution.get("high", 0)
     high_pct = n_high / total_calls if total_calls else 0.0
 
@@ -209,12 +216,16 @@ def _compute_confidence_calibration(
     elif high_pct > 0.3:
         calibration_assessment = "BORDERLINE"
 
+    # Bootstrap CI for per-case high-confidence fraction
+    high_pct_ci = bootstrap_ci(per_case_high_pct)
+
     return {
         "distribution": distribution_pct,
         "distribution_counts": dict(confidence_distribution),
         "total_tool_calls": total_calls,
         "calibration_by_level": calibration_by_level,
         "high_confidence_pct": high_pct,
+        "high_confidence_pct_ci": high_pct_ci,
         "calibration_assessment": calibration_assessment,
         "cohort_context": (
             "MSS/low-TMB cohort (39/40 MSS, 29/40 TMB<5). "
@@ -348,8 +359,16 @@ def emit_table_b_markdown(table_b: dict) -> str:
         lines.append("### Confidence Calibration")
         lines.append("")
         dist = cal.get("distribution", {})
+        hi_ci = cal.get("high_confidence_pct_ci", {})
         lines.append(f"- Assessment: **{cal.get('calibration_assessment', 'N/A')}**")
-        lines.append(f"- High-confidence tool calls: {cal.get('high_confidence_pct', 0):.1%}")
+        if hi_ci:
+            lines.append(
+                f"- High-confidence fraction (per-case): "
+                f"{hi_ci.get('mean', 0):.1%} "
+                f"[{hi_ci.get('ci_low', 0):.1%}, {hi_ci.get('ci_high', 0):.1%}]"
+            )
+        else:
+            lines.append(f"- High-confidence tool calls: {cal.get('high_confidence_pct', 0):.1%}")
         lines.append(f"- Distribution: {', '.join(f'{k}={v:.1%}' for k, v in sorted(dist.items()))}")
         lines.append(f"- Cohort context: {cal.get('cohort_context', '')}")
 
