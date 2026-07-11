@@ -22,11 +22,6 @@ docker build -t precision-medicine/r-base:latest ./r-base
 docker build -t precision-medicine/tensorflow-base:latest ./tensorflow-base
 ```
 
-**Build individual:**
-```bash
-docker build -t precision-medicine/python-base:latest ./python-base
-```
-
 **Verify images exist:**
 ```bash
 docker images | grep precision-medicine
@@ -97,3 +92,7 @@ docker scout cves precision-medicine/python-base:latest
 - GPU: Full CUDA support (~8-10GB)
 - CPU: Smaller, CPU-only (~4-5GB)
 - Simply comment/uncomment the appropriate FROM line
+
+---
+
+**Last Updated:** 2026-02-19

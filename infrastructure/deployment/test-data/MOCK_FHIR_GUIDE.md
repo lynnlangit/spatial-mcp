@@ -27,7 +27,7 @@ https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/u
 - **ID:** `patient-001`
 - **Name:** Jane Marie TestPatient
 - **Gender:** Female
-- **Birth Date:** 1968-03-15 (Age: 56)
+- **Birth Date:** 1968-03-15
 - **Identifier:** P001
 
 ### Clinical Diagnosis
@@ -64,33 +64,37 @@ https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/u
 
 ### Using curl (REST API)
 
+Set the base URL variable first (uses the Base URL from [FHIR Store Details](#fhir-store-details)):
+
+```bash
+FHIR_BASE="https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/us-central1/datasets/precision-medicine-dataset/fhirStores/identified-fhir-store/fhir"
+AUTH="Authorization: Bearer $(gcloud auth print-access-token)"
+```
+
 **Get Patient:**
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/us-central1/datasets/precision-medicine-dataset/fhirStores/identified-fhir-store/fhir/Patient/patient-001"
+curl -H "$AUTH" "$FHIR_BASE/Patient/patient-001"
 ```
 
 **Search Conditions:**
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/us-central1/datasets/precision-medicine-dataset/fhirStores/identified-fhir-store/fhir/Condition?patient=patient-001"
+curl -H "$AUTH" "$FHIR_BASE/Condition?patient=patient-001"
 ```
 
 **Search Observations:**
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/us-central1/datasets/precision-medicine-dataset/fhirStores/identified-fhir-store/fhir/Observation?patient=patient-001"
+curl -H "$AUTH" "$FHIR_BASE/Observation?patient=patient-001"
 ```
 
 **Search Medications:**
 ```bash
-curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  "https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/us-central1/datasets/precision-medicine-dataset/fhirStores/identified-fhir-store/fhir/MedicationStatement?patient=patient-001"
+curl -H "$AUTH" "$FHIR_BASE/MedicationStatement?patient=patient-001"
 ```
 
 ### Using Python (Google Cloud Healthcare API)
 
 ```python
+import os
 from google.cloud import healthcare_v1
 from google.oauth2 import service_account
 
@@ -158,13 +162,13 @@ To add additional test patients or resources:
 
 1. **Create JSON file** in `data/patient-data/PAT001-OVC-2025/clinical/fhir_raw/`
 2. **Follow FHIR R4 format** (examples provided)
-3. **Upload using:**
+3. **Upload using** (with `FHIR_BASE` and `AUTH` set as above):
    ```bash
    curl -X PUT \
-     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     -H "$AUTH" \
      -H "Content-Type: application/fhir+json" \
      -d @your-resource.json \
-     "https://healthcare.googleapis.com/v1/projects/precision-medicine-poc/locations/us-central1/datasets/precision-medicine-dataset/fhirStores/identified-fhir-store/fhir/ResourceType/resource-id"
+     "$FHIR_BASE/ResourceType/resource-id"
    ```
 
 ---
@@ -201,3 +205,7 @@ FHIR store usage is minimal for testing:
 - [FHIR R4 Specification](https://www.hl7.org/fhir/R4/)
 - [GCP Healthcare API Docs](https://cloud.google.com/healthcare-api/docs)
 - [HIPAA Safe Harbor Method](https://www.hhs.gov/hipaa/for-professionals/privacy/special-topics/de-identification/index.html)
+
+---
+
+**Last Updated:** 2026-02-19

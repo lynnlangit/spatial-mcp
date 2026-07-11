@@ -39,6 +39,7 @@ infrastructure/
 │   ├── deploy-oauth2-proxy.sh   # Azure AD SSO proxy
 │   └── verify-fhir-data.sh     # Epic FHIR connectivity test
 └── audit/               # Compliance tooling
+    ├── README.md                # Bias audit environment setup guide
     └── audit_bias.py            # Quarterly bias audit script
 ```
 
@@ -63,7 +64,7 @@ uv run python -m mcp_fgbio
 
 ### Hospital Production Setup
 
-See [Hospital Deployment Guide](hospital-deployment/README.md) for the full 6-month deployment process including VPC, SSO, Epic FHIR integration, and HIPAA compliance.
+See [Hospital Deployment Guide](hospital-deployment/README.md) for the full 3-month deployment process including VPC, SSO, Epic FHIR integration, and HIPAA compliance.
 
 ---
 
