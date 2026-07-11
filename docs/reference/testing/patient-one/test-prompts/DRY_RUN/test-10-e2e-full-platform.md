@@ -21,7 +21,7 @@ Copy and paste the following into Claude Desktop:
 ```
 Run a PatientOne (PAT001-OVC-2025) full-platform HGSOC Immunotherapy Target Discovery analysis. This exercises ALL 17 custom MCP servers in DRY_RUN mode. Summarize results as a table after each step before moving to the next.
 
-Patient profile: 58-year-old female, Stage IV High-Grade Serous Ovarian Carcinoma (HGSOC), platinum-resistant (PFI < 6 months), BRCA1 germline mutation, HRD-positive, TMB 3.2 mut/Mb. HLA type: HLA-A*02:01, HLA-A*03:01, HLA-B*07:02, HLA-B*44:02.
+Patient profile: 58-year-old female, Stage IV High-Grade Serous Ovarian Carcinoma (HGSOC), platinum-resistant (PFI < 6 months), BRCA1 germline mutation, HRD-positive, TMB 47.3 mut/Mb. HLA type: HLA-A*02:01, HLA-A*03:01, HLA-B*07:02, HLA-B*44:02.
 
 Research question: Which known immunotherapy targets are upregulated, compositionally enriched, or mechanistically active in platinum-resistant HGSOC — and in which immune cell types?
 
@@ -69,7 +69,7 @@ Profile the full immunotherapy target panel from the research plan. Score target
 
 4e. **Quantum fidelity (quantum-celltype-fidelity):** Run identify_immune_evasion_states to detect tumor cells evading immune surveillance. In platinum-resistant HGSOC, we expect tumor cells mimicking macrophage signatures as an immune evasion mechanism.
 
-4f. **Neoantigen burden (neoantigen):** Run estimate_neoantigen_burden with TMB=3.2, cancer_type="HGSOC". Then run score_antigen_presentation_pathway using the estimated neoantigen count — include b2m_expression=0.6 to model the B2M loss common in HRD-Dup HGSOC.
+4f. **Neoantigen burden (neoantigen):** Run estimate_neoantigen_burden with TMB=47.3, cancer_type="HGSOC". Then run score_antigen_presentation_pathway using the estimated neoantigen count — include b2m_expression=0.6 to model the B2M loss common in HRD-Dup HGSOC.
 
 4g. **MHC binding (neoantigen):** Run predict_mhc1_binding for peptides ["RMPEAAPPV", "VVPCEPPEV", "HMTEVVRRC"] with alleles ["HLA-A*02:01", "HLA-A*03:01"]. These represent candidate neoantigens from TP53 R175H and PIK3CA E545K mutations. Report strong vs weak binders.
 

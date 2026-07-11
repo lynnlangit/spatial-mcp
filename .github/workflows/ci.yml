@@ -49,7 +49,7 @@ jobs:
           echo "| Metric | Expected |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
           echo "| HRD score | 54 |" >> $GITHUB_STEP_SUMMARY
-          echo "| TMB | 4.2 mut/Mb |" >> $GITHUB_STEP_SUMMARY
+          echo "| TMB | 47.3 mut/Mb |" >> $GITHUB_STEP_SUMMARY
           echo "| IC50 (RMPEAAPPV) | 7.8 nM |" >> $GITHUB_STEP_SUMMARY
           echo "| Spatial spots | 300 |" >> $GITHUB_STEP_SUMMARY
           echo "| Moran's I | ≈ -0.0033 |" >> $GITHUB_STEP_SUMMARY

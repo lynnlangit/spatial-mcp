@@ -21,7 +21,7 @@ Three 90-minute lectures covering precision oncology, hands-on analysis, and eth
 2. **Genomic instability: HRD and TMB** (10 min)
    - What HRD scores measure (LOH, TAI, LST)
    - Tumor mutational burden and its clinical significance
-   - PAT001 values: HRD = 54, TMB = 4.2 mut/Mb
+   - PAT001 values: HRD = 54, TMB = 47.3 mut/Mb
 
 3. **Spatial biology and the tumor microenvironment** (10 min)
    - Visium spatial transcriptomics workflow
@@ -83,7 +83,7 @@ cd servers/mcp-genomic-results && uv sync && uv run pytest -v
 2. **Step 1: Genomic instability (HRD + TMB)** (15 min)
    - Run genomic-results cells
    - Interpret HRD = 54: PARP inhibitor candidacy
-   - Discuss TMB = 4.2: below pan-cancer TMB-high threshold but relevant in HGSOC context
+   - Discuss TMB = 47.3: well above the pan-cancer TMB-high threshold (≥10 mut/Mb); POLE-corrected hypermutator phenotype supporting checkpoint-inhibitor rationale
 
 3. **Step 2: Neoantigen prediction** (15 min)
    - Run neoantigen cells (RMPEAAPPV, HLA-A*02:01)

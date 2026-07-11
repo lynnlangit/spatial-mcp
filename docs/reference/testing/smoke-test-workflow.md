@@ -34,6 +34,6 @@ Categories (for output table):
 - Epigenetic Priming: DNMT1, DNMT3A, HDAC1, HDAC2
 - Antigen Presentation: B2M, TAP1, TAP2
 
-**Step 4 — Neoantigen Burden:** Estimate neoantigen burden for a HGSOC tumor with TMB = 3.2 mutations/Mb. Then score the antigen presentation pathway using the estimated neoantigen count.
+**Step 4 — Neoantigen Burden:** Estimate neoantigen burden for a HGSOC tumor with TMB = 47.3 mutations/Mb. Then score the antigen presentation pathway using the estimated neoantigen count.
 
 **Step 5 — Report:** Generate a one-sentence plain-language summary of the findings suitable for a patient report.

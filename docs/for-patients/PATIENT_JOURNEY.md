@@ -93,7 +93,7 @@ everyday terms:
 | Measurement | What It Tells You | Example |
 |-------------|-------------------|---------|
 | HRD score | How broken the cancer's DNA-repair system is. Higher = more broken, which can be good for treatment. | 54 (high -- PARP inhibitor candidate) |
-| TMB | How many mutations the cancer has per unit of DNA. More mutations can mean more targets for the immune system. | 4.2 mutations per megabase |
+| TMB | How many mutations the cancer has per unit of DNA. More mutations can mean more targets for the immune system. | 47.3 mutations per megabase |
 | IC50 | How tightly a neoantigen binds to immune cells. Lower = tighter = better for immune recognition. | 7.8 nM (very strong binding) |
 | CD8+ T cells | A count of immune "killer" cells near the tumor. More of these cells may mean your immune system is actively fighting. | 30 cells detected |
 

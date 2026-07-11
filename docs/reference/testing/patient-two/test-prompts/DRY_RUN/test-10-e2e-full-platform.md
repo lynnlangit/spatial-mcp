@@ -149,7 +149,7 @@ After generating the report, display a final summary that includes:
 | Research question | Immunotherapy target discovery | Endocrine resistance & BRCA2 therapy |
 | Treatment strategy | Ranked immunotherapy targets | Tiered escalation (endocrine > CDK4/6i > PI3Ki) |
 | Perturbation model | PDCD1 KD (checkpoint) | ESR1 KD (endocrine resistance) |
-| Neoantigen context | TMB 3.2, B2M loss | TMB 1.5, intact presentation |
+| Neoantigen context | TMB 47.3, B2M loss | TMB 1.5, intact presentation |
 | Deconvolution focus | TAM-M2 dominance | Moderate CD8+, low Treg |
 | Target panel | Checkpoints, CD47, CSF1R | ESR1, CDK4/6, PIK3CA, FGFR1 |
 

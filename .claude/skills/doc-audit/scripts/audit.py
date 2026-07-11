@@ -39,6 +39,8 @@ KNOWN_WRONG_VALUES = {
     ("PAT001", "47.0"): "47.3",
     ("PAT001", "7.9"):  "7.8",
     ("PAT001", "HRD 72"): "HRD 54",   # README had 72 at one point
+    ("PAT001", "4.2 mut"):  "47.3 mut",  # stale pre-POLE TMB
+    ("PAT001", "3.2 mut"):  "47.3 mut",  # stale pre-POLE TMB
     ("PAT003", "14.2"): "14.3",        # earlier canonical estimate
     ("PAT003", "12.4"): "12.0",
     ("PAT003", "11.8"): "10.3",
