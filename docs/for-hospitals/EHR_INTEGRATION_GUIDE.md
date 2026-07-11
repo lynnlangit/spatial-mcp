@@ -34,7 +34,3 @@ The mock server is located at `servers/mcp-mockepic/src/mcp_mockepic/server.py`.
 - **Clinical trial enrollment**: not modeled
 - **Lab values** (CA-125, etc.): not returned by mock server
 - **Prior treatment history**: not modeled
-
----
-
-**Last Updated:** 2026-02-19

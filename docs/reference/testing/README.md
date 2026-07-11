@@ -137,7 +137,3 @@ All servers require **Python 3.11+**. The install script automatically uses `pyt
 ### Server Test Status
 
 See [Server Registry](../shared/server-registry.md) for current server names, tool counts, and status.
-
----
-
-**Last Updated:** 2026-05-12

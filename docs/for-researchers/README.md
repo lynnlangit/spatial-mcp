@@ -93,7 +93,6 @@ graph LR
 
 ---
 
-
 > **v17 update (April 2026):** PAT003 (preventive CVD) added as a third synthetic dataset.
 > New server: `mcp-cardiometabolic` — Reynolds/Framingham/ASCVD risk scoring,
 > biomarker panels, Lp(a) assessment, ACC/AHA statin decision logic.
@@ -151,7 +150,6 @@ graph LR
 - Tumor microenvironment characterization (Spatial + Imaging + Deconvolution)
 - Drug resistance mechanisms (Multi-omics + Pathway enrichment + Variant analysis)
 - Biomarker discovery (Cohort analysis + Differential expression + Validation)
-
 
 ## Analysis Workflows
 
@@ -462,7 +460,6 @@ nearest neighbors.
 - Meta-analysis: Stouffer's Z-score method
 - Batch correction: ComBat (Empirical Bayes)
 
-
 ### Data Availability
 
 **Synthetic data (PatientOne):**
@@ -559,14 +556,9 @@ See: [Architecture References](../reference/architecture/references.md)
 - Spatial: 10x Visium format, Seurat objects
 - Imaging: TIFF, PNG
 
-
 ### "How do I ensure reproducibility?"
 **A:** Platform automatically tracks:
 - Tool versions (server commits)
 - Parameters used
 - Data provenance (file paths, checksums)
 - Random seeds
-
-
----
-

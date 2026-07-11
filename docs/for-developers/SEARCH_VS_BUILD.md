@@ -161,7 +161,3 @@ Before building, answer these four questions (from the [New Modality Server Guid
 - [Connect External MCP Servers](../for-researchers/CONNECT_EXTERNAL_MCP.md) — Setup for the 6 external servers
 - [Add a New Modality Server](ADD_NEW_MODALITY_SERVER.md) — Full implementation guide for building new servers
 - [Architecture Overview](ARCHITECTURE.md) — System design and integration points
-
----
-
-**Last Updated:** 2026-03-09

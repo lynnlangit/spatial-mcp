@@ -1,7 +1,5 @@
 # PatientTwo End-to-End Test — Claude Desktop
 
-**Last Updated:** 2026-03-26
-
 **Purpose:** Single-prompt E2E test for Claude Desktop with all custom MCP servers in DRY_RUN mode.
 Adapted for PAT002-BC-2026 (Stage IIA ER+/PR+/HER2- Invasive Ductal Carcinoma, BRCA2 germline).
 

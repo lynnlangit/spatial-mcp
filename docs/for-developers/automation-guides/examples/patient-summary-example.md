@@ -609,6 +609,5 @@ the rationale for considering clinical trials. The analogies ('drug pump',
 
 ---
 
-**Last Updated:** 2026-01-12
 **Example Patient:** PatientOne (PAT001-OVC-2025) - Synthetic test case for demonstration
 **Status:** Completed workflow - technical report → patient summary → clinician review → approved for patient delivery

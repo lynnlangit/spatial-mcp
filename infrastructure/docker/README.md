@@ -26,7 +26,3 @@ docker build -t precision-medicine/tensorflow-base:latest ./tensorflow-base
 - Docker Desktop or Docker Engine
 - 15GB+ free disk (30GB+ recommended for all images)
 - 8GB+ RAM (16GB+ for TensorFlow)
-
----
-
-**Last Updated:** 2026-02-19

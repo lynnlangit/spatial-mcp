@@ -1,7 +1,6 @@
 # Clinical Data Retrieval Architecture
 
 **Status:** ✅ Production Ready (mcp-epic: 100% real) | 🎭 Mock by Design (mcp-mockepic)
-**Last Updated:** 2026-01-10
 
 ---
 

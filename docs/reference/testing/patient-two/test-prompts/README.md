@@ -65,7 +65,3 @@ MCP servers support two layers of synthetic data. Choose the mode that fits your
 - [PAT002 Data README](../../../../data/patient-data/PAT002-BC-2026/README.md) — Complete data inventory
 - [PAT002 Canonical Values](../../../../tests/fixtures/pat002_canonical.py) — Validated reference values
 - [Server Registry](../../shared/server-registry.md) — Canonical server and tool counts
-
----
-
-**Last Updated:** 2026-05-08

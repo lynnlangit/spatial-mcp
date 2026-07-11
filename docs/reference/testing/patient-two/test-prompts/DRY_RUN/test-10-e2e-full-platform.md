@@ -1,7 +1,5 @@
 # PatientTwo End-to-End Test — Full Platform (All 17 Custom Servers)
 
-**Last Updated:** 2026-03-26
-
 **Purpose:** Comprehensive single-prompt E2E test exercising **all 17 custom MCP servers** in DRY_RUN mode. Follows a Breast Cancer Endocrine Resistance & BRCA2-Targeted Therapy workflow: profile ER pathway activity, assess HRD/PARP eligibility, evaluate immune microenvironment, and generate a ranked treatment priority list.
 
 **Research context:** Endocrine Therapy Optimization in BRCA2-Mutant ER+/PR+/HER2- Early Breast Cancer. The core question: *What is the optimal adjuvant strategy for a BRCA2-mutant, PIK3CA-mutant, Luminal A breast cancer — and what targeted options exist if endocrine resistance develops?*

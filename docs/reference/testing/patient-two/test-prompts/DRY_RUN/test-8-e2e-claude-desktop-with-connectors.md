@@ -1,7 +1,5 @@
 # PatientTwo End-to-End Test — Claude Desktop + Anthropic Connectors
 
-**Last Updated:** 2026-03-26
-
 **Purpose:** Extended E2E test that adds literature search, clinical trial matching, and preprint discovery to the base PatientTwo workflow. Uses 6 custom MCP servers (DRY_RUN) plus 3 Anthropic connectors (live data). Adapted for PAT002-BC-2026 (Stage IIA ER+/PR+/HER2- IDC, BRCA2 germline).
 
 **Prerequisites:**

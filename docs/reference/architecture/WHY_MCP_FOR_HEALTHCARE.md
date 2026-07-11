@@ -275,7 +275,3 @@ MCP standardizes:
 - **[Architecture Details](./README.md)** - System design and workflows
 - **[Developer Guide](../../for-developers/README.md)** - Build your own MCP servers
 - **[Demo & Pitch](../../for-funders/DEMO_AND_PITCH.md)** - See it in action
-
----
-
-**Last Updated:** 2026-05-09

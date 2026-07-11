@@ -720,6 +720,3 @@ python servers/mcp-patient-report/scripts/generate_patient_report.py --patient-i
 **Status:** Clinician-in-the-Loop validation implemented  
 **Outcome:** AI as co-pilot, human expert validates before clinical use  
 **Compliance:** HIPAA-compliant with 10-year audit trail  
-
----
-

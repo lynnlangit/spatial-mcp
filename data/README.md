@@ -54,7 +54,3 @@ This directory contains sample data for testing and demonstrating the Precision 
 - Risk scores (Reynolds 14.3%, Framingham 12.0%, ASCVD 10.3%)
 - Tier 1 genetic screen (negative for FH, HBOC, Lynch — shifts risk model to polygenic)
 - Lifestyle and medication data (lisinopril, Mediterranean diet, exercise)
-
----
-
-

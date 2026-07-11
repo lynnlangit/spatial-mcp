@@ -49,7 +49,3 @@ See [Value Proposition](../reference/shared/value-proposition.md) for metrics an
 ---
 
 **See also:** [Executive Summary](../for-funders/EXECUTIVE_SUMMARY.md) | [Server Registry](../reference/shared/server-registry.md) | [HIPAA Summary](../reference/shared/hipaa-summary.md)
-
----
-
-**Last Updated:** 2026-02-19

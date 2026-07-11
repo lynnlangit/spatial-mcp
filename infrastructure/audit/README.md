@@ -288,7 +288,3 @@ gsutil iam get gs://$PROJECT_ID-audit-reports/
 gsutil iam ch serviceAccount:mcp-audit-sa@$PROJECT_ID.iam.gserviceaccount.com:roles/storage.objectAdmin \
   gs://$PROJECT_ID-audit-reports/
 ```
-
----
-
-**Last Updated:** 2026-02-19

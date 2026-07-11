@@ -283,7 +283,3 @@ For instructors setting up a study group on corporate Macs:
 - **[Installation Guide](installation.md)** — Claude-specific setup
 - **[Educator Guide](../for-educators/README.md)** — Curriculum planning
 - **[Student App](../../ui/streamlit-app-students/)** — Browser-based Gemini student interface
-
----
-
-**Last Updated:** 2026-02-16

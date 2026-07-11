@@ -19,7 +19,6 @@ import json
 from typing import Annotated, Dict, List, Optional
 from pydantic import BeforeValidator
 
-
 def _coerce_dict(val):
     """Coerce JSON-string dicts for BeforeValidator."""
     if val is None or isinstance(val, dict):
@@ -27,7 +26,6 @@ def _coerce_dict(val):
     if isinstance(val, str):
         return json.loads(val)
     return val
-
 
 def _coerce_list(val):
     """Coerce JSON-string lists for BeforeValidator."""
@@ -38,7 +36,6 @@ def _coerce_list(val):
         if isinstance(parsed, list):
             return parsed
     return val
-
 
 _CoerceDict = BeforeValidator(_coerce_dict)
 _CoerceList = BeforeValidator(_coerce_list)
@@ -151,7 +148,3 @@ Each server's version lives in its `pyproject.toml` under `[project] version`.
   way that breaks existing callers, is a **major** bump.
 - The FastMCP framework version floor (`fastmcp>=2.13`) is pinned
   project-wide; individual servers should not lower it.
-
----
-
-**Last Updated:** 2026-04-21

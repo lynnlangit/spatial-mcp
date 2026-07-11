@@ -189,6 +189,5 @@ If you use any of these references in your research with this repository, please
 
 ---
 
-**Last Updated:** January 31, 2026  
 **Maintained by:** Lynn Langit  
 **Contributions:** Pull requests welcome to add relevant publications  

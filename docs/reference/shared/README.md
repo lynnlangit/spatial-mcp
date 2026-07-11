@@ -33,6 +33,3 @@ See [Server Registry](server-registry.md) for current server names, tool counts,
 3. **Multi-omics** — RNA-seq + proteomics + phosphoproteomics integration
 4. **Spatial** — 10x Visium spatial transcriptomics, cell deconvolution
 5. **Imaging** — H&E histopathology, multiplex immunofluorescence
-
----
-

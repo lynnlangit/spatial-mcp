@@ -375,5 +375,4 @@ gcloud logging read "resource.type=secretmanager.googleapis.com" \
 
 ---
 
-**Last Updated:** 2026-02-01
 **Security Contact:** Review GCP audit logs and Anthropic Console regularly

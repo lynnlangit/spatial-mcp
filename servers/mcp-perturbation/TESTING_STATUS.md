@@ -175,4 +175,3 @@ pytest tests/test_data_loader.py::TestDatasetLoader::test_load_gse184880_synthet
 
 **Conclusion:**
 The scgen 2.1.0 package from 2021 cannot be installed in a modern Python 3.11 environment without creating a completely isolated environment (Docker/conda) with Python 3.9 and exact old package versions.
-

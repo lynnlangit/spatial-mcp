@@ -563,6 +563,5 @@ See main repository LICENSE file.
 
 ---
 
-**Last Updated**: 2026-02-19
 **Version**: 1.0.0
 **Contact**: See [Hospital Deployment Guide](../../docs/for-hospitals/README.md)

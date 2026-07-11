@@ -159,4 +159,3 @@ After running each test, verify:
 3. Update high-level documentation (README, EXEC_SUMMARY)
 4. Consider adding more diverse test images
 5. Benchmark performance with real MxIF images
-

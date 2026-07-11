@@ -51,7 +51,3 @@
 - **DRY_RUN mode**: All 20 servers return synthetic data at zero API cost. Use for development, training, and classroom demos.
 - **Batch processing**: Queue cases overnight rather than real-time to reduce peak compute demand.
 - **Result caching**: Spatial and deconvolution outputs are deterministic for the same h5ad input. Cache at the de-identification layer to avoid recomputation.
-
----
-
-**Last Updated:** 2026-02-19

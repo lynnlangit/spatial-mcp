@@ -570,5 +570,4 @@ def get_combined_metrics(hours_back: int = 1) -> Dict:
 
 ---
 
-
 **🎉 Monitor your MCP costs. Optimize your architecture. Scale with confidence.**

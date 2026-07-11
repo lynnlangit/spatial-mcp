@@ -58,7 +58,3 @@ MCP servers support two layers of synthetic data. Choose the mode that fits your
 - [Quick Test Prompts](../../quick-test-prompts.md) — Rapid single-server verification
 - [PatientOne Overview](../README.md) — Complete patient scenario walkthrough
 - [Server Registry](../../../shared/server-registry.md) — Canonical server and tool counts
-
----
-
-**Last Updated:** 2026-02-23

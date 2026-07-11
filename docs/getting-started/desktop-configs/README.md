@@ -51,7 +51,6 @@ After:  "/Users/yourname/projects/spatial-mcp/servers/mcp-fgbio"
 
 ---
 
-
 ## 🔧 Configuration Details
 
 ### Why `uv run --directory`?
@@ -219,8 +218,3 @@ cp claude_desktop_config.json ~/Desktop/claude_desktop_config_backup.json
 # Restore if needed
 cp ~/Desktop/claude_desktop_config_backup.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```
-
----
-
-
-

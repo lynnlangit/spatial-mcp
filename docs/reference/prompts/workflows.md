@@ -516,7 +516,3 @@ RETURN: Updated report (changes highlighted, revised recommendations)
 - [Clinical-Genomic](clinical-genomic.md)
 - [Multi-Omics](multiomics.md)
 - [Spatial Transcriptomics](spatial.md)
-
----
-
-**Last Updated:** 2026-01-14

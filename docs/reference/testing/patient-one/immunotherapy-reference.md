@@ -295,6 +295,5 @@ Standard checkpoint inhibitors (anti-PD-1/PD-L1 monotherapy) show limited effica
 
 ---
 
-**Last Updated:** 2026-02-13
 **NCT IDs Verified:** Via ClinicalTrials.gov MCP (February 2026)
 **Data:** All analysis approaches reference PatientOne synthetic data (PAT001-OVC-2025)

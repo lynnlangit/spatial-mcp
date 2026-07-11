@@ -349,6 +349,3 @@ Track your progress:
 5. Watch your usage counters in the sidebar
 
 **Remember**: Limits are your friend - they let you explore freely without worry!
-
----
-

@@ -132,4 +132,4 @@ See [test-prompts/README.md](test-prompts/README.md) for the complete index.
 
 ---
 
-**Last Updated:** 2026-05-08 | **Status:** 100% Synthetic — Research/Demo Only
+**Status:** 100% Synthetic — Research/Demo Only

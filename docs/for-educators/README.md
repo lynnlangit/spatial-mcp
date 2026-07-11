@@ -468,8 +468,6 @@ We welcome contributions!
 ### Pilot Program
 Interested in piloting this platform in your course?
 
-
-
 ---
 
 ## Frequently Asked Questions
@@ -505,13 +503,8 @@ Production mode (real data): Requires institutional GCP account and varies by us
 
 ---
 
-
 **Related Resources:**
 - 🔬 [Researcher Guide](../for-researchers/README.md) - For bioinformatics details
 - 💻 [Developer Guide](../for-developers/README.md) - For extending the platform
 - 💰 [Funding Information](../for-funders/README.md) - For grant applications
 - 🏠 [Back to Main Documentation](../INDEX.md)
-
----
-
-**Last Updated:** 2026-02-16

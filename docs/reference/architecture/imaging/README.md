@@ -1,7 +1,6 @@
 # Imaging Analysis Architecture
 
 **Status:** Production (openimagedata: 100% real, deepcell: 100% real)
-**Last Updated:** 2026-01-31
 
 ---
 

@@ -329,5 +329,4 @@ Before finalizing output, verify:
 ---
 
 **Template Version:** 1.0
-**Last Updated:** 2026-01-12
 **Maintained by:** precision-medicine-mcp project

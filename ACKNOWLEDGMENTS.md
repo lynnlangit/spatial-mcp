@@ -78,7 +78,3 @@ If you use this repository in your research, please cite:
 ## Contributing
 
 We welcome contributions from the precision medicine and bioinformatics communities. See the main [README](README.md) for how to get started.
-
----
-
-**Last Updated:** April 21, 2026

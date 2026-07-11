@@ -548,4 +548,3 @@ conda install -c bioconda star
 
 **Status:** Production-ready for research use ✅
 **Implementation:** 95% real algorithms
-**Last Updated:** December 29, 2025

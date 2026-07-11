@@ -324,4 +324,4 @@ find . -type f -exec sha256sum {} \; > checksums.txt
 
 ---
 
-**Last Updated:** 2026-02 | **Version:** 1.0 | **Status:** 100% Synthetic — Research/Demo Only
+**Version:** 1.0 | **Status:** 100% Synthetic — Research/Demo Only

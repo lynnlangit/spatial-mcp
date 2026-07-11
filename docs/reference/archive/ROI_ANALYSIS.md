@@ -319,7 +319,3 @@ Contact us to discuss your specific institutional needs and ROI projections.
 - 📊 [Executive Summary](EXECUTIVE_SUMMARY.md)
 - 💰 [Funding Opportunities](./FUNDING.md)
 - 🏥 [Hospital Deployment Guide](../for-hospitals/README.md)
-
----
-
-**Last Updated:** 2026-02-24

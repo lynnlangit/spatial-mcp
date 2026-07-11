@@ -205,7 +205,3 @@ FHIR store usage is minimal for testing:
 - [FHIR R4 Specification](https://www.hl7.org/fhir/R4/)
 - [GCP Healthcare API Docs](https://cloud.google.com/healthcare-api/docs)
 - [HIPAA Safe Harbor Method](https://www.hhs.gov/hipaa/for-professionals/privacy/special-topics/de-identification/index.html)
-
----
-
-**Last Updated:** 2026-02-19

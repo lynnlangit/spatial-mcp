@@ -406,7 +406,6 @@ A: Edit prompt templates to include cancer-specific context. Example: For ovaria
 
 ---
 
-**Last Updated:** 2026-01-12
 **Version:** 1.0
 **Maintainer:** precision-medicine-mcp project
 

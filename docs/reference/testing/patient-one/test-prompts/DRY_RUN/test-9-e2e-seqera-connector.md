@@ -1,7 +1,5 @@
 # PatientOne End-to-End Test — Seqera Connector + Genomic Analysis
 
-**Last Updated:** 2026-02-23
-
 **Purpose:** Focused E2E test that demonstrates Seqera nf-core pipeline discovery alongside custom MCP servers for genomic analysis and reporting. Uses 3 custom MCP servers (DRY_RUN) plus the Seqera connector (live nf-core queries).
 
 **Prerequisites:**

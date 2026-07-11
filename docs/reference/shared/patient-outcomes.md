@@ -5,7 +5,6 @@
 > link to the relevant anchor rather than restating these findings.
 >
 > Source of truth for numeric values: `tests/fixtures/pat00X_canonical.py`
-> Last updated: 2026-05-09 (v17 — PAT002 deep-stage hypotheses added)
 
 ---
 

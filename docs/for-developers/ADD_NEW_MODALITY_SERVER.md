@@ -2,8 +2,6 @@
 
 > **Prerequisite:** Before building a new server, confirm that no existing internal or external server covers your need. See [SEARCH_VS_BUILD.md](SEARCH_VS_BUILD.md) for the decision process.
 
-**Last Updated:** 2026-01-12
-
 **Purpose:** Step-by-step guide for platform builders adding new data modalities to the precision medicine MCP system
 
 **Target Audience:** MCP developers, bioinformatics platform engineers, workflow architects
@@ -872,6 +870,5 @@ Use this checklist when adding your new server:
 
 ---
 
-**Last Updated:** 2026-01-12
 **Maintainer:** spatial-mcp contributors
 **License:** Apache 2.0

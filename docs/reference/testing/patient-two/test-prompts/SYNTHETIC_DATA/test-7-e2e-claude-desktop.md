@@ -1,7 +1,5 @@
 # PatientTwo End-to-End Test — Claude Desktop (SYNTHETIC_DATA Mode)
 
-**Last Updated:** 2026-05-06
-
 **Purpose:** Single-prompt E2E test for Claude Desktop with MCP servers in SYNTHETIC_DATA mode (`*_DRY_RUN=false`). Servers parse actual generated files from `/data/patient-data/PAT002-BC-2026/` instead of returning hardcoded mock data.
 
 **Setup:** See [desktop-configs/](../../../../../getting-started/desktop-configs/) for Claude Desktop configuration. Set all `*_DRY_RUN` env vars to `false` in your `claude_desktop_config.json`.

@@ -80,4 +80,4 @@ The mcp-cardiometabolic server provides 5 tools:
 
 ---
 
-**Last Updated:** 2026-05-12 | **Status:** 100% Synthetic — Research/Demo Only
+**Status:** 100% Synthetic — Research/Demo Only

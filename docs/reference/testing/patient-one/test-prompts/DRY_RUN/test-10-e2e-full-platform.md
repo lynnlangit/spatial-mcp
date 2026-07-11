@@ -1,7 +1,5 @@
 # PatientOne End-to-End Test — Full Platform (All 17 Custom Servers)
 
-**Last Updated:** 2026-03-08
-
 **Purpose:** Comprehensive single-prompt E2E test exercising **all 17 custom MCP servers** in DRY_RUN mode. Follows the 5-step HGSOC Immunotherapy Target Discovery workflow aligned with the project research plan: deconvolve platinum-resistant bulk RNA-seq cohorts, profile 30+ known immunotherapy targets at cell-type resolution, and generate a ranked target priority list.
 
 **Research context:** Immunotherapy Target Prioritization in Platinum-Resistant Stage IV HGSOC (Fischbach & Walsh Cell 2024 framework). The core question: *Which known immunotherapy targets are specifically upregulated, compositionally enriched, or mechanistically active in platinum-resistant vs. platinum-sensitive HGSOC — and in which immune cell types?*

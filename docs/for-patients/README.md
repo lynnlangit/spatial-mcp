@@ -503,7 +503,3 @@ Precision medicine is rapidly evolving:
 **Remember:** This platform is a tool to help your doctors make better decisions. You and your medical team are always in control of your treatment.
 
 **You've got this. We're here to help.** 💪
-
----
-
-**Last Updated:** 2026-04-23

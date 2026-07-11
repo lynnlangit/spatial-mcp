@@ -1,7 +1,5 @@
 # PatientOne End-to-End Test — Claude Desktop
 
-**Last Updated:** 2026-02-22
-
 **Purpose:** Single-prompt E2E test for Claude Desktop with all custom MCP servers ([Server Registry](../../../../../../docs/reference/shared/server-registry.md)) in DRY_RUN mode.
 Covers servers across clinical, genomic, spatial, multi-omics, and reporting modalities.
 

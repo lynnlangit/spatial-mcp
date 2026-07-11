@@ -244,6 +244,5 @@ Try it with Claude Desktop or your Streamlit UI and start predicting treatment r
 
 ---
 
-**Last Updated**: 2026-01-21
 **Deployment Status**: ✅ **OPERATIONAL**
 **Version**: 0.2.0 (GEARS-based)

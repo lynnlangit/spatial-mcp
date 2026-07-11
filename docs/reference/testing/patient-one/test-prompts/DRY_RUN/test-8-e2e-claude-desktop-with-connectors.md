@@ -1,7 +1,5 @@
 # PatientOne End-to-End Test — Claude Desktop + Anthropic Connectors
 
-**Last Updated:** 2026-02-22
-
 **Purpose:** Extended E2E test that adds literature search, clinical trial matching, and preprint discovery to the base PatientOne workflow. Uses 6 custom MCP servers (DRY_RUN) plus 3 Anthropic connectors (live data).
 
 **Prerequisites:**

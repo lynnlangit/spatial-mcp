@@ -92,7 +92,3 @@ docker scout cves precision-medicine/python-base:latest
 - GPU: Full CUDA support (~8-10GB)
 - CPU: Smaller, CPU-only (~4-5GB)
 - Simply comment/uncomment the appropriate FROM line
-
----
-
-**Last Updated:** 2026-02-19

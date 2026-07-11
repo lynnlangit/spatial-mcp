@@ -415,7 +415,3 @@ Are there region-specific effects not captured in bulk?
 - [Clinical-Genomic](clinical-genomic.md) - Link spatial to clinical phenotype
 - [Multi-Omics](multiomics.md) - Integrate spatial with bulk RNA/protein
 - [Workflows](workflows.md) - Complete spatial workflows
-
----
-
-**Last Updated:** 2026-01-14

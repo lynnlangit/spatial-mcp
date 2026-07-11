@@ -261,7 +261,3 @@ Step-by-step checklist for deploying the Precision Medicine MCP Platform at your
 - 🔒 [Security Overview](SECURITY_OVERVIEW.md)
 - 📊 [Executive Summary](../for-funders/EXECUTIVE_SUMMARY.md)
 - 📖 [HIPAA Compliance](compliance/hipaa.md)
-
----
-
-**Last Updated:** 2026-02-19

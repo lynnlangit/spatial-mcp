@@ -54,7 +54,3 @@
 
 ### Stakeholder presentation
 Prepare using docs/for-hospitals/STAKEHOLDER_ONE_PAGER.md as the base document.
-
----
-
-**Last Updated:** 2026-02-19

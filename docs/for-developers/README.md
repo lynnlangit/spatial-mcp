@@ -412,7 +412,3 @@ Restart Claude Desktop and test:
 - 🔬 [Researcher Guide](../for-researchers/README.md) - For bioinformaticians using the platform
 - 📊 [Architecture Documentation](../reference/architecture/README.md) - Deep technical dive
 - 🏠 [Back to Main Documentation](../INDEX.md)
-
----
-
-**Last Updated:** 2026-02-01

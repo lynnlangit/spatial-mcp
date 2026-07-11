@@ -25,7 +25,3 @@ Controls marked IMPLEMENTED are documented in `docs/for-hospitals/compliance/hip
 | Gap | Severity | Suggested fix | Effort |
 |-----|----------|---------------|--------|
 | No emergency access procedure defined | HIGH | Document break-glass process; store credentials in hospital password vault | S |
-
----
-
-**Last Updated:** 2026-02-19

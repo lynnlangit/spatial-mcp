@@ -58,6 +58,3 @@ Use these for real analysis:
 Mock implementations for workflow demonstration:
 - 🎭 **mcp-mockepic** - Synthetic FHIR data (by design)
 - 🧪 **mcp-mocktcga** - Mock TCGA cohort comparison ([README](mcp-mocktcga/README.md))
-
----
-

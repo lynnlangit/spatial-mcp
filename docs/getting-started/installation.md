@@ -523,8 +523,6 @@ python -m json.tool < ~/Library/Application\ Support/Claude/claude_desktop_confi
 
 ---
 
-**Last Updated:** 2026-02-16
-
 **Support:**
 - Documentation: `/docs` directory
 - Issues: GitHub Issues

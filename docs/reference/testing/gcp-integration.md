@@ -347,7 +347,3 @@ gcloud run services describe mcp-<name> \
 curl https://mcp-<name>-ondu7mwjpa-uc.a.run.app/sse
 # Should return SSE event stream or 405
 ```
-
----
-
-**Last Updated:** 2026-02

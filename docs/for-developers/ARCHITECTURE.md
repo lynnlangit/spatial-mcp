@@ -504,7 +504,3 @@ A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analy
 - **[ADD_NEW_MODALITY_SERVER.md](ADD_NEW_MODALITY_SERVER.md)** - Step-by-step guide for building new servers
 - **[Server Registry](../reference/shared/server-registry.md)** - Canonical server/tool counts
 - **[Server Implementations](../../servers/README.md)** - Code examples
-
----
-
-**Last Updated:** 2026-04-11

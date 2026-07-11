@@ -200,7 +200,6 @@ pip install -r requirements.txt
 - **MCP Spec:** [Model Context Protocol](https://modelcontextprotocol.io/)
 - **Anthropic Docs:** [Claude API](https://docs.anthropic.com/)
 
-
 [GCP Cloud Run](https://cloud.google.com/run)
 
 **Part of the Precision Medicine MCP suite** - Enabling AI-driven bioinformatics for cancer research.

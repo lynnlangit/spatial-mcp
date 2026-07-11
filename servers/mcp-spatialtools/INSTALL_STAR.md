@@ -623,6 +623,5 @@ STAR --runMode genomeGenerate \
 
 ---
 
-**Last Updated:** December 29, 2025
 **STAR Version Tested:** 2.7.11a
 **Status:** Production-ready installation guide ✅

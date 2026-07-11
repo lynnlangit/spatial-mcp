@@ -5,7 +5,3 @@ Four interfaces for interacting with the precision medicine MCP server architect
 - **[Jupyter Notebook](jupyter-notebook/)** — Interactive data science interface for exploratory analysis and custom workflows.
 - **[Dashboard](dashboard/)** — Real-time cost & performance monitoring across all MCP servers and clients.
 - **Claude Desktop** — Local testing UI. Configure MCP servers in `~/.claude/claude_desktop_config.json` to call tools interactively. See [desktop configs](../docs/getting-started/desktop-configs/).
-
----
-
-**Last Updated:** 2026-02-07  

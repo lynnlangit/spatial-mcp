@@ -45,7 +45,3 @@ For a basic genomic + neoantigen workflow, only these five servers are required:
 | FastMCP server cluster (all 20) | Yes | Co-locate with patient data |
 | Claude API gateway | Cloud | Anthropic-hosted; only de-identified data flows here |
 | Audit log store | Yes | HIPAA audit requirement; must be tamper-evident |
-
----
-
-**Last Updated:** 2026-02-19

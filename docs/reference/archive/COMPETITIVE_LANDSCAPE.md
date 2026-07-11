@@ -299,7 +299,6 @@ graph TD
 - **Anthropic** - Claude API for natural language orchestration
 - **Google Cloud** - GCP infrastructure and healthcare APIs
 
-
 **Research Partners:**
 - **NCI** - Access to TCGA and other cancer datasets
 - **Human Cell Atlas** - Spatial transcriptomics reference data
@@ -379,7 +378,3 @@ graph TD
 - 💰 [ROI Analysis](ROI_ANALYSIS.md)
 - 📊 [Executive Summary](EXECUTIVE_SUMMARY.md)
 - 🏥 [Hospital Deployment Guide](../for-hospitals/README.md)
-
----
-
-**Last Updated:** 2026-02-24

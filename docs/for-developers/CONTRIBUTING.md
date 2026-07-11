@@ -337,7 +337,6 @@ Once approved:
 from typing import Optional
 import pandas as pd
 
-
 async def load_data(
     file_path: str,
     normalization: Optional[str] = None
@@ -494,7 +493,6 @@ Brief description
 ## Status
 - Production ready / Partial / Mocked
 - Coverage: X%
-- Last updated: YYYY-MM-DD
 
 ## Tools
 List of tools with descriptions
@@ -573,7 +571,3 @@ To update the glossary, edit `docs/for-educators/GLOSSARY.md` and increment the
 
 To propose a new lecture module, open a GitHub issue with the `education` label.
 Maintainers will respond to education PRs within 14 days.
-
----
-
-**Last Updated:** 2026-04-21

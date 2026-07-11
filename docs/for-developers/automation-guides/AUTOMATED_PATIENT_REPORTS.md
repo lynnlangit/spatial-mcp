@@ -648,7 +648,3 @@ Research use only. Not for clinical decision-making.
 ```bash
 analyze_patient --patient-id patient-001 --output-dir ./results
 ```
-
----
-
-**Last Updated:** 2026-01-12

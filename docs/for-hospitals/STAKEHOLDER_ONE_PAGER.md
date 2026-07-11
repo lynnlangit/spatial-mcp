@@ -44,5 +44,3 @@ Full estimates: docs/for-hospitals/RESOURCE_ESTIMATES.md
 
 ---
 *Open-source. Apache 2.0 license. https://github.com/lynnlangit/precision-medicine-mcp*
-
-**Last Updated:** 2026-02-19

@@ -219,5 +219,4 @@ Generate phenotype visualization:
 
 ---
 
-**Last Updated:** 2026-02-09
 **Status:** ✅ Production ready (mcp-deepcell: segmentation + quantification, mcp-cell-classify: classification + visualization)

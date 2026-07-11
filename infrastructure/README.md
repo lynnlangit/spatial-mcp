@@ -71,7 +71,3 @@ See [Hospital Deployment Guide](hospital-deployment/README.md) for the full 3-mo
 ## Environment Variables
 
 See the root [`.env.example`](../.env.example) for all required configuration. Sensitive values (API keys, FHIR credentials, SSO secrets) are stored in GCP Secret Manager, not in environment files.
-
----
-
-**Last Updated:** 2026-02-19

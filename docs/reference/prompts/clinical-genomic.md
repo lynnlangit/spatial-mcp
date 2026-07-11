@@ -570,7 +570,3 @@ See [Connect External MCP](../../for-researchers/CONNECT_EXTERNAL_MCP.md).
 - [Multi-Omics Prompts](multiomics.md) - Integrate genomic with expression data
 - [Spatial Prompts](spatial.md) - Add spatial context
 - [Complete Workflows](workflows.md) - End-to-end analyses
-
----
-
-**Last Updated:** 2026-01-14

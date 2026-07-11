@@ -957,6 +957,5 @@ convert input.png output.tiff
 
 ---
 
-**Last Updated:** December 27, 2025
 **Version:** 1.0
 **Covers:** DRY_RUN and Actual Data modes for all MCP servers

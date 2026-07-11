@@ -1,7 +1,5 @@
 # System Architecture Overview
 
-**Last Updated:** January 10, 2026
-
 ---
 
 ## Executive Summary
