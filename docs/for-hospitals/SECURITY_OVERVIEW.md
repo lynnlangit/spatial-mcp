@@ -79,4 +79,23 @@ graph TB
 
 ---
 
+## AI Result Transparency
+
+Every MCP tool returns structured `xai_metadata` alongside its results, providing clinicians with evidence traceability for each AI-generated recommendation.
+
+**Key fields visible to clinicians:**
+
+- **Confidence level** (`high` / `medium` / `low`) -- overall reliability of the result
+- **Key drivers** -- the 1-3 factors that most influenced the result (e.g., "TP53 mutation detected", "gnomAD allele frequency < 0.01%")
+- **Evidence grade** -- domain-specific strength rating (e.g., AMP Tier I for genomic variants, AHA guideline-based for cardiovascular risk)
+- **Counterfactual** -- what would change the result (e.g., "If BRCA1 were wild-type, PARP inhibitor would not be recommended")
+
+**Clinician decision support:** The patient report aggregates evidence from all tool calls into an `evidence_strength_summary` showing high/medium/low confidence counts and the weakest evidence link. This enables informed APPROVE / REVISE / REJECT decisions per the clinician-in-the-loop workflow.
+
+**Audit trail:** All `xai_metadata` is captured in Cloud Logging alongside tool call parameters and results, retained for 10 years per HIPAA audit requirements.
+
+**Schema reference:** [XAI Metadata Schema](../reference/shared/xai-metadata-schema.md)
+
+---
+
 **See also:** [compliance/hipaa.md](compliance/hipaa.md) | [HIPAA Summary](../reference/shared/hipaa-summary.md) | [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)

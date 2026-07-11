@@ -13,6 +13,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 5. [Coding Standards](#coding-standards)
 6. [Testing Requirements](#testing-requirements)
 7. [Documentation Requirements](#documentation-requirements)
+8. [XAI Metadata Standards](#xai-metadata-standards)
 
 ---
 
@@ -497,6 +498,9 @@ Brief description
 ## Tools
 List of tools with descriptions
 
+## XAI Metadata
+Every tool returns `xai_metadata` — see [XAI schema reference](../../reference/shared/xai-metadata-schema.md)
+
 ## Installation
 Setup instructions
 
@@ -558,6 +562,28 @@ PatientOne integration example
 ---
 
 **Thank you for contributing to precision medicine!**
+
+---
+
+## XAI Metadata Standards
+
+Every MCP server must return `xai_metadata` from all tool functions. This ensures clinicians can trace evidence strength back to individual tool calls.
+
+**Canonical schema:** [XAI Metadata Schema Reference](../reference/shared/xai-metadata-schema.md)
+
+### Checklist for adding XAI to a new server
+
+1. **Copy helper** -- Add `_build_xai_metadata()` to your `server.py` (see schema reference for the function signature)
+2. **Call in every tool** -- Each `@mcp.tool()` function must include `xai_metadata` in its return dict
+3. **Choose evidence grades** -- Pick grades appropriate to your domain (see the Evidence Grade table in the schema reference)
+4. **Add README section** -- Include `## XAI Metadata` in your server's `README.md` (template above)
+5. **Add test assertions** -- Verify `xai_metadata` is present and valid in DRY_RUN tests:
+   ```python
+   result = await my_tool.run(param="test")
+   xai = result["xai_metadata"]
+   assert xai["confidence_level"] in ("high", "medium", "low")
+   assert 1 <= len(xai["key_drivers"]) <= 3
+   ```
 
 ---
 

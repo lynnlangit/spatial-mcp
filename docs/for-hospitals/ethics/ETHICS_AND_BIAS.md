@@ -65,6 +65,16 @@ Quarterly audits track three metrics per demographic subgroup:
 
 **PatientOne audit result:** MEDIUM risk (acceptable with mitigations). Finding: BRCA databases Euro-centric -> flagged variants with <5 studies, reduced confidence 30%.
 
+### XAI Metadata in Bias Audits
+
+The standardized `xai_metadata` returned by every tool provides auditable evidence for bias detection and mitigation:
+
+- **Confidence reduction for underrepresented populations** -- When variant databases have limited data for a patient's ancestry, `confidence_level` is reduced (e.g., from `high` to `medium`) and `confidence_note` explains why (e.g., "ClinVar has <5 studies for this variant in non-European populations").
+- **Audit evidence from `evidence_grade`** -- Quarterly bias audits compare `evidence_grade` distributions across demographic subgroups. Systematic downgrades for specific populations signal annotation bias requiring mitigation.
+- **Traceability via `key_drivers`** -- Each result's `key_drivers` list makes explicit which factors influenced the AI output, enabling auditors to detect when race, ethnicity, or ancestry inappropriately drove a recommendation.
+
+**Schema reference:** [XAI Metadata Schema](../../reference/shared/xai-metadata-schema.md)
+
 ---
 
 ## Regulatory Alignment
