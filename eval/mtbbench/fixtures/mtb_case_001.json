@@ -1,0 +1,30 @@
+{
+  "case_id": "P-SYNTH-001",
+  "turns": [
+    {
+      "context": "The patient is a 60-year-old White male of non-Spanish, non-Hispanic ethnicity with a diagnosis of pancreatic adenocarcinoma. Comprehensive patient history, including details of diagnosis, treatments, and lab tests, is available for the period between the ages of 60 and 61.7 years."
+    },
+    {
+      "file_data": {
+        "timeline0.txt": "AGE: 60.463, diagnosis > diagnosis --> SUBTYPE: Primary, SOURCE: Tumor Registry, AJCC: III, ICD_10: C25.0,\nAGE: 60.482, labtest > ca_19-9_labs --> RESULT: 1043, LR_UNIT_MEASURE: Units/ml,\nAGE: 60.537, treatment > treatment --> STOP_AGE: 60.9039, SUBTYPE: Chemo, AGENT: LEUCOVORIN, RX_INVESTIGATIVE: N, FLAG_OROTOPICAL: 0,\nAGE: 60.537, treatment > treatment --> STOP_AGE: 60.9039, SUBTYPE: Chemo, AGENT: OXALIPLATIN, RX_INVESTIGATIVE: N, FLAG_OROTOPICAL: 0,\nAGE: 60.537, treatment > treatment --> STOP_AGE: 60.9039, SUBTYPE: Chemo, AGENT: FLUOROURACIL, RX_INVESTIGATIVE: N, FLAG_OROTOPICAL: 0,\nAGE: 60.537, treatment > treatment --> STOP_AGE: 60.9039, SUBTYPE: Chemo, AGENT: IRINOTECAN, RX_INVESTIGATIVE: N, FLAG_OROTOPICAL: 0,\nAGE: 60.956, treatment > radiation --> SUBTYPE: Radiation,\nAGE: 61.602, diagnosis > cancer_presence --> HAS CANCER: No, SUBTYPE: NoCancer, PROCEDURE_TYPE: CT,\nAGE: 61.687, labtest > ca_19-9_labs --> RESULT: 56, LR_UNIT_MEASURE: Units/ml,",
+        "specimen.txt": "{\"SAMPLE_ID\": \"P-SYNTH-001-T01-IM5\", \"PATIENT_ID\": \"P-SYNTH-001\", \"CANCER_TYPE\": \"Pancreatic Cancer\", \"SAMPLE_TYPE\": \"Primary\", \"SAMPLE_CLASS\": \"Tumor\", \"METASTATIC_SITE\": \"Not Applicable\", \"PRIMARY_SITE\": \"Pancreas\", \"CANCER_TYPE_DETAILED\": \"Pancreatic Adenocarcinoma\", \"GENE_PANEL\": \"IMPACT410\", \"SAMPLE_COVERAGE\": 825, \"TUMOR_PURITY\": 20.0, \"ONCOTREE_CODE\": \"PAAD\", \"MSI_SCORE\": 0.0, \"MSI_TYPE\": \"Stable\", \"SOMATIC_STATUS\": \"Matched\", \"TMB_NONSYNONYMOUS\": 0.978, \"AJCC\": \"III\", \"ICD_10\": \"C25.0\"}"
+      }
+    },
+    {
+      "question": "Given that the patient is 61.7 years old, will the cancer have a recurrence in the next 24 months?\nA) Yes\nB) No",
+      "answer": "A) Yes"
+    },
+    {
+      "context": "The patient experienced a recurrence of cancer 24 months post initial treatment. A sample from the patient has been sequenced, and mutation data is available for review. Additionally, a comprehensive history is documented for the period between the ages of 61.7 and 63 years."
+    },
+    {
+      "file_data": {
+        "timeline1.txt": "AGE: 61.937, labtest > ca_19-9_labs --> RESULT: 67, LR_UNIT_MEASURE: Units/ml,\nAGE: 62.203, diagnosis > cancer_presence --> HAS CANCER: Yes, SUBTYPE: HasCancer, PROCEDURE_TYPE: CT,\nAGE: 62.203, diagnosis > progression --> CT scan reveals cancer has NOT progressed.\nAGE: 62.608, diagnosis > progression --> CT scan reveals cancer has progressed.\nAGE: 62.835, treatment > treatment --> STOP_AGE: 62.8957, SUBTYPE: Chemo, AGENT: OXALIPLATIN, RX_INVESTIGATIVE: N, FLAG_OROTOPICAL: 0,\nAGE: 62.835, treatment > treatment --> STOP_AGE: 62.8957, SUBTYPE: Chemo, AGENT: FLUOROURACIL, RX_INVESTIGATIVE: N, FLAG_OROTOPICAL: 0,"
+      }
+    },
+    {
+      "question": "Given that the patient is 63 years old, will the patient be still alive in the next 12 months?\nA) Yes\nB) No",
+      "answer": "B) No"
+    }
+  ]
+}

@@ -230,6 +230,7 @@ _shared_temp/
 # Analysis Results
 # Patient analysis outputs from CitL workflows and test scenarios
 results/
+eval/mtbbench/results/
 
 # GEARS Perturbation Datasets
 # Downloaded datasets from GEARS (can be 3+ GB)

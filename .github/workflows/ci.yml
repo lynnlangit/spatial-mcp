@@ -54,3 +54,26 @@ jobs:
           echo "| Spatial spots | 300 |" >> $GITHUB_STEP_SUMMARY
           echo "| Moran's I | ≈ -0.0033 |" >> $GITHUB_STEP_SUMMARY
           echo "| CD8+ T cells | 30 |" >> $GITHUB_STEP_SUMMARY
+
+  eval-harness-smoke:
+    name: MTBBench Harness Smoke Test
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install harness deps
+        run: uv pip install --system pytest
+      - name: Smoke test (DRY_RUN)
+        env:
+          DEIDENTIFY_DRY_RUN: "true"
+          CARDIOMETABOLIC_DRY_RUN: "true"
+          SYNTHETIC_DATA: "true"
+        run: |
+          python -m pytest eval/test_milestone_1.py -v -m integration \
+            --tb=short --timeout=120
