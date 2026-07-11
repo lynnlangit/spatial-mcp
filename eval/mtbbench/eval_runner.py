@@ -663,18 +663,15 @@ def _claude_answer(
     )
 
     prompt = (
-        f"You are a clinical oncology AI assistant evaluating a patient case.\n\n"
-        f"PATIENT CONTEXT:\n"
-        f"- Patient ID: {context.get('patient_id', 'N/A')}\n"
-        f"- Cancer type: {context.get('cancer_type', 'N/A')}\n"
-        f"- Stage: {context.get('stage', 'N/A')}\n"
-        f"- TMB: {context.get('tmb_mut_per_mb', 'N/A')} mut/Mb\n"
-        f"- MSI: {context.get('msi_type', 'N/A')} (score: {context.get('msi_score', 'N/A')})\n"
-        f"- Treatment history: {context.get('treatment_history', [])}\n\n"
-        f"TOOL ANALYSIS RESULTS:\n{tool_summary}\n\n"
-        f"QUESTION:\n{question.get('question', '')}\n\n"
-        f"Answer ONLY with 'A) Yes' or 'B) No'. Base your answer on the "
-        f"clinical evidence above. If uncertain, make your best clinical judgment."
+        f"PATIENT: {context.get('cancer_type', 'N/A')}, "
+        f"Stage {context.get('stage', 'N/A')}, "
+        f"TMB {context.get('tmb_mut_per_mb', 'N/A')} mut/Mb, "
+        f"MSI {context.get('msi_type', 'N/A')}\n"
+        f"Treatment: {context.get('treatment_history', [])}\n"
+        f"Tools: {tool_summary}\n\n"
+        f"Q: {question.get('question', '')}\n\n"
+        f"Reply with EXACTLY 'A) Yes' or 'B) No' on the first line. "
+        f"No analysis, no explanation — just the answer."
     )
 
     try:
@@ -683,7 +680,7 @@ def _claude_answer(
             "https://api.anthropic.com/v1/messages",
             data=json.dumps({
                 "model": "claude-haiku-4-5",
-                "max_tokens": 10,
+                "max_tokens": 100,
                 "messages": [{"role": "user", "content": prompt}],
             }).encode(),
             headers={
