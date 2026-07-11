@@ -232,6 +232,9 @@ _shared_temp/
 results/
 eval/mtbbench/results/
 
+# MTBBench MSK-CHORD data (CC BY-NC-ND 4.0 — do not redistribute)
+eval/mtbbench/data/
+
 # GEARS Perturbation Datasets
 # Downloaded datasets from GEARS (can be 3+ GB)
 servers/mcp-perturbation/data/gears_datasets/
