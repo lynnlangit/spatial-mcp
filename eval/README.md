@@ -117,10 +117,9 @@ EVAL_MODEL=claude-sonnet-4-6 python eval/case_study/run.py
 
 - All patient data is **synthetic** (`SYNTHETIC_DATA` mode). PAT001 and PAT002
   are fictional patients created for platform development and evaluation.
-- PAT003 and PAT004 are real individuals and must never appear in this eval.
-  See `MISSING_DATA_POLICY.md` for the full data handling policy.
+- See `MISSING_DATA_POLICY.md` for the full data handling policy.
 - MSK-CHORD cases are accessed via cBioPortal under their standard data use terms.
-  Raw case data is not committed to this repository (`eval/results/` is gitignored).
+  Raw case data is not committed to this repository 
 - `DEIDENTIFY_DRY_RUN=true` for any report generation steps.
 
 ---
