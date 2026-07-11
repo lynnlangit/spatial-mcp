@@ -372,13 +372,22 @@ def _call_mcp_tool(
     confidence = _calibrated_confidence(server, tool, case_context)
     server_xai = response.get("xai_metadata", {})
 
+    # For guideline_version and key_drivers, prefer the server's value only
+    # if it's a real guideline string (not the "N/A" fallback set by
+    # _local_server_call when the server returns no xai_metadata).
+    server_gv = server_xai.get("guideline_version", "")
+    if not server_gv or server_gv == "N/A":
+        server_gv = confidence["guideline"]
+
+    server_drivers = server_xai.get("key_drivers")
+    if not server_drivers or server_drivers == ["server_response"]:
+        server_drivers = confidence["drivers"]
+
     xai_metadata = {
         "confidence_level": confidence["level"],           # harness-assigned
         "confidence_note": server_xai.get("confidence_note", confidence["note"]),
-        "key_drivers": server_xai.get("key_drivers", confidence["drivers"]),
-        "guideline_version": server_xai.get(
-            "guideline_version", confidence["guideline"]
-        ),
+        "key_drivers": server_drivers,
+        "guideline_version": server_gv,
         "evidence_grade": confidence["grade"],             # harness-assigned
         "counterfactual": server_xai.get("counterfactual"),
     }
@@ -511,16 +520,48 @@ def run_case(case: MTBCase, dry_run: bool = True) -> EvalTranscript:
             level = "medium"
         confidence_counts[level] = confidence_counts.get(level, 0) + 1
 
+    # Collect unique guideline citations
+    guideline_citations = sorted({
+        tc.xai_metadata.get("guideline_version", "")
+        for tc in transcript.tool_calls
+        if tc.xai_metadata.get("guideline_version", "") not in ("", "N/A")
+    })
+
+    overall = (
+        "Strong biomarker signal" if confidence_counts["high"] >= 2
+        else "Moderate evidence" if confidence_counts["medium"] >= 2
+        else "Limited actionable evidence"
+    )
+
+    # Flag items that require attention (governance signal):
+    # - synthetic_data_items: every DRY_RUN tool output is synthetic
+    # - action_required: low-confidence cases where the platform cannot
+    #   make a strong recommendation (MSS/low-TMB with limited targets)
+    synthetic_data_items = [
+        f"{tc.server}.{tc.tool}" for tc in transcript.tool_calls
+        if tc.response.get("status") in ("SERVER_DRY_RUN", "SYNTHETIC_FALLBACK")
+    ]
+
+    action_required = []
+    tmb = context.get("tmb_mut_per_mb", 0.0)
+    msi_type = context.get("msi_type", "Stable")
+    if confidence_counts["high"] == 0 and tmb < 10.0:
+        action_required.append(
+            "No high-confidence findings — insufficient evidence for "
+            "targeted therapy recommendation"
+        )
+    if msi_type in ("Stable",) and tmb < 5.0:
+        action_required.append(
+            f"MSS/low-TMB ({tmb:.1f} mut/Mb) — immunotherapy eligibility "
+            "not supported by current biomarkers"
+        )
+
     transcript.xai_evidence_summary = {
         "confidence_counts": confidence_counts,
-        "guideline_version": transcript.tool_calls[0].xai_metadata.get(
-            "guideline_version", "N/A"
-        ),
-        "overall_assessment": (
-            "Strong biomarker signal" if confidence_counts["high"] >= 2
-            else "Moderate evidence" if confidence_counts["medium"] >= 2
-            else "Limited actionable evidence"
-        ),
+        "guideline_version": "; ".join(guideline_citations) if guideline_citations else "N/A",
+        "overall_assessment": overall,
+        "synthetic_data_items": synthetic_data_items,
+        "action_required": action_required,
     }
 
     # Step 5: De-id validation
