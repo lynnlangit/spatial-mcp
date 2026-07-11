@@ -106,11 +106,17 @@ def test_deid_dry_run_respected():
 
 
 @pytest.mark.integration
-def test_hitl_gate_triggered():
-    """HITL gate should be triggered in full platform run."""
+def test_hitl_gate_biomarker_driven():
+    """HITL gate fires only for TMB-High / MSI-H cases.
+
+    The synthetic fixture (P-SYNTH-001) has default TMB=0.0 / MSI=Stable,
+    so the gate should NOT trigger — there's insufficient evidence for a
+    formal recommendation requiring human review.
+    """
     case = load_mtbbench_case(SAMPLE_CASE_PATH)
     transcript = run_case(case, dry_run=True)
-    assert transcript.hitl_triggered is True
+    # Low-TMB, MSS → no HITL trigger (correct governance behavior)
+    assert transcript.hitl_triggered is False
 
 
 @pytest.mark.integration
