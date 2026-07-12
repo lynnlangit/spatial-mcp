@@ -63,6 +63,8 @@ The platform surfaces clinically actionable findings that standard workup cannot
 
 The same 20-server architecture runs all three. No disease-specific code changes between use cases.
 
+**[How we validate our results →](https://lynnlangit.github.io/precision-medicine-mcp/proof-layers.html)**
+
 ### Validated results — PAT001 (HGSOC)
 
 | Metric | Value | Source server |
@@ -111,23 +113,6 @@ All servers default to **DRY_RUN mode** (mock responses, no API keys needed) for
 | **All docs** | [Documentation Index](docs/INDEX.md) |
 
 **Video:** [5-minute demo](https://www.youtube.com/watch?v=LUldOHHX5Yo) | **Paper:** [Why MCP for Healthcare](docs/reference/architecture/WHY_MCP_FOR_HEALTHCARE.md) | **External connectors:** [Setup guide](docs/for-researchers/CONNECT_EXTERNAL_MCP.md)
-
----
-
-## Validation
-
-The platform has been independently validated on two evaluations:
-
-- **MTBBench longitudinal track** (n=40 patients, 180 questions, MSK-CHORD
-  via cBioPortal): governance metrics — tool grounding, HITL gating,
-  de-identification, and confidence calibration — operate correctly across
-  cancer types. See [eval/README.md](eval/README.md).
-- **Clinical case study** (PAT001 + PAT002, 12 clinically unambiguous questions):
-  tool-augmented reasoning achieves **100% accuracy** vs. **33.3% without tools**
-  (p < 0.001, Fisher's exact test) — a 66.7 percentage-point improvement on the
-  platform's target indications (HGSOC and HR+ breast cancer).
-
-All patient data used in evaluation is synthetic. Model: `claude-sonnet-4-6`.
 
 ---
 
