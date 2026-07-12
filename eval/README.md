@@ -15,6 +15,35 @@ clinical accuracy on its target indications.
 
 **Model:** All evaluations use `claude-sonnet-4-6`. Do not substitute another model — results are pinned to this version for reproducibility.
 
+```mermaid
+flowchart TD
+    classDef output fill:#1a3a5c,color:#fff,stroke:#1a3a5c
+    classDef finding fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef data fill:#f0f4f8,color:#333,stroke:#aaa
+    classDef process fill:#fff,color:#333,stroke:#aaa
+
+    A["MTBBench MSK-CHORD\n40 patients · 180 questions"]:::data
+    B["PAT001 / PAT002\nCanonical Fixtures\npat001_canonical.py\npat002_canonical.py"]:::data
+
+    C["Eval Runner\neval/mtbbench/eval_runner.py"]:::process
+    D["Claude Sonnet 4.6\nwith MCP tool outputs"]:::process
+    E["Governance Metrics\nHITL · De-id · Calibration"]:::process
+
+    F["12 Clinically Unambiguous\nBinary Questions"]:::process
+    G["Claude Sonnet 4.6\nwith tool outputs"]:::process
+    H["Claude Sonnet 4.6\nno tool outputs"]:::process
+
+    I["Table B — Governance\nHITL 7.5% · Calibration correct\nFlagged items 5.60"]:::output
+    J["Table A — Accuracy\n100% with tools\nvs 33.3% without\np &lt; 0.001"]:::output
+    K["Methodological Finding\nMCP platforms need\npatient-specific data"]:::finding
+
+    A --> C --> D --> E --> I
+    A -->|"identical synthetic\noutputs per case"| K
+    B --> F
+    F -->|"with tool outputs"| G --> J
+    F -->|"no tool outputs"| H --> J
+```
+
 ---
 
 ## MTBBench Longitudinal

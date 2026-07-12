@@ -555,6 +555,39 @@ A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analy
 
 ---
 
+## Evaluation Architecture
+
+The platform includes a reproducible evaluation harness under `eval/`
+with two complementary evaluations designed around different questions:
+
+### MTBBench Longitudinal (governance validation, n=40 patients)
+- 40 cases from MSK-CHORD via cBioPortal; 180 binary questions across
+  survival, progression, and recurrence tracks
+- Measures governance properties independent of cancer type:
+  HITL catch rate (7.5% [0%, 17.5%]), confidence calibration (82.1%
+  moderate/low for MSS/low-TMB cohort), flagged items (5.60 per case)
+- Tool-grounding and de-id integrity are architectural guarantees
+  (enforced by pipeline, not model-dependent)
+- Key methodological finding: MTBBench's standardized synthetic tool
+  outputs are identical per case, preventing accuracy differentiation —
+  MCP platforms require patient-specific data for accuracy evaluation
+
+### Case Study (accuracy validation, n=12 questions)
+- PAT001 (HGSOC) and PAT002 (HR+ breast cancer) — platform's target indications
+- 12 clinically unambiguous binary questions with guideline-cited ground truth
+- Tool outputs sourced from `tests/fixtures/pat001_canonical.py` and
+  `pat002_canonical.py` — reproducible without running MCP servers
+- Result: 100% accuracy with tool outputs vs. 33.3% without
+  (p < 0.001, Fisher's exact test, Claude Sonnet 4.6)
+
+### Reproducibility
+- Case study: deterministic from canonical fixtures; runs in CI on every PR
+- MTBBench: run manually before paper submission
+- Model pinned: `claude-sonnet-4-6` across all evaluations
+- See `eval/README.md` for full run instructions and result tables
+
+---
+
 **Related Resources:**
 - **[ADD_NEW_MODALITY_SERVER.md](ADD_NEW_MODALITY_SERVER.md)** - Step-by-step guide for building new servers
 - **[Server Registry](../reference/shared/server-registry.md)** - Canonical server/tool counts

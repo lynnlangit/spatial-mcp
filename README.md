@@ -114,4 +114,21 @@ All servers default to **DRY_RUN mode** (mock responses, no API keys needed) for
 
 ---
 
+## Validation
+
+The platform has been independently validated on two evaluations:
+
+- **MTBBench longitudinal track** (n=40 patients, 180 questions, MSK-CHORD
+  via cBioPortal): governance metrics — tool grounding, HITL gating,
+  de-identification, and confidence calibration — operate correctly across
+  cancer types. See [eval/README.md](eval/README.md).
+- **Clinical case study** (PAT001 + PAT002, 12 clinically unambiguous questions):
+  tool-augmented reasoning achieves **100% accuracy** vs. **33.3% without tools**
+  (p < 0.001, Fisher's exact test) — a 66.7 percentage-point improvement on the
+  platform's target indications (HGSOC and HR+ breast cancer).
+
+All patient data used in evaluation is synthetic. Model: `claude-sonnet-4-6`.
+
+---
+
 **Apache 2.0** | **Python 3.11+** | **FastMCP >= 2.13** | **uv** for package management
