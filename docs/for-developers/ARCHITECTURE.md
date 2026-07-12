@@ -588,6 +588,25 @@ with two complementary evaluations designed around different questions:
 
 ---
 
+## How we prove our results
+
+The platform's claims rest on three layers of evidence: explainability
+(each recommendation shows its work), traceability (every action is
+recorded and auditable), and evaluation (results are independently validated).
+
+**[View interactive summary →](../proof-layers.html)**
+*(click layer names to expand detail)*
+
+| Layer | Mechanisms | Key evidence |
+|---|---|---|
+| **Explainability** | XAI Evidence Strength Summary, key_drivers, confidence_counts, evidence badges, counterfactual | Per-recommendation provenance in every report |
+| **Traceability** | Tool-grounding, guideline attribution, HITL gate, de-id integrity, HIPAA audit log, canonical fixtures | 100% tool-grounding + de-id (architectural); HITL 7.5% catch rate (measured) |
+| **Evaluation** | Case study accuracy, MTBBench governance, methodological finding, CI regression, scheduled doc-audit | 100% vs. 33.3% accuracy (p < 0.001); governance validated n=40 patients |
+
+See [eval/README.md](../../eval/README.md) for full evaluation methodology and results.
+
+---
+
 **Related Resources:**
 - **[ADD_NEW_MODALITY_SERVER.md](ADD_NEW_MODALITY_SERVER.md)** - Step-by-step guide for building new servers
 - **[Server Registry](../reference/shared/server-registry.md)** - Canonical server/tool counts
