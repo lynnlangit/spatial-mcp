@@ -4,14 +4,14 @@ High-level architecture for developers building or extending the precision-medic
 
 ---
 
-## Table of Contents
+## Detailed Guides
 
-1. [System Layers](#system-layers)
-2. [Data Flow](#data-flow)
-3. [Server Communication](#server-communication)
-4. [Integration Patterns](#integration-patterns)
-5. [XAI & Evidence Flow](#xai--evidence-flow)
-6. [Technology Stack](#technology-stack)
+| Guide | Contents |
+|---|---|
+| **[Data Flow & Server Communication](DATA_FLOW.md)** | Query-to-results flow, server communication patterns, data passing conventions |
+| **[Integration Patterns](INTEGRATION_PATTERNS.md)** | 4 integration patterns + PatientOne example workflow |
+| **[XAI & Evidence Flow](XAI_EVIDENCE_FLOW.md)** | 3-stage explainability pipeline (per-tool → synthesis → report) |
+| **[Technology Stack](TECHNOLOGY_STACK.md)** | Core technologies, Python libraries, performance, scalability |
 
 ---
 
@@ -59,352 +59,6 @@ The precision-medicine-mcp platform consists of 5 architectural layers:
 │         • External APIs (TCGA, DeepCell, HuggingFace)        │
 └──────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## Data Flow
-
-### 1. User Query → Analysis Results
-
-```
-User: "Identify treatment targets for PatientOne using spatial pathway enrichment"
-  │
-  ▼
-Claude API parses intent:
-  - Patient ID: PAT001-OVC-2025
-  - Analysis: Spatial pathway enrichment
-  - Output: Treatment recommendations
-  │
-  ▼
-Claude orchestrates multi-server workflow:
-  1. mcp-mockepic → Get clinical data
-  2. mcp-spatialtools → Load spatial transcriptomics
-  3. mcp-spatialtools → Run pathway enrichment
-  4. mcp-multiomics → Cross-validate with bulk RNA
-  5. mcp-fgbio → Map variants to pathways
-  │
-  ▼
-Claude synthesizes results:
-  - Top 3 pathways: PI3K/AKT/mTOR, DNA repair, immune response
-  - Treatment recommendations: Everolimus, olaparib, checkpoint inhibitors
-  - Evidence: Spatial expression patterns, mutation status, NCCN guidelines
-  │
-  ▼
-User receives structured report with visualizations
-```
-
-### 2. Server → Data → Server Flow
-
-```
-mcp-epic (FHIR) → Patient clinical data
-         │
-         ├──> Patient demographics (age, stage, histology)
-         ├──> Diagnoses (ICD-10 codes)
-         ├──> Medications (RxNorm codes)
-         └──> Lab results (LOINC codes)
-                 │
-                 ▼
-        mcp-spatialtools (Spatial RNA-seq)
-                 │
-                 ├──> Load Visium data (patient tissue regions)
-                 ├──> Spatial differential expression
-                 ├──> Pathway enrichment (spatial context)
-                 └──> Results: Activated pathways by region
-                         │
-                         ▼
-                mcp-multiomics (Bulk RNA/Protein)
-                         │
-                         ├──> Validate pathway activation (bulk data)
-                         ├──> Stouffer meta-analysis (RNA + Protein)
-                         └──> Results: Concordance with spatial findings
-                                 │
-                                 ▼
-                        mcp-fgbio (Genomic variants)
-                                 │
-                                 ├──> Load VCF (mutations)
-                                 ├──> Map variants to pathways
-                                 └──> Results: Mutation-pathway links
-                                         │
-                                         ▼
-                                Final report synthesis by Claude
-```
-
----
-
-## Server Communication
-
-### Key Principle: Servers Do Not Call Each Other
-
-**Why:**
-- Prevents circular dependencies
-- Makes debugging easier
-- Claude API acts as single orchestrator
-- Each server is stateless and independent
-
-**Communication Pattern:**
-
-```python
-# ❌ BAD: Server calling another server directly
-@mcp.tool()
-async def my_tool():
-    # Don't do this!
-    result = await other_server.call_tool()
-    return process(result)
-
-# ✅ GOOD: Server returns data, Claude orchestrates
-@mcp.tool()
-async def my_tool():
-    # Return data, let Claude decide what to do next
-    return {"data": my_results}
-```
-
-**Claude orchestrates multi-server workflows:**
-
-```
-User prompt → Claude decides workflow:
-  1. Call mcp-epic.get_patient_demographics()
-  2. Call mcp-spatialtools.get_spatial_data_for_patient()
-  3. Call mcp-spatialtools.perform_pathway_enrichment()
-  4. Synthesize results into report
-```
-
-### Server-to-Server Data Passing
-
-**Use file paths, not file contents:**
-
-```python
-# ✅ GOOD: Return file path
-@mcp.tool()
-async def process_spatial_data():
-    output_file = "/data/patient-001/spatial/enrichment.csv"
-    # ... process data, save to output_file ...
-    return {"output_file": output_file, "pathways": 23}
-
-# Then next tool can reference the file
-@mcp.tool()
-async def integrate_with_bulk_rna(spatial_file: str):
-    spatial_data = pd.read_csv(spatial_file)
-    # ... integration logic ...
-```
-
-**Shared data conventions:**
-
-```
-/data/patient-data/
-├── PAT001-OVC-2025/
-│   ├── clinical/
-│   │   └── fhir_bundle.json           # From mcp-epic
-│   ├── genomic/
-│   │   ├── variants.vcf               # From sequencing pipeline
-│   │   └── fastq/                     # Raw reads
-│   ├── multiomics/
-│   │   ├── rna_counts.csv             # From mcp-multiomics
-│   │   ├── protein_abundance.csv
-│   │   └── phospho_abundance.csv
-│   ├── spatial/
-│   │   ├── tissue_positions.csv       # From mcp-spatialtools
-│   │   ├── filtered_feature_matrix/
-│   │   └── pathway_enrichment.csv
-│   └── imaging/
-│       ├── H_and_E_slide_001.tif      # From mcp-openimagedata
-│       └── multiplex_IF_tumor.tif
-```
-
----
-
-## Integration Patterns
-
-### Pattern 1: Clinical → Genomic Workflow
-
-```
-mcp-epic: Get patient diagnosis (ovarian cancer, stage IV)
-    ↓
-mcp-fgbio: Load reference genome + patient VCF
-    ↓
-mcp-fgbio: Identify pathogenic variants (TP53, BRCA1)
-    ↓
-Claude synthesizes: Treatment implications (PARP inhibitors for BRCA1)
-```
-
-**Server responsibilities:**
-- mcp-epic: FHIR data retrieval, de-identification
-- mcp-fgbio: Variant calling, annotation, reference data
-- Claude: Clinical interpretation, treatment matching
-
-### Pattern 2: Multi-Omics Integration
-
-```
-mcp-multiomics: Load RNA, Protein, Phospho data
-    ↓
-mcp-multiomics: Stouffer meta-analysis (combine p-values)
-    ↓
-mcp-multiomics: Pathway enrichment (KEGG)
-    ↓
-mcp-fgbio: Map variants to enriched pathways
-    ↓
-Claude synthesizes: Mutation-pathway-drug connections
-```
-
-**Server responsibilities:**
-- mcp-multiomics: Data integration, statistical testing, pathway analysis
-- mcp-fgbio: Variant-pathway mapping
-- Claude: Connect pathways to actionable treatments
-
-### Pattern 3: Spatial → Clinical Bridge
-
-```
-mcp-spatialtools: Load Visium spatial transcriptomics
-    ↓
-mcp-spatialtools: Identify tumor vs. normal regions
-    ↓
-mcp-spatialtools: Spatial pathway enrichment (tumor microenvironment)
-    ↓
-mcp-mockepic: Link spatial findings to clinical presentation
-    ↓
-Claude synthesizes: Spatial heterogeneity implications for treatment
-```
-
-**Server responsibilities:**
-- mcp-spatialtools: Spatial analysis, microenvironment characterization
-- mcp-mockepic: Clinical context (stage, histology, treatment history)
-- Claude: Interpret spatial patterns for clinical decisions
-
-### Pattern 4: Imaging → Classification → Spatial Integration
-
-```
-mcp-openimagedata: Load H&E slide + MxIF images
-    ↓
-mcp-deepcell: Cell segmentation (nuclear/membrane models)
-    ↓
-mcp-deepcell: Quantify per-cell marker intensities (Ki67, TP53, CD8)
-    ↓
-mcp-cell-classify: Classify phenotypes (Ki67+/TP53+ double-positive)
-    ↓
-mcp-spatialtools: Overlay spatial transcriptomics on segmentation
-    ↓
-Claude synthesizes: Immune contexture and treatment implications
-```
-
-**Server responsibilities:**
-- mcp-openimagedata: Image retrieval, preprocessing
-- mcp-deepcell: Cell segmentation + per-cell marker quantification
-- mcp-cell-classify: Phenotype classification + visualization (lightweight, no TensorFlow)
-- mcp-spatialtools: Spatial statistics, cell-type deconvolution
-- Claude: Integrate imaging + transcriptomics for immune profiling
-
----
-
-## XAI & Evidence Flow
-
-Every tool returns `xai_metadata` alongside its results, enabling end-to-end evidence traceability from individual tool calls through to the patient report.
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│  Stage 1: Per-Tool XAI Metadata                                │
-│                                                                │
-│  mcp-fgbio         mcp-multiomics      mcp-spatialtools       │
-│  ┌──────────────┐  ┌──────────────┐    ┌──────────────┐       │
-│  │ xai_metadata  │  │ xai_metadata  │    │ xai_metadata  │     │
-│  │ confidence: H │  │ confidence: H │    │ confidence: M │     │
-│  │ grade: Tier_I │  │ grade: strong │    │ grade: mod.   │     │
-│  │ drivers: [..] │  │ drivers: [..] │    │ drivers: [..] │     │
-│  └──────┬───────┘  └──────┬───────┘    └──────┬───────┘      │
-│         │                 │                    │               │
-└─────────┼─────────────────┼────────────────────┼───────────────┘
-          │                 │                    │
-          ▼                 ▼                    ▼
-┌────────────────────────────────────────────────────────────────┐
-│  Stage 2: Claude Cross-Tool Synthesis                          │
-│                                                                │
-│  • Collects xai_metadata from each tool call                   │
-│  • Identifies the weakest evidence link                        │
-│  • Counts high / medium / low confidence results               │
-│  • Flags disagreements between modalities                      │
-└──────────────────────────┬─────────────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────────────┐
-│  Stage 3: Report Evidence Summary                              │
-│                                                                │
-│  evidence_strength_summary:                                    │
-│    high_confidence_count: 3                                    │
-│    medium_confidence_count: 1                                  │
-│    weakest_link: "Spatial enrichment (medium)"                 │
-│    overall_assessment: "Strong multi-modal evidence"           │
-│                                                                │
-│  → Clinician: APPROVE / REVISE / REJECT                        │
-└────────────────────────────────────────────────────────────────┘
-```
-
-**Three stages explained:**
-
-1. **Per-tool metadata** -- Each MCP server includes `xai_metadata` in every tool response via a standardized `_build_xai_metadata()` helper. This captures confidence level, key drivers, evidence grade, guideline version, and an optional counterfactual.
-
-2. **Cross-tool synthesis** -- Claude aggregates the `xai_metadata` from all tool calls in a workflow. It identifies the weakest evidence link and flags any confidence disagreements between modalities (e.g., genomic evidence is high but spatial evidence is only moderate).
-
-3. **Report aggregation** -- The final patient report includes an `evidence_strength_summary` that gives clinicians a single view of evidence quality, supporting the APPROVE / REVISE / REJECT decision in the clinician-in-the-loop workflow.
-
-**Schema reference:** [XAI Metadata Schema](../reference/shared/xai-metadata-schema.md)
-
----
-
-## Technology Stack
-
-### Core Technologies
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **UI** | Streamlit | Web-based chat interface |
-| **UI** | Jupyter Notebook | Data science workflows |
-| **AI** | Claude API (Sonnet 4.6) | Natural language orchestration |
-| **Protocol** | MCP (Model Context Protocol) | AI-tool integration standard |
-| **Framework** | FastMCP (Python) | Build MCP servers |
-| **Transport** | STDIO (local) / SSE (cloud) | MCP communication |
-| **Compute** | GCP Cloud Run | Serverless container platform |
-| **Storage** | GCS (Google Cloud Storage) | Patient data, analysis results |
-| **Healthcare** | GCP Healthcare API | FHIR store for clinical data |
-| **Monitoring** | GCP Cloud Logging + Monitoring | Observability |
-
-### Python Libraries by Server
-
-**mcp-fgbio:**
-- `pysam` - BAM/VCF file handling
-- `pyfaidx` - FASTA reference genome indexing
-
-**mcp-multiomics:**
-- `pandas`, `numpy` - Data manipulation
-- `scipy` - Statistical testing
-- `statsmodels` - Meta-analysis (Stouffer's method)
-- `HAllA` - Multi-omics integration
-
-**mcp-spatialtools:**
-- `scanpy` - Single-cell/spatial transcriptomics analysis
-- `squidpy` - Spatial statistics (Moran's I, spatial graphs)
-- `numpy`, `scipy` - Numerical computing
-
-**mcp-openimagedata:**
-- `opencv-python` - Image processing
-- `Pillow` - Image I/O
-- `numpy` - Array operations
-
-**mcp-epic:**
-- `google-cloud-healthcare` - GCP Healthcare API
-- `fhir.resources` - FHIR data models
-- `google-cloud-logging` - HIPAA-compliant audit logging
-
-**All servers:**
-- `fastmcp` - MCP server framework
-- `pytest`, `pytest-asyncio` - Testing
-- `pytest-cov` - Code coverage
-
-### External APIs (Mocked in Current Version)
-
-| API | Server | Status | Purpose |
-|-----|--------|--------|---------|
-| **GDC API** | mcp-mocktcga | ❌ Mocked | TCGA cohort data retrieval |
-| **DeepCell API** | mcp-deepcell | ✅ Real | Cell segmentation + quantification |
-
-**Production Roadmap:** Replace mocks with real API integrations (6-12 months)
 
 ---
 
@@ -464,97 +118,6 @@ A live monitoring dashboard (`ui/dashboard/`) provides server health, cost analy
 
 ---
 
-## PatientOne Example Workflow
-
-**User Prompt:**
-> "Perform comprehensive multi-modal analysis for PatientOne (PAT001-OVC-2025) and identify top 3 treatment targets."
-
-**Orchestrated Workflow (DRY_RUN: ~35 minutes / Production: an estimated 2-5 hours):**
-
-```
-[Stage 0] De-identification (prerequisite — run once per patient onboarding)
-  → mcp-deidentify.deidentify_json(json_content=patient_record, patient_id="PAT001-OVC-2025")
-  → mcp-deidentify.generate_anonymization_key(patient_id="PAT001-OVC-2025")
-  → Writes PAT001-OVC-2025_anonymization_key.json (stored separately from pipeline data)
-
-[0-5 min] Clinical Context
-  → mcp-mockepic.query_patient_records(patient_id="PAT001-OVC-2025")
-  → Returns: Stage IV HGSOC, platinum-resistant, CA-125 elevated
-
-[5-12 min] Genomic Analysis
-  → mcp-fgbio.fetch_reference_genome(build="GRCh38")
-  → mcp-genomic-results.parse_somatic_variants(vcf_path="/data/PAT001/genomic/variants.vcf")
-  → Returns: TP53 mutation, BRCA1 germline variant
-
-[12-22 min] Multi-Omics Integration
-  → mcp-multiomics.integrate_omics_data(patient_id="PAT001-OVC-2025")
-  → mcp-multiomics.calculate_stouffer_meta(modalities=["rna","protein","phospho"])
-  → mcp-multiomics.predict_upstream_regulators(method="gsea")
-  → Returns: PI3K/AKT/mTOR pathway activation (p<0.001)
-
-[22-32 min] Spatial Transcriptomics
-  → mcp-spatialtools.get_spatial_data_for_patient(patient_id="PAT001-tumor-region-1")
-  → mcp-spatialtools.perform_pathway_enrichment()
-  → Returns: Spatial heterogeneity, immune exhaustion in tumor core
-
-[32-35 min] Report Synthesis
-  → Claude synthesizes results:
-    1. BRCA1 variant → PARP inhibitor (olaparib)
-    2. PI3K/AKT/mTOR activation → mTOR inhibitor (everolimus)
-    3. Immune exhaustion → Checkpoint inhibitor (pembrolizumab)
-```
-
-**Server Call Summary:**
-- 2 calls to mcp-deidentify (Stage 0, one-time per patient onboarding)
-- 2 calls to mcp-mockepic
-- 3 calls to mcp-fgbio
-- 4 calls to mcp-multiomics
-- 3 calls to mcp-spatialtools
-- **Total: 14 tool calls, ~35 min DRY_RUN / an estimated 2-5 hrs production**
-
----
-
-## Performance Considerations
-
-### Latency Budget (per tool call)
-
-| Operation | Target | Notes |
-|-----------|--------|-------|
-| **Tool call overhead** | <1 sec | MCP protocol + FastMCP |
-| **Data loading** | 1-5 sec | Local files, <100MB |
-| **Statistical analysis** | 5-30 sec | Differential expression, pathway enrichment |
-| **Heavy computation** | 30-300 sec | Batch correction, dimensionality reduction |
-| **External API calls** | 1-10 sec | NCBI, KEGG (with caching) |
-
-**Total workflow:** 25-35 min DRY_RUN / an estimated 2-5 hours production for comprehensive multi-modal analysis
-
-### Scalability
-
-**Current capacity (single instance):**
-- 1-2 concurrent analyses
-- 10-20 tool calls/minute
-- 100GB patient data
-
-**Production scaling (GCP Cloud Run):**
-- Auto-scales to 100+ instances
-- Handles 100+ concurrent analyses
-- Petabyte-scale data with GCS
-
----
-
-## Next Steps for Developers
-
-1. **Understand the architecture** (this doc + README.md) - 30 min
-2. **Study a reference server** (mcp-multiomics recommended) - 30 min
-3. **Build a new server** (follow ADD_NEW_MODALITY_SERVER.md) - 4-8 hours
-4. **Write tests** (≥50% coverage for production) - 1-2 hours
-5. **Deploy to GCP** (Cloud Run deployment) - 30 min
-6. **Integrate with workflow** (test with PatientOne) - 30 min
-
-**See:** [README.md](README.md) for quick start paths and resources.
-
----
-
 ## Evaluation Architecture
 
 The platform includes a reproducible evaluation harness under `eval/`
@@ -594,7 +157,7 @@ The platform's claims rest on three layers of evidence: explainability
 (each recommendation shows its work), traceability (every action is
 recorded and auditable), and evaluation (results are independently validated).
 
-**[View interactive summary →](../proof-layers.html)**
+**[View interactive summary →](https://lynnlangit.github.io/precision-medicine-mcp/proof-layers.html)**
 *(click layer names to expand detail)*
 
 | Layer | Mechanisms | Key evidence |
@@ -604,6 +167,19 @@ recorded and auditable), and evaluation (results are independently validated).
 | **Evaluation** | Case study accuracy, MTBBench governance, methodological finding, CI regression, scheduled doc-audit | 100% vs. 33.3% accuracy (p < 0.001); governance validated n=40 patients |
 
 See [eval/README.md](../../eval/README.md) for full evaluation methodology and results.
+
+---
+
+## Next Steps for Developers
+
+1. **Understand the architecture** (this doc + README.md) - 30 min
+2. **Study a reference server** (mcp-multiomics recommended) - 30 min
+3. **Build a new server** (follow ADD_NEW_MODALITY_SERVER.md) - 4-8 hours
+4. **Write tests** (≥50% coverage for production) - 1-2 hours
+5. **Deploy to GCP** (Cloud Run deployment) - 30 min
+6. **Integrate with workflow** (test with PatientOne) - 30 min
+
+**See:** [README.md](README.md) for quick start paths and resources.
 
 ---
 
