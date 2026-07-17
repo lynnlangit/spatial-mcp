@@ -14,7 +14,7 @@ Cardiovascular risk scoring, biomarker interpretation, and preventive health mon
 | `interpret_lipid_pattern` | Classify lipid phenotype (mixed dyslipidemia, isolated hypercholesterolemia, etc.), Friedewald validity, ApoB/LDL concordance |
 | `calculate_fh_clinical_score` | Dutch Lipid Clinic Network (DLCN) scoring for familial hypercholesterolemia with genetic test interpretation |
 | `assess_renal_drug_constraints` | Assess CV drug safety by eGFR stage and kidney count (13 drug classes, single-kidney modifier, KDIGO 2024) |
-| `calculate_lipid_treatment_targets` | LDL/ApoB/Non-HDL targets by risk tier with stepwise therapy pathway modeling (statin → ezetimibe → PCSK9) |
+| `calculate_lipid_treatment_targets` | LDL/ApoB/Non-HDL targets by risk tier with stepwise therapy pathway modeling (statin → ezetimibe → oral PCSK9 → injectable PCSK9) |
 | `assess_postcovid_cv_risk` | Post-COVID CV risk tier adjustment, mechanism flags, double endothelial injury detection, cardiac workup recommendations |
 | `search_cvd_prs_scores` | Query PGS Catalog REST API for validated CVD polygenic risk scores by trait |
 | `calculate_cvd_prs` | Compute polygenic risk score from germline genotype file + PGS Catalog score |
@@ -56,7 +56,15 @@ cd servers/mcp-cardiometabolic
 uv run pytest -v
 ```
 
-107 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, renal drug constraints, lipid treatment targets, post-COVID CV risk, double endothelial injury detection, PRS tools, APO risk assessment, XAI metadata (per-tool presence, confidence logic, report integration), and DRY_RUN behavior.
+108 tests covering risk equations, biomarker classification, lipid pattern interpretation, FH clinical scoring, renal drug constraints, lipid treatment targets, post-COVID CV risk, double endothelial injury detection, PRS tools, APO risk assessment, XAI metadata (per-tool presence, confidence logic, report integration), and DRY_RUN behavior.
+
+**Drug classes included in lipid treatment pathway (as of July 2025):**
+- Statins (high / moderate / low intensity)
+- Ezetimibe
+- Oral PCSK9 inhibitor: enlicitide (Lipfendra) — FDA approved July 2025
+- Injectable PCSK9 inhibitors: alirocumab (Praluent), evolocumab (Repatha)
+- Inclisiran (RNA-based, twice-yearly)
+- Bempedoic acid (for statin-intolerant patients)
 
 ## Environment
 

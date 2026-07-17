@@ -462,7 +462,10 @@ async def _assess_lpa_status_impl(
     implications = []
     if lpa_mg_dl >= 50:
         implications.append("Independent CVD risk factor; upgrades statin indication")
-        implications.append("Consider PCSK9 inhibitor (may lower Lp(a) ~25%)")
+        implications.append(
+            "Consider PCSK9 inhibitor — oral (enlicitide/Lipfendra) or injectable — "
+            "may lower Lp(a) ~15-25% (class effect)"
+        )
     elif lpa_mg_dl >= 30:
         implications.append("Borderline Lp(a); monitor with other risk factors")
     else:
@@ -1255,6 +1258,11 @@ async def _interpret_lipid_pattern_impl(
         implications = [
             "Consider FH evaluation (DLCN score) if LDL persistently >190 mg/dL.",
             "High-intensity statin first-line; ezetimibe add-on if target not reached.",
+            (
+                "If statin + ezetimibe insufficient: oral PCSK9 inhibitor "
+                "(enlicitide/Lipfendra 10mg daily, FDA approved July 2025, $315/month) "
+                "before injectable PCSK9."
+            ),
         ]
     elif pattern == "isolated_hypertriglyceridemia":
         implications = [
@@ -1266,7 +1274,10 @@ async def _interpret_lipid_pattern_impl(
         implications = [
             "Classic metabolic syndrome triad — evaluate for insulin resistance.",
             "ApoB may be more informative than LDL in this pattern.",
-            "Statin + lifestyle; consider adding ezetimibe or PCSK9 if needed.",
+            (
+                "Statin + lifestyle; consider adding ezetimibe, then oral PCSK9 "
+                "(enlicitide/Lipfendra), then injectable PCSK9 if needed."
+            ),
         ]
 
     # XAI confidence logic
@@ -1453,9 +1464,11 @@ async def _calculate_fh_clinical_score_impl(
     if total >= 3:
         pcsk9_note = (
             "Patients with Possible, Probable, or Definite FH (DLCN >=3) may "
-            "qualify for PCSK9 inhibitor (evolocumab/Repatha or alirocumab/Praluent) "
-            "insurance coverage on clinical grounds, even without genetic "
-            "confirmation. Eligibility typically also requires documented statin "
+            "qualify for PCSK9 inhibitor coverage on clinical grounds, even without "
+            "genetic confirmation. Options: oral PCSK9 (enlicitide/Lipfendra 10mg "
+            "daily, $315/month, primary care prescribing, FDA approved July 2025) "
+            "or injectable PCSK9 (evolocumab/Repatha or alirocumab/Praluent, "
+            "$500-600/month). Eligibility typically also requires documented statin "
             "intolerance or failure to reach LDL target on maximally tolerated "
             "statin + ezetimibe. Some payers require an FH diagnosis code "
             "(ICD-10: E78.01) — clinical DLCN score >=3 supports this code. "
@@ -1858,9 +1871,17 @@ async def _assess_renal_drug_constraints_impl(
         "arbs": lambda: _assess_ace_arb(egfr, single_kidney),
         "metformin": lambda: _assess_metformin(egfr),
         "fibrates": lambda: _assess_fibrates(egfr),
+        "oral_pcsk9_inhibitor": lambda: {
+            "class_status": "safe",
+            "note": (
+                "Enlicitide (Lipfendra) 10mg daily — oral PCSK9 inhibitor, FDA approved "
+                "July 2025. No renal clearance. Safe at all eGFR levels. $315/month, "
+                "primary care prescribing."
+            ),
+        },
         "pcsk9_inhibitors": lambda: {
             "class_status": "safe",
-            "note": "Monoclonal antibodies — no renal clearance. Safe at all eGFR levels including dialysis. No dose adjustment required.",
+            "note": "Injectable monoclonal antibodies — no renal clearance. Safe at all eGFR levels including dialysis. No dose adjustment required.",
         },
         "ezetimibe": lambda: {
             "class_status": "safe",
@@ -1912,7 +1933,7 @@ async def _assess_renal_drug_constraints_impl(
         "Preferred statin: atorvastatin (hepatic only, safe at any eGFR)",
         "Preferred anticoagulant if indicated: apixaban (lowest renal DOAC)",
         "Avoid: dabigatran, gemfibrozil, NSAIDs" + (" (single kidney)" if single_kidney else " (eGFR <60)") + ", iodinated contrast without pre-hydration protocol",
-        "Safe without dose adjustment: ezetimibe, PCSK9 inhibitors, prescription omega-3",
+        "Safe without dose adjustment: ezetimibe, oral PCSK9 (enlicitide), injectable PCSK9, prescription omega-3",
     ]
     if egfr >= 45:
         top_line.append(f"Metformin safe at eGFR {egfr} — monitor if eGFR approaches 45")
@@ -2005,7 +2026,8 @@ _THERAPY_REDUCTIONS = {
     "moderate_intensity_statin": 0.35,
     "low_intensity_statin": 0.25,
     "ezetimibe": 0.20,
-    "pcsk9_inhibitor": 0.60,
+    "oral_pcsk9_inhibitor": 0.60,
+    "injectable_pcsk9_inhibitor": 0.60,
 }
 
 _TIER_ORDER = ["low", "intermediate", "high", "very_high"]
@@ -2017,6 +2039,7 @@ def _model_therapy_pathway(
     already_on_statin: bool,
     statin_intensity: Optional[str],
     already_on_ezetimibe: bool,
+    already_on_oral_pcsk9: bool,
     already_on_pcsk9: bool,
     renal_constraint: bool,
 ) -> tuple:
@@ -2068,12 +2091,31 @@ def _model_therapy_pathway(
         })
         current = projected
 
-    if current > ldl_target and not already_on_pcsk9:
-        reduction = _THERAPY_REDUCTIONS["pcsk9_inhibitor"]
+    if current > ldl_target and not already_on_oral_pcsk9 and not already_on_pcsk9:
+        reduction = _THERAPY_REDUCTIONS["oral_pcsk9_inhibitor"]
         projected = round(current * (1 - reduction), 1)
         steps.append({
             "step": len(steps) + 1,
-            "add": "Add PCSK9 inhibitor (evolocumab/Repatha or alirocumab/Praluent)",
+            "add": "Add oral PCSK9 inhibitor (enlicitide/Lipfendra 10mg daily)",
+            "expected_ldl": projected,
+            "ldl_reduction_pct": round(reduction * 100),
+            "target_reached": projected <= ldl_target,
+            "cost_note": "List price $315/month; primary care prescribing (no specialist required)",
+            "fda_approval": "July 2025",
+            "outcome_data": (
+                "PCSK9 class: 20% reduction MI/stroke/CV death (injectable RCTs); "
+                "oral outcome trial ongoing"
+            ),
+            "lpa_benefit": "~15-25% Lp(a) reduction (class effect)",
+        })
+        current = projected
+
+    if current > ldl_target and not already_on_pcsk9:
+        reduction = _THERAPY_REDUCTIONS["injectable_pcsk9_inhibitor"]
+        projected = round(current * (1 - reduction), 1)
+        steps.append({
+            "step": len(steps) + 1,
+            "add": "Add injectable PCSK9 inhibitor (evolocumab/Repatha or alirocumab/Praluent)",
             "expected_ldl": projected,
             "ldl_reduction_pct": round(reduction * 100),
             "target_reached": projected <= ldl_target,
@@ -2081,6 +2123,7 @@ def _model_therapy_pathway(
                 "PCSK9 inhibitors are safe at any eGFR — monoclonal antibodies "
                 "with no renal clearance."
             ),
+            "cost_note": "List price $500-600/month; may require specialist referral",
         })
         current = projected
 
@@ -2098,6 +2141,7 @@ async def _calculate_lipid_treatment_targets_impl(
     currently_on_statin: bool = False,
     current_statin_intensity: Optional[str] = None,
     currently_on_ezetimibe: bool = False,
+    currently_on_oral_pcsk9: bool = False,
     currently_on_pcsk9_inhibitor: bool = False,
     renal_constraint: bool = False,
 ) -> Dict[str, Any]:
@@ -2131,6 +2175,7 @@ async def _calculate_lipid_treatment_targets_impl(
         already_on_statin=currently_on_statin,
         statin_intensity=current_statin_intensity,
         already_on_ezetimibe=currently_on_ezetimibe,
+        already_on_oral_pcsk9=currently_on_oral_pcsk9,
         already_on_pcsk9=currently_on_pcsk9_inhibitor,
         renal_constraint=renal_constraint,
     )
@@ -2164,7 +2209,7 @@ async def _calculate_lipid_treatment_targets_impl(
             f"Effective risk tier: {effective_tier} (LDL target: {ldl_target} mg/dL)",
             f"FH status: {fh_status}" + (" -- risk tier upgraded" if fh_upgrade else ""),
         ],
-        guideline_version="ACC Expert Consensus 2022; ESC Dyslipidaemias 2023",
+        guideline_version="ACC Expert Consensus 2022; ESC Dyslipidaemias 2023; AHA/ACC 2025 (oral PCSK9)",
         evidence_grade="Class I (AHA/ACC)",
         counterfactual=(
             f"If starting LDL were already at {ldl_target} mg/dL (target), "
@@ -2202,6 +2247,7 @@ async def _calculate_lipid_treatment_targets_impl(
             "2023 ESC Guidelines on Dyslipidaemias — https://doi.org/10.1093/eurheartj/ehac468",
             "FOURIER trial (evolocumab) — https://doi.org/10.1056/NEJMoa1615664",
             "IMPROVE-IT trial (ezetimibe) — https://doi.org/10.1056/NEJMoa1410489",
+            "Enlicitide (Lipfendra) FDA approval July 2025 — oral PCSK9 inhibitor, LDL reduction up to 60%",
         ],
         "clinical_note": (
             "RESEARCH ONLY — NOT FOR CLINICAL USE. LDL reduction estimates are "
@@ -2958,6 +3004,7 @@ async def calculate_lipid_treatment_targets(
     currently_on_statin: bool = False,
     current_statin_intensity: Optional[str] = None,
     currently_on_ezetimibe: bool = False,
+    currently_on_oral_pcsk9: bool = False,
     currently_on_pcsk9_inhibitor: bool = False,
     renal_constraint: bool = False,
 ) -> dict:
@@ -2965,8 +3012,8 @@ async def calculate_lipid_treatment_targets(
 
     Given current lipid values, risk tier, and FH status, calculates treatment
     targets per 2022 ACC Expert Consensus and 2023 ESC guidelines. Models which
-    combination of therapies (statin → ezetimibe → PCSK9 inhibitor) is needed
-    to reach targets step by step.
+    combination of therapies (statin → ezetimibe → oral PCSK9 → injectable
+    PCSK9) is needed to reach targets step by step.
 
     FH status "definite" or "probable" upgrades risk tier one step.
 
@@ -2981,7 +3028,8 @@ async def calculate_lipid_treatment_targets(
         currently_on_statin: Whether patient is currently on a statin.
         current_statin_intensity: "high", "moderate", or "low" (if on statin).
         currently_on_ezetimibe: Whether patient is currently on ezetimibe.
-        currently_on_pcsk9_inhibitor: Whether patient is on a PCSK9 inhibitor.
+        currently_on_oral_pcsk9: Whether patient is on oral PCSK9 (enlicitide).
+        currently_on_pcsk9_inhibitor: Whether patient is on injectable PCSK9.
         renal_constraint: True if single kidney or eGFR <60 (prefer atorvastatin).
 
     Returns:
@@ -2999,6 +3047,7 @@ async def calculate_lipid_treatment_targets(
         currently_on_statin=currently_on_statin,
         current_statin_intensity=current_statin_intensity,
         currently_on_ezetimibe=currently_on_ezetimibe,
+        currently_on_oral_pcsk9=currently_on_oral_pcsk9,
         currently_on_pcsk9_inhibitor=currently_on_pcsk9_inhibitor,
         renal_constraint=renal_constraint,
     )

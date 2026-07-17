@@ -168,8 +168,30 @@ class TestLipidTreatmentTargets:
             current_ldl=205,
             risk_tier="high",
         )
-        assert len(result["guideline_references"]) == 4
+        assert len(result["guideline_references"]) == 5
         assert any("ACC" in ref for ref in result["guideline_references"])
+        assert any("Lipfendra" in ref or "enlicitide" in ref for ref in result["guideline_references"])
+
+    @pytest.mark.asyncio
+    async def test_oral_pcsk9_recommended_before_injectable(self):
+        """Enlicitide (oral PCSK9) should appear in pathway before injectable PCSK9."""
+        result = await _calculate_lipid_treatment_targets_impl(
+            patient_id="SYNTH01",
+            current_ldl=180,
+            risk_tier="high",
+            fh_status="possible",
+            currently_on_statin=True,
+            current_statin_intensity="high",
+            currently_on_ezetimibe=True,
+        )
+        pathway = result["therapy_pathway"]
+        step_labels = [s["add"] for s in pathway]
+        oral_steps = [i for i, s in enumerate(step_labels) if "oral PCSK9" in s or "enlicitide" in s.lower() or "Lipfendra" in s]
+        injectable_steps = [i for i, s in enumerate(step_labels) if "injectable PCSK9" in s]
+        assert oral_steps, f"Oral PCSK9 should appear in pathway, got: {step_labels}"
+        assert injectable_steps, f"Injectable PCSK9 should appear in pathway, got: {step_labels}"
+        assert oral_steps[0] < injectable_steps[0], \
+            f"Oral PCSK9 (step {oral_steps[0]}) should come before injectable (step {injectable_steps[0]})"
 
 
 # ── assess_postcovid_cv_risk ─────────────────────────────────────────────────
