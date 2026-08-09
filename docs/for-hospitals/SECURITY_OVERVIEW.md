@@ -21,7 +21,7 @@ graph TB
         end
 
         subgraph Application["Application"]
-            SERVERS[20 MCP Servers<br/>Cloud Run<br/>No Public IPs]
+            SERVERS[19 MCP Servers<br/>Cloud Run<br/>No Public IPs]
         end
 
         subgraph Data["Encrypted Storage"]

@@ -23,7 +23,7 @@
 | deepcell | 4 | 2 | No | Cell segmentation |
 | cibersortx | 4 | 2 | No | API-bound |
 | cardiometabolic | 4 | 2 | No | CVD risk scoring, preventive health |
-| **Total (20 servers)** | **~93** | **~50** | Optional | Low-RAM servers can co-locate on shared node |
+| **Total (19 servers)** | **~93** | **~50** | Optional | Low-RAM servers can co-locate on shared node |
 
 *Server count matches [server-registry.md](../reference/shared/server-registry.md). Boilerplate template server excluded from estimates.*
 
@@ -33,7 +33,7 @@
 |----------|------------------|-------------------|----------------------|
 | Genomic + neoantigen only | 5,000 | 2,000 | ~$0.23 (Sonnet) |
 | Full 5-server MVP pipeline | 15,000 | 6,000 | ~$0.68 (Sonnet) |
-| All 20 servers | 40,000 | 15,000 | ~$1.73 (Sonnet) |
+| All 19 servers | 40,000 | 15,000 | ~$1.73 (Sonnet) |
 
 *Verify current pricing at https://www.anthropic.com/pricing before budgeting.*
 
@@ -48,6 +48,6 @@
 
 ## Cost reduction options
 
-- **DRY_RUN mode**: All 20 servers return synthetic data at zero API cost. Use for development, training, and classroom demos.
+- **DRY_RUN mode**: All 19 servers return synthetic data at zero API cost. Use for development, training, and classroom demos.
 - **Batch processing**: Queue cases overnight rather than real-time to reduce peak compute demand.
 - **Result caching**: Spatial and deconvolution outputs are deterministic for the same h5ad input. Cache at the de-identification layer to avoid recomputation.

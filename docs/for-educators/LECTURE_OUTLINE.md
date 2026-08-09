@@ -39,7 +39,7 @@ Three 90-minute lectures covering precision oncology, hands-on analysis, and eth
    - FastMCP framework: decorators, Pydantic validation, DRY_RUN
 
 6. **Server architecture walkthrough** (15 min)
-   - 19 custom servers (104 tools) — see `docs/reference/shared/server-registry.md`
+   - 19 custom servers (119 tools) — see `docs/reference/shared/server-registry.md`
    - 6 external connectors (PubMed, bioRxiv, ClinicalTrials.gov, etc.)
    - Data flow: acquisition -> deconvolution -> profiling -> inference -> report
 

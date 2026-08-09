@@ -15,7 +15,7 @@
 2. `cd precision-medicine-mcp && uv sync`
 3. `python -m pytest tests/ -x --tb=short`
 4. Verify PAT001 canonical values match the "Validated Results" table in README.md
-5. Connect Claude Desktop and confirm all 20 MCP servers appear
+5. Connect Claude Desktop and confirm all 19 MCP servers appear
 
 ### People to identify before Day 10
 - 3 oncologist champions willing to review AI-generated hypotheses

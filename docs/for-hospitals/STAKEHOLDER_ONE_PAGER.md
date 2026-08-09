@@ -6,7 +6,7 @@ Standard clinical workup — whether for advanced cancer or preventive health �
 
 ## What this platform does
 - Analyzes tumor genomics, spatial architecture, immune infiltration, and drug response prediction in a single automated workflow
-- Generates a structured oncologist-ready report in under five minutes per patient
+- Generates a structured oncologist-ready report in a single automated session, rather than a multi-day relay across bioinformatics, pathology, and clinical informatics
 - Operates on de-identified data with HIPAA-aligned audit logging and a fully open-source codebase
 
 ## What we demonstrated
@@ -19,7 +19,7 @@ Three synthetic patients, three independent live end-to-end validations — no d
 | **PAT002** | ER+/HER2− breast cancer | HRD 35 below myChoice threshold but PARP-eligible via BRCA2 germline — handled without code changes |
 | **PAT003** | Preventive cardiovascular | 3 evidence gaps missed by standard lipid panel + Helix Tier 1 genetic screen: Lp(a), APOE genotype, CAC score; intermediate 10-yr CVD risk confirmed (Reynolds 14.3%) |
 
-Each analysis completed in under five minutes per patient, fully automated, with a structured clinician-ready report.
+Each analysis ran as a single automated session producing a structured clinician-ready report. End-to-end runtime on synthetic data is 5-15 minutes across the full platform; runtime on real patient data is estimated at 2-5 hours, against an estimated 40 hours for the equivalent manual multi-modal analysis. Time figures are modeled and pending clinical validation — see [Value Proposition](../reference/shared/value-proposition.md).
 
 ## What a 90-day POC looks like
 - Days 1-30: Infrastructure setup and smoke testing with synthetic data
@@ -30,7 +30,7 @@ Full runbook: docs/for-hospitals/POC_RUNBOOK.md
 
 ## What it costs
 Compute: approximately 93 GB RAM, 50 CPU cores (on-premise).
-API: approximately $1-2 per full 20-server analysis (Claude API).
+API: approximately $1-2 per full 19-server analysis (Claude API).
 Personnel: approximately 78 hours setup, 25 hours per month ongoing.
 Full estimates: docs/for-hospitals/RESOURCE_ESTIMATES.md
 

@@ -61,7 +61,7 @@ The platform surfaces clinically actionable findings that standard workup cannot
 | **ER+ Breast Cancer** | PAT002 | 3 investigational hypotheses: inavolisib over alpelisib (PIK3CA H1047R, 2024 FDA approval), MYC-driven triple therapy, YSAPLSSSL neoepitope vaccine + CAF depletion + anti-PD-1 — zero disease-specific code changes |
 | **Preventive Cardiovascular** | PAT003 | Intermediate CVD risk (Reynolds 14.3%) with 3 high-priority gaps missed by standard lipid panel AND population genetic screen: Lp(a), APOE genotype, CAC score |
 
-The same 20-server architecture runs all three. No disease-specific code changes between use cases.
+The same 19-server architecture runs all three. No disease-specific code changes between use cases.
 
 **[How we validate our results →](https://lynnlangit.github.io/precision-medicine-mcp/proof-layers.html)**
 

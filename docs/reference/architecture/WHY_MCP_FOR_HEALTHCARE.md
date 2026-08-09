@@ -69,10 +69,10 @@ graph TD
     USER["Clinician Query:<br/>'Find treatment targets for PAT001'"]
 
     subgraph Claude["🤖 Claude as Orchestrator"]
-        PLAN["1. Understand intent<br/>2. Plan workflow<br/>3. Execute across 20 servers"]
+        PLAN["1. Understand intent<br/>2. Plan workflow<br/>3. Execute across 19 servers"]
     end
 
-    subgraph Servers["🔧 20 MCP Servers — 7 Categories (119 tools)"]
+    subgraph Servers["🔧 19 MCP Servers — 7 Categories (119 tools)"]
         STAGE0["🔒 De-identification (6 tools)<br/>HIPAA Safe Harbor"]
         CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>EHR context + variant calls"]
         OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>Pathway + spatial analysis"]
@@ -107,7 +107,7 @@ graph TD
 ```
 
 ### 3. Domain Expertise Encoded
-**Each category encapsulates bioinformatics best practices (20 servers, 119 tools):**
+**Each category encapsulates bioinformatics best practices (19 servers, 119 tools):**
 
 | Category | Encoded Expertise | Replaces |
 |----------|-------------------|----------|

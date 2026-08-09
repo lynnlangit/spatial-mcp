@@ -1,6 +1,11 @@
 # MCP Server Registry - Quick Reference
 
-**Custom Servers:** 20 (119 tools) | **Production Ready:** 18 (90%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
+**Custom Servers:** 19 (119 tools) | **Production Ready:** 17 (89%) | **External Servers:** 6 (46 tools) | **Framework:** FastMCP ≥ 2.13
+
+> Counts are the sum of the two tables below (17 production + 2 mock = 19 servers, 119 tools),
+> verified against `@mcp.tool` declarations in each server's `server.py`. The `servers/`
+> directory also contains `mcp-server-boilerplate`, a 2-tool template that is not a functional
+> server and is excluded from every count on this page.
 
 📁 **[Individual Server Documentation →](../../../servers/README.md)**
 
@@ -98,7 +103,8 @@ Six external servers complement the custom servers above. These are either Anthr
 
 ## Framework Version
 
-All 20 custom servers declare `fastmcp>=2.13.0` in their `pyproject.toml`
+All 20 directories under `servers/` (the 19 functional servers above plus the
+`mcp-server-boilerplate` template) declare `fastmcp>=2.13.0` in their `pyproject.toml`
 as of 2026-04-08 (HOSPITAL1 migration — see `docs/HOSPITAL1_DEPLOYMENT_PLAN.md`).
 Resolved versions in `uv.lock` span 2.14.1 through 3.1.0; every server has
 been verified by `scripts/phase6_signature_audit.sh` to import cleanly,
