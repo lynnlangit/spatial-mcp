@@ -43,14 +43,21 @@ is used as the primary risk estimate for PAT003.
 
 | Clinical question | Server | Coverage |
 |-------------------|--------|----------|
-| CVD gene-disease associations | opentargets | Partial — generic mock, no CVD ontology |
-| Drug targets and emerging therapies | opentargets | Partial — no CVD drug mock data |
-| Medication safety profile | opentargets | Partial — no ACE safety data in DRY_RUN |
-| Structured preventive health report | patient-report | Gap — schema is oncology-only |
-| Biomarker panel integration | multiomics | Gap — expects omics matrices, not biomarkers |
-| Polygenic risk score for CVD | — | **Gap — new server needed** |
-| Longitudinal biomarker tracking | — | **Gap — new server needed** |
-| Lifestyle intervention evidence | — | **Gap — new server needed** |
+| 10-year CVD risk scoring | cardiometabolic | Covered — `calculate_cvd_risk_scores` (Reynolds, Framingham, ACC/AHA PCE) |
+| CVD gene-disease associations | opentargets | Covered — CVD disease ontology (EFO IDs) plus risk genes APOE, LDLR, APOB, PCSK9, LPA, ACE, CDKN2A/B |
+| Drug targets and emerging therapies | opentargets | Covered — CVD drug data for ACE (lisinopril), PCSK9, LDLR |
+| Medication safety profile | opentargets | Covered — ACE safety profile available in DRY_RUN |
+| Serum Lp(a) interpretation | cardiometabolic | Covered — `assess_lpa_status` |
+| Structured preventive health report | cardiometabolic | Covered — `generate_preventive_report` |
+| Biomarker panel integration | cardiometabolic | Covered — `assess_biomarker_panel` |
+| Polygenic risk score for CVD | cardiometabolic | Covered — `search_cvd_prs_scores`, `calculate_cvd_prs`, `interpret_cvd_prs_percentile` (PGS Catalog) |
+| Lifestyle intervention evidence | cardiometabolic | Covered — `get_lifestyle_evidence`, curated interventions with trial citations |
+| Longitudinal biomarker tracking | — | **Gap — still open** (see [ROADMAP](../../ROADMAP.md)) |
+
+*Coverage last verified against server source on 2026-08-08. The gaps this table
+originally recorded were closed by `mcp-cardiometabolic` and by the PAT003
+cardiovascular additions to `mcp-opentargets`. Tool counts and status:
+[Server Registry](../reference/shared/server-registry.md).*
 
 ## Genetic screen findings and their clinical significance
 

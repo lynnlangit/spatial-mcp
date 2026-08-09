@@ -20,11 +20,11 @@
 | PAT002 breast cancer validation dataset | Medium | M | Synthetic data generation | **Done** |
 | Automated CI regression test against canonical values | Medium | S | CI infrastructure | Planned |
 | Multi-language patient report (Spanish, Mandarin) | Low | M | Translation resources | Planned |
-| Cardiometabolic server (lipid panel + CVD risk scoring + Lp(a) + biomarker tracking) | High | M | PAT003 gap report v3 | **Done** |
+| Cardiometabolic server (lipid panel + CVD risk scoring + Lp(a) + biomarker panels) | High | M | PAT003 gap report v3 | **Done** |
 | HIPAA Safe Harbor de-identification server (JSON, DOCX, PDF, VCF, h5ad) | High | M | Stage 0 pipeline | **Done** |
-| Cardiovascular polygenic risk score server | High | M | PAT003 data design | Planned |
+| Cardiovascular polygenic risk score | High | M | PAT003 data design | **Done** (shipped as 3 tools in mcp-cardiometabolic, PGS Catalog) |
+| Lifestyle intervention evidence (literature-based) | Medium | L | PAT003 use case | **Done** (shipped as `get_lifestyle_evidence` in mcp-cardiometabolic) |
 | Longitudinal biomarker tracking server | Medium | M | PAT003 use case | Planned |
-| Lifestyle intervention evidence server (literature-based) | Medium | L | PAT003 use case | Planned |
 
 ## Version history
 
