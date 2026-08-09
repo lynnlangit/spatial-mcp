@@ -82,6 +82,26 @@ The same 20-server architecture runs all three. No disease-specific code changes
 
 ---
 
+## What This Changes for the Patient
+
+A patient can spend months moving between referrals, imaging, repeat evaluations, and denials without reaching a decision. Much of that motion starts at the workup — the test that would have settled the question was never ordered, or the finding that would have opened a door was never generated.
+
+That is the segment this platform addresses. It does not triage patients or route referrals. It makes the analysis behind a decision complete on the first pass, instead of spread across a sequence of visits.
+
+| Where the loop starts | What the platform does | Evidence |
+|---|---|---|
+| **The decisive test was never ordered** | Reports what was *not* tested, and why it would change management | PAT003 — Lp(a), APOE genotype, and CAC score flagged after a "normal" lipid panel and a negative Helix Tier 1 screen ([detail](docs/reference/shared/patient-outcomes.md#pat003)) |
+| **A threshold closed the door** | Re-checks eligibility against current labeling, not only the panel's cutoff | PAT002 — HRD 35 fell below the myChoice CDx 42-point PARP threshold, so olaparib was not offered; OlympiA-based FDA labeling supports germline BRCA2+ as an independent criterion ([detail](docs/reference/shared/patient-outcomes.md#pat002)) |
+| **No hypothesis was ever generated** | Synthesizes genomic, spatial, immune, and perturbation data into investigational paths | PAT001 + PAT002 — 6 investigational hypotheses standard workup did not reach ([detail](docs/reference/shared/patient-outcomes.md)) |
+| **The decision can't survive review** | Every result carries XAI metadata (confidence, evidence grade, counterfactual) behind a clinician APPROVE/REVISE/REJECT gate with an audit trail | [How we validate results →](https://lynnlangit.github.io/precision-medicine-mcp/proof-layers.html) |
+| **Every modality is another handoff** | One orchestrated session replaces a multi-day relay across bioinformatics, pathology, and clinical informatics | An estimated 40 hours of manual multi-modal analysis vs. an estimated 2–5 hours in production ([modeled figures](docs/reference/shared/value-proposition.md)) |
+
+**Fewer tests is also a result.** A CAC score of 0 would support *deferring* statin therapy for PAT003. The same analysis that adds a test can remove one — the goal is the decision, not the volume of workup.
+
+**Scope of the claim.** These are three synthetic patients analyzed end-to-end, not clinical outcomes. Time and cost figures are modeled and pending clinical validation. The platform's contribution is to the quality and completeness of the decision, not to the referral pathway around it.
+
+---
+
 ## Try It
 
 ```bash
