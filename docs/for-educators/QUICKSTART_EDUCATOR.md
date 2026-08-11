@@ -27,7 +27,7 @@ uv sync && python3 -m pytest tests/ -x --tb=short
 
 ## First demo in 10 minutes
 
-1. Open Claude Desktop and confirm the 18 MCP servers are connected.
+1. Open Claude Desktop and confirm the 19 MCP servers are connected.
 2. Open `docs/for-educators/PAT001_walkthrough.ipynb` in JupyterLab or VS Code.
 3. Run all cells. All assertions should pass using DRY_RUN synthetic data.
 4. Compare output values to the table in README.md under "Validated results (PAT001)."

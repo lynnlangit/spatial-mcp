@@ -9,7 +9,7 @@ Three 90-minute lectures covering precision oncology, hands-on analysis, and eth
 **Learning objectives:**
 - Describe the key data modalities in HGSOC precision oncology
 - Explain the Model Context Protocol (MCP) architecture
-- Identify the 18 servers and their roles
+- Identify the 19 servers and their roles
 
 **Outline:**
 

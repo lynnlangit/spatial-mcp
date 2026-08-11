@@ -99,6 +99,8 @@ Each server requires specific environment variables:
 
 All servers are configured with `DRY_RUN=true` by default (synthetic data, no external dependencies). To disable, set the server-specific variable to `false` (e.g., `"FGBIO_DRY_RUN": "false"`).
 
+**Exception — `deidentify` ships with `DEIDENTIFY_DRY_RUN=false`.** A de-identification server returning fabricated entities is a safety failure, not a safe default, so fixture mode must be opted into explicitly. Because it runs live, it needs a real `ANTHROPIC_API_KEY`: replace the `YOUR_ANTHROPIC_API_KEY` placeholder in the config, or set `DEIDENTIFY_DRY_RUN` to `true` if you only want the synthetic fixtures. See [DRY_RUN Mode](../../reference/shared/dry-run-mode.md).
+
 > **Full details:** See [DRY_RUN Mode Guide](../../../docs/reference/shared/dry-run-mode.md) for per-server variables and requirements.
 
 ---

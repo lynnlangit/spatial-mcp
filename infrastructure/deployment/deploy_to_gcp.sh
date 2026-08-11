@@ -103,6 +103,11 @@ SERVERS=(
     "mcp-cibersortx:3014:2Gi:1:CIBERSORTX_LOG_LEVEL=INFO:CIBERSORTX_DRY_RUN=true"
     "mcp-opentargets:3015:2Gi:1:OPENTARGETS_LOG_LEVEL=INFO:OPENTARGETS_DRY_RUN=true"
     "mcp-neoantigen:3016:2Gi:1:NEOANTIGEN_LOG_LEVEL=INFO:NEOANTIGEN_DRY_RUN=true"
+    # Stage 0. DEIDENTIFY_DRY_RUN=false is also the server's own default: a
+    # de-identification server that silently returns fabricated entities is a
+    # safety failure, so fixture mode must be opted into explicitly.
+    # ANTHROPIC_API_KEY comes from ambient service account auth on Cloud Run.
+    "mcp-deidentify:3017:2Gi:1:DEIDENTIFY_LOG_LEVEL=INFO:DEIDENTIFY_DRY_RUN=false"
 )
 
 # Apply deployment profile to SERVERS array.

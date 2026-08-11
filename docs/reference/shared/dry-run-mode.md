@@ -30,7 +30,20 @@ export {SERVER_NAME}_DRY_RUN=true
 | mcp-mocktcga | `MOCKTCGA_DRY_RUN` |
 | mcp-genomic-results | `GENOMIC_RESULTS_DRY_RUN` |
 | mcp-quantum-celltype-fidelity | `QUANTUM_DRY_RUN` |
-| mcp-deidentify | `DEIDENTIFY_DRY_RUN` |
+| mcp-deidentify | `DEIDENTIFY_DRY_RUN` (**defaults to `false`** — see below) |
+
+> **Exception — mcp-deidentify defaults to DRY_RUN off.** Every other server
+> defaults its DRY_RUN variable to `true`. `mcp-deidentify` defaults to `false`,
+> because a de-identification server that silently returns fabricated entities is
+> a safety failure rather than a safe default: a caller who forgets the variable
+> must get a loud error, never synthetic output that reads like a successful
+> de-identification. Fixture mode must be opted into explicitly.
+>
+> DRY_RUN is also all-or-nothing per tool there. `validate_deidentification`
+> cannot run its Haiku red-team layer in DRY_RUN, so instead of letting the other
+> two layers imply a verdict it returns `status="unavailable_in_dry_run"` with
+> `passed=null`. See the
+> [server README](../../../servers/mcp-deidentify/README.md#dry_run-mode).
 
 ## When to Use
 

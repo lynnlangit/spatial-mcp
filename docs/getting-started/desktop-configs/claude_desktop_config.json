@@ -1,5 +1,20 @@
 {
   "mcpServers": {
+    "deidentify": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/lynnlangit/Documents/GitHub/spatial-mcp/servers/mcp-deidentify",
+        "python",
+        "-m",
+        "mcp_deidentify"
+      ],
+      "env": {
+        "DEIDENTIFY_DRY_RUN": "false",
+        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY"
+      }
+    },
     "fgbio": {
       "command": "uv",
       "args": [
