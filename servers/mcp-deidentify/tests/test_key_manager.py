@@ -55,12 +55,13 @@ def test_as_dict_contains_entity_map():
 def test_live_write_and_reload(tmp_path):
     """Live: key written to disk and reloaded should preserve entity_map."""
     import mcp_deidentify.key_manager as km_mod
+    from mcp_deidentify import config
 
-    # Temporarily disable DRY_RUN
-    orig_dry = km_mod.DRY_RUN
-    orig_key_dir = km_mod.KEY_DIR
-    km_mod.DRY_RUN = False
-    km_mod.KEY_DIR = str(tmp_path)
+    # Temporarily disable DRY_RUN (config is now the single source of truth)
+    orig_dry = config.DRY_RUN
+    orig_key_dir = config.KEY_DIR
+    config.DRY_RUN = False
+    config.KEY_DIR = str(tmp_path)
     try:
         km = km_mod.KeyManager("PAT-LIVE-001")
         km.session_key["entity_map"]["Test Name"] = {
@@ -72,5 +73,5 @@ def test_live_write_and_reload(tmp_path):
         km2 = km_mod.KeyManager("PAT-LIVE-001")
         assert "Test Name" in km2.session_key["entity_map"]
     finally:
-        km_mod.DRY_RUN = orig_dry
-        km_mod.KEY_DIR = orig_key_dir
+        config.DRY_RUN = orig_dry
+        config.KEY_DIR = orig_key_dir

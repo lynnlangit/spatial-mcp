@@ -15,9 +15,10 @@ from typing import Dict, List, Optional, Tuple
 
 from mcp_deidentify.engine import extract_entities, replace_entities
 
+from mcp_deidentify import config
+
 logger = logging.getLogger(__name__)
 
-DRY_RUN = os.getenv("DEIDENTIFY_DRY_RUN", "true").lower() == "true"
 OUTPUT_DIR = os.getenv("DEIDENTIFY_OUTPUT_DIR", "data/patients")
 
 # Synthetic de-identified text returned in DRY_RUN mode
@@ -50,7 +51,7 @@ async def deidentify_text_string(
     Returns:
         Tuple of (deidentified_text, entities_found).
     """
-    if DRY_RUN:
+    if config.DRY_RUN:
         from mcp_deidentify.engine import SYNTHETIC_ENTITIES
 
         return _SYNTHETIC_DEID_NOTE, list(SYNTHETIC_ENTITIES)
@@ -84,7 +85,7 @@ async def deidentify_docx_file(
     if output_path is None:
         output_path = _default_output_path(patient_id, docx_path)
 
-    if DRY_RUN:
+    if config.DRY_RUN:
         from mcp_deidentify.engine import SYNTHETIC_ENTITIES
 
         return (

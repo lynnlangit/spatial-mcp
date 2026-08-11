@@ -2,21 +2,33 @@
 
 Key file location:
   {DEIDENTIFY_KEY_DIR}/{patient_id}/{patient_id}_anonymization_key.json
+  DEIDENTIFY_KEY_DIR defaults to <repo_root>/data/patients (absolute, not CWD-relative).
 
 In DRY_RUN mode: no disk I/O. Returns in-memory synthetic key + a synthetic path.
 """
 
 import json
 import logging
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict
 
+from mcp_deidentify import config
+
 logger = logging.getLogger(__name__)
 
-DRY_RUN = os.getenv("DEIDENTIFY_DRY_RUN", "true").lower() == "true"
-KEY_DIR = os.getenv("DEIDENTIFY_KEY_DIR", "data/patients")
+# Anchor the default key directory to the repo root, not the process CWD.
+# The anonymization key is the re-identification map for a patient -- the most
+# sensitive artifact this server produces -- so where it lands must not depend
+# on which directory the server happened to be launched from.
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+_DEFAULT_KEY_DIR = _REPO_ROOT / "data" / "patients"
+
+
+def _key_dir() -> Path:
+    """Configured key directory, or the repo-anchored default."""
+    return Path(config.KEY_DIR) if config.KEY_DIR else _DEFAULT_KEY_DIR
+
 
 # Synthetic key returned in DRY_RUN mode -- no disk reads/writes
 _SYNTHETIC_KEY: Dict = {
@@ -43,7 +55,7 @@ class KeyManager:
         self._key: Dict = {}
         self._path: Path = self._build_path(patient_id)
 
-        if DRY_RUN:
+        if config.DRY_RUN:
             import copy
 
             self._key = copy.deepcopy(_SYNTHETIC_KEY)
@@ -71,7 +83,7 @@ class KeyManager:
 
     def save(self) -> str:
         """Write the current key to disk. No-op in DRY_RUN. Returns key path."""
-        if DRY_RUN:
+        if config.DRY_RUN:
             logger.debug("DRY_RUN: skipping key write to disk")
             return self.path
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -95,7 +107,7 @@ class KeyManager:
 
     @staticmethod
     def _build_path(patient_id: str) -> Path:
-        return Path(KEY_DIR) / patient_id / f"{patient_id}_anonymization_key.json"
+        return _key_dir() / patient_id / f"{patient_id}_anonymization_key.json"
 
     def _load(self) -> None:
         """Load key from disk if it exists, otherwise initialise empty key."""

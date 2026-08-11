@@ -12,7 +12,7 @@ Runs before the 5-stage pipeline. Strips all 18 HIPAA Safe Harbor identifiers fr
 |---|---|
 | `deidentify_json` | De-identify a JSON clinical record. Recursively walks all string leaves, detects PII via Haiku LLM, replaces with deterministic codes (e.g. `Dr. ONC-001`, `FAC-002`). Writes anonymization key to disk. |
 | `deidentify_text` | De-identify plain text (`source_format="txt"`) or a DOCX file (`source_format="docx"`). DOCX is written to `output_path`. |
-| `deidentify_pdf` | Extract and de-identify text from a PDF (page by page). Returns de-identified plain text; does not rewrite the PDF binary. |
+| `deidentify_pdf_text` | Extract and de-identify the **text layer** of a PDF (page by page). Returns de-identified plain text; does not rewrite the PDF binary. Image-only/scanned PDFs have no text layer and return `status="no_text_layer"` rather than an empty result. |
 | `deidentify_genomics_file` | De-identify headers only in VCF (`##` meta lines), h5ad (`.uns` fields), or CNS (`#` comment lines). Data rows are never modified. |
 | `generate_anonymization_key` | Retrieve or initialize the anonymization key for a patient. Safe to call on new or existing patients. |
 | `validate_deidentification` | Three-layer PII audit: (1) Haiku red-team prompt, (2) deterministic regex sweep (SSN, phone, email, dates, MRN, accession patterns), (3) anonymization key reverse lookup. All three must pass for `passed: true`. |
@@ -35,8 +35,9 @@ uv run pytest tests/ -v
 
 | Variable | Default | Description |
 |---|---|---|
-| `DEIDENTIFY_DRY_RUN` | `true` | When `true`, returns synthetic fixture data without calling Haiku. Set to `false` for live de-identification. |
-| `DEIDENTIFY_KEY_DIR` | `data/patients` | Root directory for anonymization key files. Key for PAT004 → `{dir}/PAT004/PAT004_anonymization_key.json` |
+| `DEIDENTIFY_DRY_RUN` | `false` | When `true`, returns synthetic fixture data without calling Haiku. **Defaults to `false`**: for a de-identification server, fabricating output must be opt-in. |
+| `DEIDENTIFY_DATE_POLICY` | `SAFE_HARBOR` | `SAFE_HARBOR` (no date elements except year, 45 CFR 164.514(b)(2)) or `LIMITED_DATA_SET` (full dates retained, 45 CFR 164.514(e), requires a data use agreement). Applied by both the `deidentify_*` tools and `validate_deidentification`. |
+| `DEIDENTIFY_KEY_DIR` | `<repo_root>/data/patients` | Root directory for anonymization key files. Key for PAT004 → `{dir}/PAT004/PAT004_anonymization_key.json`. Absolute by default — not resolved against the process CWD. |
 | `DEIDENTIFY_OUTPUT_DIR` | `data/patients` | Root directory for de-identified DOCX output files. |
 | `ANTHROPIC_API_KEY` | — | Required when `DEIDENTIFY_DRY_RUN=false`. Haiku calls use `claude-haiku-4-5-20251001`. |
 
@@ -93,9 +94,29 @@ Run validate_deidentification on this text for PAT005 and confirm all three laye
 
 ## DRY_RUN Mode
 
-All tools return synthetic fixture data when `DEIDENTIFY_DRY_RUN=true` (the default). No Haiku calls are made and no files are read from or written to disk.
+`DEIDENTIFY_DRY_RUN` defaults to **`false`**. This deliberately diverges from the repo-wide convention of defaulting DRY_RUN on: a de-identification tool that silently returns fabricated entities is a safety failure, not a safe default.
 
-Synthetic output includes `"synthetic_data": true` and `"dry_run": true` in every response.
+When `DEIDENTIFY_DRY_RUN=true`, tools return synthetic fixture data. No Haiku calls are made and no files are read from or written to disk. Such a response is marked three ways, so that code ignoring metadata still cannot consume it by accident:
+
+- `"status": "SYNTHETIC_DRY_RUN"` and `"dry_run": true`
+- every **server-generated** string prefixed `SYNTHETIC:` (caller-supplied echo fields — `patient_id`, `file_type`, `source_format` — are left intact so downstream dispatch keeps working)
+- the usual `_DRY_RUN_WARNING` / `_message` banner
+
+### DRY_RUN is all-or-nothing per tool
+
+`validate_deidentification` cannot run its Haiku red-team layer in DRY_RUN. Rather than let the remaining two layers imply a verdict, it returns:
+
+```json
+{
+  "status": "unavailable_in_dry_run",
+  "passed": null,
+  "confidence": null,
+  "layers_skipped": ["haiku_red_team"],
+  "residual_pii_found": [ ... ]
+}
+```
+
+`passed` is **never** `true` when any layer was skipped. Hits from the layers that did run are still reported — they are real findings — but their absence does not mean the content is clean. The same shape (`status: "incomplete"`) is returned if the Haiku call fails at runtime.
 
 ---
 

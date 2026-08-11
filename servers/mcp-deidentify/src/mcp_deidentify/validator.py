@@ -1,23 +1,27 @@
 """Three-layer de-identification validator for mcp-deidentify.
 
 Layer 1 -- Haiku red-team:    Aggressive Haiku prompt that assumes PII is present.
-Layer 2 -- Regex sweep:       Deterministic structural pattern matching (9 patterns).
+Layer 2 -- Regex sweep:       Deterministic structural pattern matching.
 Layer 3 -- Key reverse lookup: Checks that no known entity_text from the anonymization
                               key appears verbatim in the content.
 
-All three layers must pass independently for the overall result to be passed=True.
+All three layers must RUN and pass independently for passed=True.
 
-DRY_RUN=true: Haiku is not called; regex and key lookup run on synthetic content.
+If any layer could not run -- because DRY_RUN is on, or because the Haiku call
+failed -- this module returns ``status`` of "unavailable_in_dry_run" or
+"incomplete" with ``passed: None``. It never reports a pass on the strength of
+the layers that happened to execute. A validator that silently grades itself on
+two of three layers is worse than no validator, because the caller cannot tell
+the difference between "clean" and "not actually checked".
 """
 
 import logging
-import os
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from mcp_deidentify import config
 
 logger = logging.getLogger(__name__)
-
-DRY_RUN = os.getenv("DEIDENTIFY_DRY_RUN", "true").lower() == "true"
 
 # ---------------------------------------------------------------------------
 # Layer 2 -- Regex patterns for structural PII
@@ -38,10 +42,21 @@ _REGEX_PATTERNS: List[Tuple[str, str]] = [
 _COMPILED = [(name, re.compile(pat, re.IGNORECASE)) for name, pat in _REGEX_PATTERNS]
 
 
+def _active_patterns() -> List[Tuple[str, Any]]:
+    """Return the patterns that apply under the configured date policy.
+
+    Under LIMITED_DATA_SET, full dates are permitted by 45 CFR 164.514(e), so
+    flagging them as residual PII would contradict the de-identifier.
+    """
+    if config.DATE_POLICY == config.LIMITED_DATA_SET:
+        return [(n, p) for n, p in _COMPILED if not n.startswith("DATE_")]
+    return _COMPILED
+
+
 def _run_regex_layer(content: str) -> Tuple[bool, List[Dict]]:
-    """Run all regex patterns against content. Returns (passed, hits)."""
+    """Run the active regex patterns against content. Returns (passed, hits)."""
     hits = []
-    for name, pattern in _COMPILED:
+    for name, pattern in _active_patterns():
         for m in pattern.finditer(content):
             hits.append(
                 {
@@ -81,21 +96,34 @@ def _run_key_lookup_layer(content: str, session_key: Dict) -> Tuple[bool, List[D
 # Layer 1 -- Haiku red-team
 # ---------------------------------------------------------------------------
 
+LAYER_RAN = "ran"
+LAYER_SKIPPED_DRY_RUN = "skipped_dry_run"
+LAYER_ERROR = "error"
 
-async def _run_haiku_layer(content: str) -> Tuple[bool, List[Dict]]:
-    """Call Haiku with red-team prompt. In DRY_RUN always returns passed=True."""
-    if DRY_RUN:
-        return True, []
 
-    from mcp_deidentify.engine import extract_entities
+async def _run_haiku_layer(content: str) -> Tuple[str, Optional[bool], List[Dict]]:
+    """Call Haiku with the red-team prompt.
 
-    entities = await extract_entities(content, red_team=True)
+    Returns (status, passed, hits). ``passed`` is None whenever the layer did not
+    actually run -- this layer must never manufacture a pass it did not earn.
+    """
+    if config.DRY_RUN:
+        return LAYER_SKIPPED_DRY_RUN, None, []
+
+    try:
+        from mcp_deidentify.engine import extract_entities
+
+        entities = await extract_entities(content, red_team=True)
+    except Exception as e:  # noqa: BLE001 - any failure must degrade to "did not run"
+        logger.error("Haiku red-team layer failed, reporting as not-run: %s", e)
+        return LAYER_ERROR, None, []
+
     hits = [
         {"layer": "haiku_red_team", **ent}
         for ent in entities
         if ent.get("entity_type", "UNKNOWN") != "UNKNOWN"
     ]
-    return len(hits) == 0, hits
+    return LAYER_RAN, len(hits) == 0, hits
 
 
 # ---------------------------------------------------------------------------
@@ -110,37 +138,90 @@ async def validate(content: str, session_key: Dict) -> Dict[str, Any]:
         content:     The de-identified text to audit.
         session_key: The anonymization key dict for this patient (used in Layer 3).
 
-    Returns:
+    Returns one of two shapes.
+
+    All three layers ran::
+
         {
-          "passed": <bool>,          # True only if ALL three layers pass
-          "confidence": <float>,     # 1.0 = all pass, 0.67 = one fail, etc.
-          "layers": {
-            "haiku_red_team":    {"passed": <bool>, "hits": [...]},
-            "regex_sweep":       {"passed": <bool>, "hits": [...]},
-            "key_reverse_lookup":{"passed": <bool>, "hits": [...]},
-          },
-          "residual_pii_found": [...]   # flat list of all hits across all layers
+          "status": "complete",
+          "passed": <bool>,          # True only if ALL three layers passed
+          "confidence": <float>,     # 1.0 = all pass, 0.6667 = one fail
+          "layers": {...},           # per-layer status + passed + hits
+          "layers_skipped": [],
+          "residual_pii_found": [...],
+          "date_policy": <str>,
+        }
+
+    One or more layers could not run::
+
+        {
+          "status": "unavailable_in_dry_run" | "incomplete",
+          "passed": None,            # never a verdict
+          "confidence": None,
+          "layers": {...},
+          "layers_skipped": ["haiku_red_team"],
+          "residual_pii_found": [...],   # hits from the layers that DID run
+          "date_policy": <str>,
+          "_VALIDATION_WARNING": "...",
         }
     """
-    # Run regex and key lookup synchronously (no I/O)
     regex_passed, regex_hits = _run_regex_layer(content)
     key_passed, key_hits = _run_key_lookup_layer(content, session_key)
+    haiku_status, haiku_passed, haiku_hits = await _run_haiku_layer(content)
 
-    # Run Haiku layer (async, may be no-op in DRY_RUN)
-    haiku_passed, haiku_hits = await _run_haiku_layer(content)
+    layers = {
+        "haiku_red_team": {
+            "status": haiku_status,
+            "passed": haiku_passed,
+            "hits": haiku_hits,
+        },
+        "regex_sweep": {"status": LAYER_RAN, "passed": regex_passed, "hits": regex_hits},
+        "key_reverse_lookup": {
+            "status": LAYER_RAN,
+            "passed": key_passed,
+            "hits": key_hits,
+        },
+    }
 
     all_hits = haiku_hits + regex_hits + key_hits
-    layers_passed = [haiku_passed, regex_passed, key_passed]
-    overall_passed = all(layers_passed)
-    confidence = round(sum(layers_passed) / 3, 4)
+    skipped = [name for name, layer in layers.items() if layer["status"] != LAYER_RAN]
 
+    if skipped:
+        if haiku_status == LAYER_SKIPPED_DRY_RUN:
+            status = "unavailable_in_dry_run"
+            reason = (
+                "DEIDENTIFY_DRY_RUN=true, so the Haiku red-team layer did not run. "
+                "No validation verdict is available. Set DEIDENTIFY_DRY_RUN=false "
+                "and provide ANTHROPIC_API_KEY to validate content."
+            )
+        else:
+            status = "incomplete"
+            reason = (
+                "One or more validation layers failed to execute. No validation "
+                "verdict is available. See server logs for the underlying error."
+            )
+        return {
+            "status": status,
+            "passed": None,
+            "confidence": None,
+            "layers": layers,
+            "layers_skipped": skipped,
+            "residual_pii_found": all_hits,
+            "date_policy": config.DATE_POLICY,
+            "_VALIDATION_WARNING": (
+                f"NOT VALIDATED - {reason} Any hits listed in residual_pii_found "
+                f"are real findings from the layers that did run, but their absence "
+                f"does NOT indicate the content is clean."
+            ),
+        }
+
+    layers_passed = [haiku_passed, regex_passed, key_passed]
     return {
-        "passed": overall_passed,
-        "confidence": confidence,
-        "layers": {
-            "haiku_red_team": {"passed": haiku_passed, "hits": haiku_hits},
-            "regex_sweep": {"passed": regex_passed, "hits": regex_hits},
-            "key_reverse_lookup": {"passed": key_passed, "hits": key_hits},
-        },
+        "status": "complete",
+        "passed": all(layers_passed),
+        "confidence": round(sum(1 for p in layers_passed if p) / 3, 4),
+        "layers": layers,
+        "layers_skipped": [],
         "residual_pii_found": all_hits,
+        "date_policy": config.DATE_POLICY,
     }

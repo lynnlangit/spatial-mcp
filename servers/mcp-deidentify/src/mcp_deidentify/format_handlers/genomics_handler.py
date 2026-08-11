@@ -11,16 +11,16 @@ DRY_RUN=true: no file I/O; returns synthetic pre-built output.
 """
 
 import logging
-import os
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 from mcp_deidentify.engine import extract_entities, replace_entities
 
+from mcp_deidentify import config
+
 logger = logging.getLogger(__name__)
 
-DRY_RUN = os.getenv("DEIDENTIFY_DRY_RUN", "true").lower() == "true"
 
 # ---------------------------------------------------------------------------
 # DRY_RUN synthetic outputs
@@ -66,7 +66,7 @@ async def deidentify_vcf(
 
     Returns (deidentified_content, fields_modified, entities).
     """
-    if DRY_RUN:
+    if config.DRY_RUN:
         from mcp_deidentify.engine import SYNTHETIC_ENTITIES
 
         return _SYNTHETIC_VCF_HEADER, ["fileDate", "source", "SAMPLE"], list(SYNTHETIC_ENTITIES)
@@ -114,7 +114,7 @@ async def deidentify_h5ad(
 
     Returns (deidentified_uns_dict, fields_modified, entities_found).
     """
-    if DRY_RUN:
+    if config.DRY_RUN:
         from mcp_deidentify.engine import SYNTHETIC_ENTITIES
 
         return _SYNTHETIC_H5AD_UNS, ["patient_id", "accession"], list(SYNTHETIC_ENTITIES)
@@ -154,7 +154,7 @@ async def deidentify_cns(
 
     Returns (deidentified_content, fields_modified, entities_found).
     """
-    if DRY_RUN:
+    if config.DRY_RUN:
         from mcp_deidentify.engine import SYNTHETIC_ENTITIES
 
         return _SYNTHETIC_CNS_HEADER, ["sample", "source"], list(SYNTHETIC_ENTITIES)

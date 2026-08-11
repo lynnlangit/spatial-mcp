@@ -87,9 +87,11 @@ async def test_deidentify_text_docx_dry_run():
 
 @pytest.mark.asyncio
 async def test_deidentify_pdf_dry_run():
-    from mcp_deidentify.server import deidentify_pdf
+    from mcp_deidentify.server import deidentify_pdf_text
 
-    result = await deidentify_pdf(pdf_path="tests/fixtures/synthetic.pdf", patient_id="PAT-TEST")
+    result = await deidentify_pdf_text(
+        pdf_path="tests/fixtures/synthetic.pdf", patient_id="PAT-TEST"
+    )
     assert "extracted_text" in result
     assert "deidentified_text" in result
     assert "page_count" in result
@@ -148,10 +150,13 @@ async def test_validate_deidentification_clean_text():
         content="GNA11 R183C mutation detected. Treatment: Trametinib.",
         patient_id="PAT-TEST",
     )
+    assert "status" in result
     assert "passed" in result
     assert "confidence" in result
     assert "layers" in result
-    assert result["passed"] is True
+    # DRY_RUN cannot yield a verdict: the Haiku red-team layer did not run.
+    assert result["status"] == "unavailable_in_dry_run"
+    assert result["passed"] is None
     assert result["dry_run"] is True
 
 
@@ -163,9 +168,11 @@ async def test_validate_deidentification_ssn_fails():
         content="Patient SSN: 123-45-6789",
         patient_id="PAT-TEST",
     )
-    assert result["passed"] is False
-    assert result["confidence"] < 1.0
+    assert result["passed"] is not True
     assert len(result["residual_pii_found"]) > 0
+    # confidence is None in DRY_RUN: a score computed from 2 of 3 layers would
+    # imply a completeness the run does not have.
+    assert result["confidence"] is None
 
 
 @pytest.mark.asyncio
@@ -174,7 +181,7 @@ async def test_all_six_tools_no_longer_raise():
     from mcp_deidentify.server import (
         deidentify_genomics_file,
         deidentify_json,
-        deidentify_pdf,
+        deidentify_pdf_text,
         deidentify_text,
         generate_anonymization_key,
         validate_deidentification,
@@ -187,12 +194,10 @@ async def test_all_six_tools_no_longer_raise():
     r2 = await deidentify_text(text="some note", patient_id="PAT-TEST")
     assert isinstance(r2, dict)
 
-    r3 = await deidentify_pdf(pdf_path="any.pdf", patient_id="PAT-TEST")
+    r3 = await deidentify_pdf_text(pdf_path="any.pdf", patient_id="PAT-TEST")
     assert isinstance(r3, dict)
 
-    r4 = await deidentify_genomics_file(
-        file_path="any.vcf", patient_id="PAT-TEST", file_type="vcf"
-    )
+    r4 = await deidentify_genomics_file(file_path="any.vcf", patient_id="PAT-TEST", file_type="vcf")
     assert isinstance(r4, dict)
 
     r5 = await generate_anonymization_key(patient_id="PAT-TEST")

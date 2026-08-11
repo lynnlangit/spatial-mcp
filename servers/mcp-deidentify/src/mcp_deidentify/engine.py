@@ -1,18 +1,18 @@
 """Haiku-based PII extraction engine for mcp-deidentify.
 
-DRY_RUN=true  -> returns synthetic fixture (no Haiku calls, no API key needed)
-DRY_RUN=false -> calls claude-haiku-4-5-20251001 via Anthropic SDK
+DEIDENTIFY_DRY_RUN=true  -> returns synthetic fixture (no Haiku calls, no API key)
+DEIDENTIFY_DRY_RUN=false -> calls claude-haiku-4-5-20251001 via Anthropic SDK (default)
 """
 
 import asyncio
 import json
 import logging
-import os
 from typing import Any, Dict, List
+
+from mcp_deidentify import config
 
 logger = logging.getLogger(__name__)
 
-DRY_RUN = os.getenv("DEIDENTIFY_DRY_RUN", "true").lower() == "true"
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 MAX_CHUNK_CHARS = 6000  # ~1800 tokens at 3.5 chars/token
 OVERLAP_CHARS = 350  # ~100 tokens overlap for cross-boundary entities
@@ -201,7 +201,7 @@ async def extract_entities(text: str, red_team: bool = False) -> List[Dict]:
     Returns:
         List of entity dicts with keys: text, entity_type, start, end.
     """
-    if DRY_RUN:
+    if config.DRY_RUN:
         logger.info("DEIDENTIFY_DRY_RUN=true: returning synthetic entity fixture")
         return SYNTHETIC_ENTITIES
 

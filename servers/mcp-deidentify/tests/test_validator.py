@@ -8,7 +8,6 @@ os.environ["DEIDENTIFY_DRY_RUN"] = "true"
 
 from mcp_deidentify.validator import _run_key_lookup_layer, _run_regex_layer, validate
 
-
 # --- Layer 2: regex tests ---
 
 
@@ -83,9 +82,7 @@ def test_key_lookup_detects_verbatim_entity():
 
 def test_key_lookup_case_insensitive():
     session_key = {
-        "entity_map": {
-            "CITY GENERAL HOSPITAL": {"code": "FAC-001", "entity_type": "FACILITY_NAME"}
-        }
+        "entity_map": {"CITY GENERAL HOSPITAL": {"code": "FAC-001", "entity_type": "FACILITY_NAME"}}
     }
     passed, hits = _run_key_lookup_layer("Seen at city general hospital.", session_key)
     assert passed is False
@@ -94,9 +91,7 @@ def test_key_lookup_case_insensitive():
 def test_key_lookup_skips_short_entities():
     """Entities shorter than 4 chars should not trigger lookup hits."""
     session_key = {
-        "entity_map": {
-            "Jo": {"code": "PAT-NAME-001", "entity_type": "PERSON_NAME_PATIENT"}
-        }
+        "entity_map": {"Jo": {"code": "PAT-NAME-001", "entity_type": "PERSON_NAME_PATIENT"}}
     }
     passed, hits = _run_key_lookup_layer("Patient Jo was seen.", session_key)
     assert passed is True
@@ -106,22 +101,28 @@ def test_key_lookup_skips_short_entities():
 
 
 @pytest.mark.asyncio
-async def test_validate_clean_text_passes_all_layers():
+async def test_validate_clean_text_yields_no_verdict_in_dry_run():
+    """DRY_RUN cannot produce a pass: the Haiku layer never ran.
+
+    This previously asserted passed=True at confidence 1.0, which is exactly the
+    rubber-stamp the validator must not issue.
+    """
     session_key = {"entity_map": {}}
     result = await validate("The tumor showed GNA11 R183C mutation.", session_key)
-    assert result["passed"] is True
-    assert result["confidence"] == 1.0
+    assert result["status"] == "unavailable_in_dry_run"
+    assert result["passed"] is None
+    assert result["confidence"] is None
     assert result["layers"]["regex_sweep"]["passed"] is True
     assert result["layers"]["key_reverse_lookup"]["passed"] is True
-    # Haiku layer is skipped in DRY_RUN -> always passes
-    assert result["layers"]["haiku_red_team"]["passed"] is True
+    assert result["layers"]["haiku_red_team"]["passed"] is None
 
 
 @pytest.mark.asyncio
 async def test_validate_with_ssn_fails():
     session_key = {"entity_map": {}}
     result = await validate("Patient SSN: 123-45-6789 confirmed.", session_key)
-    assert result["passed"] is False
+    # No verdict in DRY_RUN, but hits from layers that DID run are still reported.
+    assert result["passed"] is not True
     assert result["layers"]["regex_sweep"]["passed"] is False
     assert len(result["residual_pii_found"]) > 0
 
@@ -134,7 +135,7 @@ async def test_validate_with_key_hit_fails():
         }
     }
     result = await validate("Patient Jane Doe Smith is enrolled.", session_key)
-    assert result["passed"] is False
+    assert result["passed"] is not True
     assert result["layers"]["key_reverse_lookup"]["passed"] is False
 
 
@@ -142,8 +143,11 @@ async def test_validate_with_key_hit_fails():
 async def test_validate_result_schema():
     session_key = {"entity_map": {}}
     result = await validate("clean text", session_key)
+    assert "status" in result
     assert "passed" in result
     assert "confidence" in result
     assert "layers" in result
+    assert "layers_skipped" in result
+    assert "date_policy" in result
     assert "residual_pii_found" in result
     assert set(result["layers"].keys()) == {"haiku_red_team", "regex_sweep", "key_reverse_lookup"}

@@ -1,11 +1,14 @@
 """MCP De-identification server -- Stage 0 preprocessing for Precision Medicine MCP.
 
-Phase 1: Engine and code generator only. Format handler tools are stubs.
-Set DEIDENTIFY_DRY_RUN=false and ANTHROPIC_API_KEY to enable live Haiku calls.
+Runs live by default. DEIDENTIFY_DRY_RUN=true returns synthetic fixtures instead
+of de-identifying anything; every field of such a response is prefixed
+"SYNTHETIC:" and carries status="SYNTHETIC_DRY_RUN" so that downstream code
+which ignores metadata cannot mistake fixture output for a real result.
+
+Set ANTHROPIC_API_KEY for the Haiku calls. See config.py for DEIDENTIFY_DATE_POLICY.
 """
 
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -23,11 +26,46 @@ if str(_repo_root / "shared") not in sys.path:
 from common.dry_run import add_dry_run_warning as _add_dry_run_warning  # noqa: E402
 from common.transport import run_server as _run_server  # noqa: E402
 
-DRY_RUN = os.getenv("DEIDENTIFY_DRY_RUN", "true").lower() == "true"
+from mcp_deidentify import config  # noqa: E402
+
+_SYNTHETIC_PREFIX = "SYNTHETIC:"
+
+# Fields the caller supplied and we merely echo back. These are not fabricated,
+# and prefixing them would corrupt legitimate downstream dispatch -- e.g. code
+# that switches on file_type would stop recognising "vcf".
+_ECHO_KEYS = frozenset({"patient_id", "file_type", "source_format"})
+
+
+def _mark_synthetic(value: Any) -> Any:
+    """Recursively prefix server-generated strings in a DRY_RUN payload.
+
+    Metadata-only warnings are easy to ignore: a caller that reads
+    result["deidentified_text"] and nothing else has no way to know the text was
+    fabricated. Prefixing the values themselves makes fixture data impossible to
+    consume by accident.
+
+    Keys beginning with "_" (the warning fields) and _ECHO_KEYS are left alone.
+    """
+    if isinstance(value, str):
+        return f"{_SYNTHETIC_PREFIX} {value}"
+    if isinstance(value, list):
+        return [_mark_synthetic(v) for v in value]
+    if isinstance(value, dict):
+        return {
+            k: (v if (k.startswith("_") or k in _ECHO_KEYS) else _mark_synthetic(v))
+            for k, v in value.items()
+        }
+    return value
 
 
 def add_dry_run_warning(result: Dict) -> Dict:
-    return _add_dry_run_warning(result, dry_run=DRY_RUN, env_var="DEIDENTIFY_DRY_RUN")
+    """Tag a result with DRY_RUN metadata, and in DRY_RUN make it unmissable."""
+    if not config.DRY_RUN:
+        return result
+    marked = _mark_synthetic(result)
+    marked["status"] = "SYNTHETIC_DRY_RUN"
+    marked["dry_run"] = True
+    return _add_dry_run_warning(marked, dry_run=True, env_var="DEIDENTIFY_DRY_RUN")
 
 
 # ---------------------------------------------------------------------------
@@ -100,8 +138,8 @@ async def deidentify_json(
             "key_path": key_path,
             "entities_found": entities,
             "entity_count": len(entities),
-            "synthetic_data": DRY_RUN,
-            "dry_run": DRY_RUN,
+            "synthetic_data": config.DRY_RUN,
+            "dry_run": config.DRY_RUN,
         }
     )
 
@@ -162,7 +200,7 @@ async def deidentify_text(
                 "entities_found": entities,
                 "entity_count": len(entities),
                 "source_format": source_format,
-                "dry_run": DRY_RUN,
+                "dry_run": config.DRY_RUN,
             }
         )
     else:
@@ -178,21 +216,23 @@ async def deidentify_text(
                 "entities_found": entities,
                 "entity_count": len(entities),
                 "source_format": source_format,
-                "dry_run": DRY_RUN,
+                "dry_run": config.DRY_RUN,
             }
         )
 
 
 @mcp.tool()
-async def deidentify_pdf(
+async def deidentify_pdf_text(
     pdf_path: str,
     patient_id: str,
 ) -> Dict[str, Any]:
-    """Extract and de-identify a PDF document (Stage 0 preprocessing).
+    """Extract and de-identify the TEXT LAYER of a PDF (Stage 0 preprocessing).
 
-    Extracts text from each page via pdfplumber and de-identifies it using
-    Haiku (or synthetic fixture in DRY_RUN). Returns de-identified plain text;
-    does not produce a de-identified PDF file.
+    This tool reads the text layer via pdfplumber and de-identifies it. It does
+    NOT produce a redacted PDF file, and it cannot see text that exists only as
+    pixels. Scanned or image-only PDFs -- which is what most clinical documents
+    are -- have no text layer, and are reported as status="no_text_layer" rather
+    than silently returning zero entities.
 
     Args:
         pdf_path:   Path to the source PDF file.
@@ -200,10 +240,12 @@ async def deidentify_pdf(
 
     Returns:
         {
+          "status": "ok" | "no_text_layer",
           "extracted_text": <str>,
           "deidentified_text": <str>,
           "key_path": <str>,
           "page_count": <int>,
+          "pages_without_text": [<int>, ...],   # 1-indexed; NOT de-identified
           "entities_found": [...],
           "entity_count": <int>,
           "dry_run": <bool>
@@ -213,22 +255,24 @@ async def deidentify_pdf(
     from mcp_deidentify.key_manager import KeyManager
 
     km = KeyManager(patient_id)
-    raw_text, deid_text, page_count, entities = await deidentify_pdf_file(
+    res = await deidentify_pdf_file(
         pdf_path=pdf_path, patient_id=patient_id, session_key=km.session_key
     )
-    key_path = km.save()
 
-    return add_dry_run_warning(
-        {
-            "extracted_text": raw_text,
-            "deidentified_text": deid_text,
-            "key_path": key_path,
-            "page_count": page_count,
-            "entities_found": entities,
-            "entity_count": len(entities),
-            "dry_run": DRY_RUN,
-        }
-    )
+    payload: Dict[str, Any] = {
+        "status": res["status"],
+        "extracted_text": res["raw_text"],
+        "deidentified_text": res["deidentified_text"],
+        "key_path": km.save() if res["status"] == "ok" else None,
+        "page_count": res["page_count"],
+        "pages_without_text": res["pages_without_text"],
+        "entities_found": res["entities_found"],
+        "entity_count": len(res["entities_found"]),
+        "dry_run": config.DRY_RUN,
+    }
+    if "error" in res:
+        payload["error"] = res["error"]
+    return add_dry_run_warning(payload)
 
 
 @mcp.tool()
@@ -283,7 +327,7 @@ async def deidentify_genomics_file(
             "fields_modified": fields_modified,
             "entity_count": len(entities),
             "file_type": file_type,
-            "dry_run": DRY_RUN,
+            "dry_run": config.DRY_RUN,
         }
     )
 
@@ -322,7 +366,7 @@ async def generate_anonymization_key(patient_id: str) -> Dict[str, Any]:
             "code_map": clean.get("entity_map", {}),
             "entry_count": len(clean.get("entity_map", {})),
             "generated_at": clean.get("generated_at", ""),
-            "dry_run": DRY_RUN,
+            "dry_run": config.DRY_RUN,
         }
     )
 
@@ -335,14 +379,16 @@ async def validate_deidentification(
     """Three-layer validation that de-identified content contains no residual PII.
 
     Runs three independent layers:
-      Layer 1 -- Haiku red-team: aggressive Haiku prompt (skipped in DRY_RUN).
+      Layer 1 -- Haiku red-team: aggressive Haiku prompt.
       Layer 2 -- Regex sweep: 9 structural patterns (SSN, phone, email, dates,
                              MRN, accession numbers).
       Layer 3 -- Key reverse lookup: checks that no original entity text from the
                              patient's anonymization key appears verbatim.
 
-    All three layers must pass for passed=True. A single hit in any layer
-    returns passed=False regardless of the other layers.
+    All three layers must RUN and pass for passed=True. If any layer could not
+    run -- DRY_RUN is on, or the Haiku call failed -- this returns
+    status="unavailable_in_dry_run" (or "incomplete") with passed=None. It never
+    reports a verdict based only on the layers that happened to execute.
 
     Args:
         content:    The de-identified text to audit.
@@ -351,10 +397,13 @@ async def validate_deidentification(
 
     Returns:
         {
-          "passed": <bool>,
-          "confidence": <float>,     # 1.0 = clean, 0.67 = one layer failed, 0.0 = all failed
-          "layers": { ... },         # per-layer passed + hits
+          "status": "complete" | "unavailable_in_dry_run" | "incomplete",
+          "passed": <bool | None>,   # None whenever any layer was skipped
+          "confidence": <float | None>,
+          "layers": { ... },         # per-layer status + passed + hits
+          "layers_skipped": [...],
           "residual_pii_found": [...],
+          "date_policy": <str>,
           "patient_id": <str>,
           "dry_run": <bool>
         }
@@ -365,8 +414,14 @@ async def validate_deidentification(
     km = KeyManager(patient_id)
     result = await validate(content=content, session_key=km.session_key)
     result["patient_id"] = patient_id
-    result["dry_run"] = DRY_RUN
-    return add_dry_run_warning(result)
+    result["dry_run"] = config.DRY_RUN
+
+    # add_dry_run_warning() would overwrite status with SYNTHETIC_DRY_RUN and
+    # prefix every field. For this tool the validator's own
+    # status="unavailable_in_dry_run" is the more precise signal, so preserve it.
+    if config.DRY_RUN:
+        result["_DRY_RUN_WARNING"] = "NOT VALIDATED - no verdict available in DRY_RUN"
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -375,7 +430,12 @@ async def validate_deidentification(
 
 
 def main() -> None:
-    _run_server(mcp, server_name="mcp-deidentify", dry_run=DRY_RUN, env_var="DEIDENTIFY_DRY_RUN")
+    _run_server(
+        mcp,
+        server_name="mcp-deidentify",
+        dry_run=config.DRY_RUN,
+        env_var="DEIDENTIFY_DRY_RUN",
+    )
 
 
 if __name__ == "__main__":
