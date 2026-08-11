@@ -80,6 +80,15 @@ done
 # Server configurations with resource requirements
 # Format: "name:port:memory:cpu:env-vars:dry-run-flag"
 #
+# The port field is documentation only -- Cloud Run assigns each service its own
+# URL and injects $PORT, and this script never passes --port. Keep it in sync
+# with the server's own Dockerfile (ENV MCP_PORT / EXPOSE) so the two do not
+# drift; a value here that matches nothing in the server is a bug in this list,
+# not a deployment failure.
+#
+# Every server listed here MUST have a Dockerfile: deploy_server() aborts with
+# "Dockerfile not found" otherwise.
+#
 # Profile notes:
 #   - mcp-mockepic / mcp-mocktcga are development-only (synthetic data)
 #   - mcp-epic is production-only (real Epic FHIR R4 sandbox / hospital)
@@ -94,8 +103,8 @@ SERVERS=(
     "mcp-deepcell:3007:2Gi:1:DEEPCELL_LOG_LEVEL=INFO:DEEPCELL_DRY_RUN=true"
     "mcp-mockepic:3008:2Gi:1:EPIC_LOG_LEVEL=INFO:DEIDENTIFY_ENABLED=true"
     "mcp-epic:3008:2Gi:1:EPIC_LOG_LEVEL=INFO:DEIDENTIFY_ENABLED=true"
-    "mcp-perturbation:3009:4Gi:2:PERTURBATION_LOG_LEVEL=INFO:PERTURBATION_DRY_RUN=false"
-    "mcp-quantum-celltype-fidelity:3010:2Gi:2:QUANTUM_BACKEND=cpu:QUANTUM_LOG_LEVEL=INFO"
+    "mcp-perturbation:8080:4Gi:2:PERTURBATION_LOG_LEVEL=INFO:PERTURBATION_DRY_RUN=false"
+    "mcp-quantum-celltype-fidelity:8080:2Gi:2:QUANTUM_BACKEND=cpu:QUANTUM_LOG_LEVEL=INFO"
     "mcp-patient-report:3011:2Gi:1:PATIENT_REPORT_LOG_LEVEL=INFO:PATIENT_REPORT_DRY_RUN=false"
     "mcp-genomic-results:3012:2Gi:1:GENOMIC_RESULTS_LOG_LEVEL=INFO:GENOMIC_RESULTS_DRY_RUN=false"
     "mcp-cell-classify:3009:2Gi:1:CELL_CLASSIFY_LOG_LEVEL=INFO:CELL_CLASSIFY_DRY_RUN=true"
@@ -108,6 +117,7 @@ SERVERS=(
     # safety failure, so fixture mode must be opted into explicitly.
     # ANTHROPIC_API_KEY comes from ambient service account auth on Cloud Run.
     "mcp-deidentify:3017:2Gi:1:DEIDENTIFY_LOG_LEVEL=INFO:DEIDENTIFY_DRY_RUN=false"
+    "mcp-cardiometabolic:3018:2Gi:1:CARDIOMETABOLIC_LOG_LEVEL=INFO:CARDIOMETABOLIC_DRY_RUN=false"
 )
 
 # Apply deployment profile to SERVERS array.
