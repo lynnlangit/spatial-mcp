@@ -13,14 +13,14 @@ PatientThree validates the platform's preventive health capabilities beyond onco
 **Patient:** Synthetic, 67F post-menopausal
 **Key profile:** Controlled hypertension (lisinopril 5 mg), BMI 26.4, bilateral family history of CVD (father MI at 61, mother stroke at 69)
 **Genetic screen:** Tier 1 population screen NEGATIVE (FH, HBOC, Lynch all ruled out)
-**Risk category:** Intermediate (Reynolds 14.2%, Framingham 10.0%, ASCVD 10.3%)
+**Risk category:** Intermediate (Reynolds 14.3%, Framingham 12.0%, ASCVD 10.3%)
 
 ### Key Results
 
 | Metric | Value | Server |
 |--------|-------|--------|
-| Reynolds Risk Score | 14.2% (intermediate) | mcp-cardiometabolic |
-| Framingham 10-year risk | 10.0% | mcp-cardiometabolic |
+| Reynolds Risk Score | 14.3% (intermediate) | mcp-cardiometabolic |
+| Framingham 10-year risk | 12.0% | mcp-cardiometabolic |
 | ASCVD 10-year risk | 10.3% | mcp-cardiometabolic |
 | hsCRP | 1.8 mg/L (moderate) | mcp-cardiometabolic |
 | LDL | 118 mg/dL | mcp-cardiometabolic |

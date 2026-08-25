@@ -61,17 +61,22 @@ PAT003 = {
     "cvd_risk_genes": ["APOE", "LDLR", "ACE", "PCSK9", "CDKN2A", "CDKN2B", "LPA"],
 
     # --- Estimated risk scores (for verification) ---
-    "framingham_10yr_risk_percent": 10.0,   # computed by cardiometabolic server
+    # Verified against calculate_cvd_risk_scores() on 2026-08-25. The server is
+    # canonical; these values are transcribed from it, not estimated.
+    "framingham_10yr_risk_percent": 12.0,   # computed by cardiometabolic server
     "ascvd_10yr_risk_percent": 10.3,        # computed by cardiometabolic server
-    "reynolds_risk_score_percent": 14.2,    # Reynolds (includes CRP + family hx)
+    "reynolds_risk_score_percent": 14.3,    # Reynolds (includes CRP + family hx)
     # Risk score notes:
-    # Reynolds 14.2% — primary score; validated specifically in women (WHS 2007);
-    #   incorporates hsCRP and family history; actual computed = 14.3% (delta=0.1%)
-    # Framingham 10.0% — point-based lookup table; original estimate was 12.4%
-    #   (pre-build); point rounding accounts for difference; intermediate risk confirmed
-    # ASCVD 10.3% — PCE equation; original estimate was 11.8% (pre-build);
-    #   all three scores confirm intermediate risk category (7.5-20%)
-    # All three scores agree: PAT003 is intermediate risk — clinical conclusion unchanged
+    # Reynolds 14.3% — primary score; validated specifically in women (WHS 2007);
+    #   incorporates hsCRP and family history
+    # Framingham 12.0% — point-based lookup table (13 points)
+    # ASCVD 10.3% — PCE equation
+    # All three scores agree: PAT003 is intermediate risk (7.5-20%)
+    #
+    # This block previously held Reynolds 14.2 and Framingham 10.0, carrying a
+    # comment that acknowledged "actual computed = 14.3%". No test asserted these
+    # values, so the drift from the server went unnoticed. Doc-audit check C could
+    # not catch it either: it skipped the whole docs/ and tests/ trees.
 
     # --- Preventive health questions this profile should answer ---
     "clinical_questions": [

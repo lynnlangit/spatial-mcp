@@ -35,8 +35,8 @@ You are conducting a preventive cardiovascular health assessment for PAT003, a 6
 - Glucose/HbA1c — pre-diabetic range
 
 ### Risk Scores (all confirm intermediate risk, 7.5-20%)
-- **Reynolds Risk Score:** ~14.2% (primary; validated in women, incorporates hsCRP + family history)
-- **Framingham 10-year risk:** ~10.0%
+- **Reynolds Risk Score:** ~14.3% (primary; validated in women, incorporates hsCRP + family history)
+- **Framingham 10-year risk:** ~12.0%
 - **ASCVD 10-year risk:** ~10.3%
 
 ### Evidence Gaps Identified

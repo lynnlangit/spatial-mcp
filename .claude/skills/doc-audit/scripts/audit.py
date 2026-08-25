@@ -48,6 +48,14 @@ KNOWN_WRONG_VALUES = {
 
 PATIENT_IDS = {"PAT001", "PAT002", "PAT003"}
 
+# A numeric match only counts as a patient-outcome claim if its line is about a
+# patient metric. "11.8" once matched "CUDA 11.8+" in a GPU requirements list
+# simply because the file mentioned PAT003 elsewhere.
+METRIC_CONTEXT = (
+    r"reynolds|framingham|ascvd|pooled cohort|hscrp|hs-crp|crp\b|"
+    r"tmb|ic50|neoantigen|hrd|caf|risk|mut/mb|nm\b|mg/l|PAT00\d"
+)
+
 # patient-specific files that are expected to mention only one patient
 SINGLE_PATIENT_FILES = {
     "PAT001_OVERVIEW.md", "PAT002_OVERVIEW.md", "PAT003_OVERVIEW.md",
@@ -285,14 +293,22 @@ def check_C():
     violations = []
     for md in all_md_files():
         rel = str(md.relative_to(REPO_ROOT))
-        if md.name in SINGLE_PATIENT_FILES:
-            continue
-        if any(rel.startswith(d) for d in SINGLE_PATIENT_DIRS):
-            continue
         text = md.read_text()
+
+        # SINGLE_PATIENT_* exempts a doc from the COMPLETENESS rule only: a
+        # per-patient overview is supposed to mention one patient. It must NOT
+        # exempt the accuracy rule -- applied to the whole function (as it once
+        # was) it skipped docs/, servers/, tests/ and more, so the check that
+        # validates canonical patient values never looked at patient-outcomes.md,
+        # the canonical patient file itself.
+        single_patient_ok = (
+            md.name in SINGLE_PATIENT_FILES
+            or any(rel.startswith(d) for d in SINGLE_PATIENT_DIRS)
+        )
+
         found = {p for p in PATIENT_IDS if p in text or p.lower() in text}
         # completeness: if any patient mentioned, all should be (in non-trivial files)
-        if 1 <= len(found) <= 2 and len(text) > 500:
+        if not single_patient_ok and 1 <= len(found) <= 2 and len(text) > 500:
             missing = PATIENT_IDS - found
             violations.append(
                 f"  INCOMPLETE  {md.relative_to(REPO_ROOT)}  "
@@ -306,9 +322,17 @@ def check_C():
             # inside "17.9%" in an unrelated confidence distribution, and would
             # equally match "7.85". Require the value not to sit inside a longer
             # number on either side.
-            m = re.search(r"(?<![\d.])" + re.escape(wrong) + r"(?![\d])", text)
-            if m:
+            for m in re.finditer(
+                r"(?<![\d.])" + re.escape(wrong) + r"(?![\d])", text
+            ):
                 line_no = text[: m.start()].count("\n") + 1
+                line = text.splitlines()[line_no - 1]
+                # The number must appear in a line that is actually about a
+                # patient metric. Without this, "11.8" matched "CUDA 11.8+" in a
+                # GPU requirements list purely because the file mentioned PAT003
+                # somewhere else.
+                if not re.search(METRIC_CONTEXT, line, re.IGNORECASE):
+                    continue
                 violations.append(
                     f"  WRONG VALUE  {md.relative_to(REPO_ROOT)}:{line_no}  "
                     f"'{wrong}' for {pat} should be '{correct}'"
