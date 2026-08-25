@@ -9,9 +9,8 @@ In DRY_RUN mode: no disk I/O. Returns in-memory synthetic key + a synthetic path
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict
 
 from mcp_deidentify import config
 
@@ -31,7 +30,7 @@ def _key_dir() -> Path:
 
 
 # Synthetic key returned in DRY_RUN mode -- no disk reads/writes
-_SYNTHETIC_KEY: Dict = {
+_SYNTHETIC_KEY: dict = {
     "patient_id": "PAT-SYNTHETIC-001",
     "generated_at": "2026-01-01T00:00:00+00:00",
     "synthetic_data": True,
@@ -52,7 +51,7 @@ class KeyManager:
 
     def __init__(self, patient_id: str):
         self.patient_id = patient_id
-        self._key: Dict = {}
+        self._key: dict = {}
         self._path: Path = self._build_path(patient_id)
 
         if config.DRY_RUN:
@@ -68,7 +67,7 @@ class KeyManager:
     # ------------------------------------------------------------------
 
     @property
-    def session_key(self) -> Dict:
+    def session_key(self) -> dict:
         """Return the mutable in-memory key dict.
 
         Pass this to code_generator.assign_code -- it will be modified in-place.
@@ -87,13 +86,13 @@ class KeyManager:
             logger.debug("DRY_RUN: skipping key write to disk")
             return self.path
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._key["generated_at"] = datetime.now(timezone.utc).isoformat()
+        self._key["generated_at"] = datetime.now(UTC).isoformat()
         with open(self._path, "w") as f:
             json.dump(self._key, f, indent=2)
         logger.info(f"Anonymization key written: {self._path}")
         return self.path
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         """Return a clean copy of the key (without internal _counters)."""
         import copy
 
@@ -118,7 +117,7 @@ class KeyManager:
         else:
             self._key = {
                 "patient_id": self.patient_id,
-                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "synthetic_data": False,
                 "entity_map": {},
                 "_counters": {},

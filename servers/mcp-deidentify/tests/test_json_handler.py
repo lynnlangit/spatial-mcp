@@ -45,7 +45,7 @@ async def test_dict_structure_preserved():
         "nested": {"facility": "City General Hospital"},
     }
     session_key = {"entity_map": {}, "_counters": {}}
-    result, entities = await deidentify_json_dict(record, "PAT-SYNTHETIC-001", session_key)
+    result, _entities = await deidentify_json_dict(record, "PAT-SYNTHETIC-001", session_key)
 
     # Structure preserved
     assert "patient_id" in result
@@ -81,7 +81,7 @@ async def test_list_values_deidentified():
 
     record = {"notes": [SYNTHETIC_TEXT, "short"], "id": "PAT001"}
     session_key = {"entity_map": {}, "_counters": {}}
-    result, entities = await deidentify_json_dict(record, "PAT-SYNTHETIC-001", session_key)
+    result, _entities = await deidentify_json_dict(record, "PAT-SYNTHETIC-001", session_key)
 
     # The first list item should have been processed
     assert isinstance(result["notes"], list)

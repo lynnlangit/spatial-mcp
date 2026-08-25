@@ -7,7 +7,7 @@ DEIDENTIFY_DRY_RUN=false -> calls claude-haiku-4-5-20251001 via Anthropic SDK (d
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from mcp_deidentify import config
 
@@ -22,7 +22,7 @@ MAX_RETRIES = 3
 # Synthetic DRY_RUN fixture -- NO real PII
 # ---------------------------------------------------------------------------
 
-SYNTHETIC_ENTITIES: List[Dict[str, Any]] = [
+SYNTHETIC_ENTITIES: list[dict[str, Any]] = [
     {
         "text": "Jane Doe Smith",
         "entity_type": "PERSON_NAME_PATIENT",
@@ -123,7 +123,7 @@ Text to audit:
 
 def _chunk_text(
     text: str, chunk_size: int = MAX_CHUNK_CHARS, overlap: int = OVERLAP_CHARS
-) -> List[Dict]:
+) -> list[dict]:
     """Split text into overlapping chunks. Returns list of {text, offset} dicts."""
     if len(text) <= chunk_size:
         return [{"text": text, "offset": 0}]
@@ -143,7 +143,7 @@ def _chunk_text(
 # ---------------------------------------------------------------------------
 
 
-async def _call_haiku(prompt_prefix: str, text_chunk: str) -> List[Dict]:
+async def _call_haiku(prompt_prefix: str, text_chunk: str) -> list[dict]:
     """Call Haiku and parse entity list. Returns [] on failure (fail-safe)."""
     try:
         import anthropic
@@ -174,7 +174,15 @@ async def _call_haiku(prompt_prefix: str, text_chunk: str) -> List[Dict]:
         except json.JSONDecodeError as e:
             logger.warning(f"Haiku returned malformed JSON: {e}. Skipping chunk.")
             return []
-        except Exception as e:
+        # The suppression below silences the lint, not the concern. Every failure
+        # path here returns [], and [] means "no PII entities in this chunk":
+        # replace_entities() then returns the text unchanged. So a failed Haiku
+        # call yields UN-REDACTED text that reads downstream as successfully
+        # de-identified — the same silent-failure shape as the half-stubbed
+        # validator. Fixing it properly means deciding what a partial extraction
+        # failure should do (raise, or mark the result NOT_ASSESSABLE), which is
+        # a behaviour change rather than a lint fix.
+        except Exception as e:  # noqa: BLE001 - see comment above
             logger.error(f"Haiku call failed: {e}")
             return []
 
@@ -187,7 +195,7 @@ async def _call_haiku(prompt_prefix: str, text_chunk: str) -> List[Dict]:
 # ---------------------------------------------------------------------------
 
 
-async def extract_entities(text: str, red_team: bool = False) -> List[Dict]:
+async def extract_entities(text: str, red_team: bool = False) -> list[dict]:
     """Extract PII entities from text.
 
     In DRY_RUN mode: returns SYNTHETIC_ENTITIES without calling Haiku.
@@ -213,7 +221,7 @@ async def extract_entities(text: str, red_team: bool = False) -> List[Dict]:
     chunk_results = await asyncio.gather(*tasks)
 
     # Flatten + adjust offsets back to original text coordinates
-    all_entities: List[Dict] = []
+    all_entities: list[dict] = []
     seen_spans = set()
     for chunk, entities in zip(chunks, chunk_results):
         offset = chunk["offset"]
@@ -236,7 +244,7 @@ async def extract_entities(text: str, red_team: bool = False) -> List[Dict]:
     return all_entities
 
 
-def replace_entities(text: str, entities: List[Dict], session_key: Dict, patient_id: str) -> str:
+def replace_entities(text: str, entities: list[dict], session_key: dict, patient_id: str) -> str:
     """Apply entity replacements to text using codes from code_generator.
 
     Processes entities in reverse order (by start offset) so substitutions

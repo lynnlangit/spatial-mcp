@@ -49,7 +49,7 @@ def test_regex_detects_slashed_date():
 
 def test_regex_passes_on_anonymization_codes():
     """Codes like FAC-001 and DOB-REDACTED should not trigger regex hits."""
-    passed, hits = _run_regex_layer(
+    passed, _hits = _run_regex_layer(
         "Patient PAT-NAME-001 seen at FAC-001. DOB-REDACTED. MRN-REDACTED-001."
     )
     # Codes should not contain raw SSN/phone/email patterns
@@ -65,7 +65,7 @@ def test_key_lookup_clean_content_passes():
             "Jane Doe Smith": {"code": "PAT-NAME-001", "entity_type": "PERSON_NAME_PATIENT"}
         }
     }
-    passed, hits = _run_key_lookup_layer("Patient: PAT-NAME-001", session_key)
+    passed, _hits = _run_key_lookup_layer("Patient: PAT-NAME-001", session_key)
     assert passed is True
 
 
@@ -84,7 +84,7 @@ def test_key_lookup_case_insensitive():
     session_key = {
         "entity_map": {"CITY GENERAL HOSPITAL": {"code": "FAC-001", "entity_type": "FACILITY_NAME"}}
     }
-    passed, hits = _run_key_lookup_layer("Seen at city general hospital.", session_key)
+    passed, _hits = _run_key_lookup_layer("Seen at city general hospital.", session_key)
     assert passed is False
 
 
@@ -93,7 +93,7 @@ def test_key_lookup_skips_short_entities():
     session_key = {
         "entity_map": {"Jo": {"code": "PAT-NAME-001", "entity_type": "PERSON_NAME_PATIENT"}}
     }
-    passed, hits = _run_key_lookup_layer("Patient Jo was seen.", session_key)
+    passed, _hits = _run_key_lookup_layer("Patient Jo was seen.", session_key)
     assert passed is True
 
 

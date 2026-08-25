@@ -5,6 +5,7 @@ Tests marked @pytest.mark.live require ANTHROPIC_API_KEY and make real API calls
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -105,7 +106,7 @@ async def test_live_haiku_returns_entities(tmp_path):
     orig = eng.DRY_RUN
     eng.DRY_RUN = False
     try:
-        text = open("tests/fixtures/synthetic_note.txt").read()
+        text = Path("tests/fixtures/synthetic_note.txt").read_text()
         entities = await extract_entities(text)
         assert len(entities) > 0, "Haiku should detect at least one entity in the synthetic note"
     finally:

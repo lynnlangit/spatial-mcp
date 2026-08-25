@@ -26,7 +26,7 @@ async def test_vcf_dry_run_returns_synthetic_header():
 @pytest.mark.asyncio
 async def test_h5ad_dry_run_returns_synthetic_uns():
     session_key = {"entity_map": {}, "_counters": {}}
-    uns, fields, entities = await deidentify_h5ad("any.h5ad", "PAT-TEST", session_key)
+    uns, fields, _entities = await deidentify_h5ad("any.h5ad", "PAT-TEST", session_key)
     assert "patient_id" in uns
     assert uns["synthetic_data"] is True
     assert len(fields) > 0
@@ -35,7 +35,7 @@ async def test_h5ad_dry_run_returns_synthetic_uns():
 @pytest.mark.asyncio
 async def test_cns_dry_run_returns_synthetic_header():
     session_key = {"entity_map": {}, "_counters": {}}
-    content, fields, entities = await deidentify_cns("any.cns", "PAT-TEST", session_key)
+    content, fields, _entities = await deidentify_cns("any.cns", "PAT-TEST", session_key)
     assert "SPECIMEN-001" in content
     assert len(fields) > 0
 
@@ -43,7 +43,7 @@ async def test_cns_dry_run_returns_synthetic_header():
 @pytest.mark.asyncio
 async def test_dispatcher_vcf():
     session_key = {"entity_map": {}, "_counters": {}}
-    content, fields, entities = await deidentify_genomics_file(
+    content, _fields, _entities = await deidentify_genomics_file(
         "any.vcf", "PAT-TEST", session_key, "vcf"
     )
     assert isinstance(content, str)
@@ -52,7 +52,7 @@ async def test_dispatcher_vcf():
 @pytest.mark.asyncio
 async def test_dispatcher_h5ad():
     session_key = {"entity_map": {}, "_counters": {}}
-    content, fields, entities = await deidentify_genomics_file(
+    content, _fields, _entities = await deidentify_genomics_file(
         "any.h5ad", "PAT-TEST", session_key, "h5ad"
     )
     assert isinstance(content, str)
@@ -61,7 +61,7 @@ async def test_dispatcher_h5ad():
 @pytest.mark.asyncio
 async def test_dispatcher_cns():
     session_key = {"entity_map": {}, "_counters": {}}
-    content, fields, entities = await deidentify_genomics_file(
+    content, _fields, _entities = await deidentify_genomics_file(
         "any.cns", "PAT-TEST", session_key, "cns"
     )
     assert isinstance(content, str)

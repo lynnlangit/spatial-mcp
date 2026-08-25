@@ -14,7 +14,7 @@ Usage:
 import copy
 import logging
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from mcp_deidentify.engine import extract_entities, replace_entities
 
@@ -39,16 +39,14 @@ def _should_skip(value: str) -> bool:
     """Return True if this string value should not be sent for entity extraction."""
     if len(value) < _MIN_LEN:
         return True
-    if _CODE_PATTERN.match(value.strip()):
-        return True
-    return False
+    return bool(_CODE_PATTERN.match(value.strip()))
 
 
 async def deidentify_json_dict(
-    record: Dict[str, Any],
+    record: dict[str, Any],
     patient_id: str,
-    session_key: Dict,
-) -> Tuple[Dict[str, Any], List[Dict]]:
+    session_key: dict,
+) -> tuple[dict[str, Any], list[dict]]:
     """Recursively de-identify all string leaves in a JSON dict.
 
     Args:
@@ -63,7 +61,7 @@ async def deidentify_json_dict(
         all_entities_found is a flat list of all DetectedEntity-like dicts.
     """
     result = copy.deepcopy(record)
-    all_entities: List[Dict] = []
+    all_entities: list[dict] = []
 
     await _walk(result, patient_id, session_key, all_entities)
     return result, all_entities
@@ -72,8 +70,8 @@ async def deidentify_json_dict(
 async def _walk(
     node: Any,
     patient_id: str,
-    session_key: Dict,
-    all_entities: List[Dict],
+    session_key: dict,
+    all_entities: list[dict],
     parent_key: str = "",
 ) -> Any:
     """Recursive in-place walker. Modifies node in-place for dict/list nodes."""
@@ -85,10 +83,9 @@ async def _walk(
             node[i] = await _walk(
                 item, patient_id, session_key, all_entities, parent_key=parent_key
             )
-    elif isinstance(node, str):
-        if not _should_skip(node):
-            entities = await extract_entities(node)
-            if entities:
-                all_entities.extend(entities)
-                node = replace_entities(node, entities, session_key, patient_id)
+    elif isinstance(node, str) and not _should_skip(node):
+        entities = await extract_entities(node)
+        if entities:
+            all_entities.extend(entities)
+            node = replace_entities(node, entities, session_key, patient_id)
     return node

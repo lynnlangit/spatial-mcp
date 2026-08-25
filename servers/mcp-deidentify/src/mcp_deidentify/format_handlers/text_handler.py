@@ -11,11 +11,9 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
-from mcp_deidentify.engine import extract_entities, replace_entities
 
 from mcp_deidentify import config
+from mcp_deidentify.engine import extract_entities, replace_entities
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +37,8 @@ def _default_output_path(patient_id: str, source_path: str) -> str:
 async def deidentify_text_string(
     text: str,
     patient_id: str,
-    session_key: Dict,
-) -> Tuple[str, List[Dict]]:
+    session_key: dict,
+) -> tuple[str, list[dict]]:
     """De-identify a plain text string.
 
     Args:
@@ -64,9 +62,9 @@ async def deidentify_text_string(
 async def deidentify_docx_file(
     docx_path: str,
     patient_id: str,
-    session_key: Dict,
-    output_path: Optional[str] = None,
-) -> Tuple[str, str, List[Dict]]:
+    session_key: dict,
+    output_path: str | None = None,
+) -> tuple[str, str, list[dict]]:
     """De-identify a DOCX file and write a new de-identified DOCX.
 
     Processes all paragraph runs in parallel. Tables and images are preserved
@@ -97,7 +95,7 @@ async def deidentify_docx_file(
     from docx import Document
 
     doc = Document(docx_path)
-    all_entities: List[Dict] = []
+    all_entities: list[dict] = []
 
     # Collect all paragraphs that have text
     paragraphs = [p for p in doc.paragraphs if p.text.strip()]

@@ -13,11 +13,9 @@ DRY_RUN=true: no file I/O; returns synthetic pre-built output.
 import logging
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
-
-from mcp_deidentify.engine import extract_entities, replace_entities
 
 from mcp_deidentify import config
+from mcp_deidentify.engine import extract_entities, replace_entities
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +58,8 @@ _VCF_SAMPLE_RE = re.compile(r"^##SAMPLE=", re.IGNORECASE)
 async def deidentify_vcf(
     vcf_path: str,
     patient_id: str,
-    session_key: Dict,
-) -> Tuple[str, List[str], List[Dict]]:
+    session_key: dict,
+) -> tuple[str, list[str], list[dict]]:
     """De-identify VCF ## header lines.
 
     Returns (deidentified_content, fields_modified, entities).
@@ -72,9 +70,9 @@ async def deidentify_vcf(
         return _SYNTHETIC_VCF_HEADER, ["fileDate", "source", "SAMPLE"], list(SYNTHETIC_ENTITIES)
 
     lines = Path(vcf_path).read_text().splitlines(keepends=True)
-    out_lines: List[str] = []
-    all_entities: List[Dict] = []
-    fields_modified: List[str] = []
+    out_lines: list[str] = []
+    all_entities: list[dict] = []
+    fields_modified: list[str] = []
 
     for line in lines:
         if line.startswith("##"):
@@ -108,8 +106,8 @@ async def deidentify_vcf(
 async def deidentify_h5ad(
     h5ad_path: str,
     patient_id: str,
-    session_key: Dict,
-) -> Tuple[Dict, List[str], List[Dict]]:
+    session_key: dict,
+) -> tuple[dict, list[str], list[dict]]:
     """De-identify string values in adata.uns. Writes modified h5ad back to same path.
 
     Returns (deidentified_uns_dict, fields_modified, entities_found).
@@ -122,8 +120,8 @@ async def deidentify_h5ad(
     import anndata as ad
 
     adata = ad.read_h5ad(h5ad_path)
-    all_entities: List[Dict] = []
-    fields_modified: List[str] = []
+    all_entities: list[dict] = []
+    fields_modified: list[str] = []
 
     for key, val in list(adata.uns.items()):
         if isinstance(val, str) and len(val) >= 4:
@@ -148,8 +146,8 @@ async def deidentify_h5ad(
 async def deidentify_cns(
     cns_path: str,
     patient_id: str,
-    session_key: Dict,
-) -> Tuple[str, List[str], List[Dict]]:
+    session_key: dict,
+) -> tuple[str, list[str], list[dict]]:
     """De-identify # comment lines at the top of a CNVkit .cns file.
 
     Returns (deidentified_content, fields_modified, entities_found).
@@ -160,9 +158,9 @@ async def deidentify_cns(
         return _SYNTHETIC_CNS_HEADER, ["sample", "source"], list(SYNTHETIC_ENTITIES)
 
     lines = Path(cns_path).read_text().splitlines(keepends=True)
-    out_lines: List[str] = []
-    all_entities: List[Dict] = []
-    fields_modified: List[str] = []
+    out_lines: list[str] = []
+    all_entities: list[dict] = []
+    fields_modified: list[str] = []
 
     for line in lines:
         if line.startswith("#"):
@@ -184,9 +182,9 @@ async def deidentify_cns(
 async def deidentify_genomics_file(
     file_path: str,
     patient_id: str,
-    session_key: Dict,
+    session_key: dict,
     file_type: str = "vcf",
-) -> Tuple[str, List[str], List[Dict]]:
+) -> tuple[str, list[str], list[dict]]:
     """Dispatch to the appropriate genomics handler by file_type.
 
     Args:

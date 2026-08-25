@@ -5,11 +5,10 @@ Codes have human-readable prefixes: Dr. ONC-001, FAC-002, ACCESSION-001, etc.
 """
 
 import hashlib
-from typing import Dict
 
 # Maps entity_type -> (prefix, separator)
 # The counter suffix is zero-padded to 3 digits.
-_PREFIX_MAP: Dict[str, str] = {
+_PREFIX_MAP: dict[str, str] = {
     "PERSON_NAME_PHYSICIAN": "Dr. ONC",
     "PERSON_NAME_PATHOLOGIST": "Dr. PATH",
     "PERSON_NAME_LAB_DIRECTOR": "LAB-DIR",
@@ -37,7 +36,7 @@ _PREFIX_MAP: Dict[str, str] = {
 _DEFAULT_PREFIX = "ENTITY"
 
 # Entity types that always map to a single fixed replacement (no counter)
-_FIXED_REPLACEMENTS: Dict[str, str] = {
+_FIXED_REPLACEMENTS: dict[str, str] = {
     "DATE_OF_BIRTH": "DOB-REDACTED",
     "SSN": "SSN-REDACTED",
 }
@@ -60,7 +59,7 @@ def assign_code(
     patient_id: str,
     entity_type: str,
     entity_text: str,
-    session_key: Dict,
+    session_key: dict,
 ) -> str:
     """Assign a deterministic anonymization code for the given entity.
 
@@ -100,7 +99,7 @@ def assign_code(
     return code
 
 
-def _record(session_key: Dict, entity_text: str, entity_type: str, code: str) -> None:
+def _record(session_key: dict, entity_text: str, entity_type: str, code: str) -> None:
     """Write entity->code mapping into session_key (idempotent)."""
     entity_map = session_key.setdefault("entity_map", {})
     if entity_text not in entity_map:
