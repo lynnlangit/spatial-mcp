@@ -61,8 +61,10 @@ def _make_text_pdf(path: pathlib.Path, lines) -> None:
     objs = [
         b"<< /Type /Catalog /Pages 2 0 R >>",
         b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
-        b"/Resources << /Font << /F1 5 0 R >> >> >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+            b"/Resources << /Font << /F1 5 0 R >> >> >>"
+        ),
         b"<< /Length %d >>\nstream\n" % len(content) + content + b"endstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     ]
@@ -208,7 +210,7 @@ async def test_validate_haiku_failure_does_not_yield_a_verdict(monkeypatch):
     """A failed Haiku call must degrade to 'incomplete', not to a pass."""
     _reload_config(monkeypatch, dry_run=None)  # live mode
 
-    import mcp_deidentify.engine as engine
+    from mcp_deidentify import engine
 
     async def _boom(*a, **k):
         raise RuntimeError("simulated API outage")

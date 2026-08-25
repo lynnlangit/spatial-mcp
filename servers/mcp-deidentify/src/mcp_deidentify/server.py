@@ -11,7 +11,7 @@ Set ANTHROPIC_API_KEY for the Haiku calls. See config.py for DEIDENTIFY_DATE_POL
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -23,10 +23,10 @@ mcp = FastMCP("deidentify")
 _repo_root = Path(__file__).resolve().parents[4]
 if str(_repo_root / "shared") not in sys.path:
     sys.path.insert(0, str(_repo_root / "shared"))
-from common.dry_run import add_dry_run_warning as _add_dry_run_warning  # noqa: E402
-from common.transport import run_server as _run_server  # noqa: E402
+from common.dry_run import add_dry_run_warning as _add_dry_run_warning
+from common.transport import run_server as _run_server
 
-from mcp_deidentify import config  # noqa: E402
+from mcp_deidentify import config
 
 _SYNTHETIC_PREFIX = "SYNTHETIC:"
 
@@ -58,7 +58,7 @@ def _mark_synthetic(value: Any) -> Any:
     return value
 
 
-def add_dry_run_warning(result: Dict) -> Dict:
+def add_dry_run_warning(result: dict) -> dict:
     """Tag a result with DRY_RUN metadata, and in DRY_RUN make it unmissable."""
     if not config.DRY_RUN:
         return result
@@ -77,8 +77,8 @@ def add_dry_run_warning(result: Dict) -> Dict:
 async def deidentify_json(
     json_content: str,
     patient_id: str,
-    code_map: Optional[Dict] = None,
-) -> Dict[str, Any]:
+    code_map: dict | None = None,
+) -> dict[str, Any]:
     """De-identify a JSON clinical record (Stage 0 preprocessing).
 
     Recursively scans every string leaf in the JSON dict, detects PII using
@@ -149,8 +149,8 @@ async def deidentify_text(
     text: str,
     patient_id: str,
     source_format: str = "txt",
-    output_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    output_path: str | None = None,
+) -> dict[str, Any]:
     """De-identify plain text or DOCX content (Stage 0 preprocessing).
 
     For source_format="txt": de-identifies the supplied string in memory.
@@ -225,7 +225,7 @@ async def deidentify_text(
 async def deidentify_pdf_text(
     pdf_path: str,
     patient_id: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Extract and de-identify the TEXT LAYER of a PDF (Stage 0 preprocessing).
 
     This tool reads the text layer via pdfplumber and de-identifies it. It does
@@ -259,7 +259,7 @@ async def deidentify_pdf_text(
         pdf_path=pdf_path, patient_id=patient_id, session_key=km.session_key
     )
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "status": res["status"],
         "extracted_text": res["raw_text"],
         "deidentified_text": res["deidentified_text"],
@@ -280,7 +280,7 @@ async def deidentify_genomics_file(
     file_path: str,
     patient_id: str,
     file_type: str = "vcf",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """De-identify PII from genomics file headers (Stage 0 preprocessing).
 
     Supported file types:
@@ -333,7 +333,7 @@ async def deidentify_genomics_file(
 
 
 @mcp.tool()
-async def generate_anonymization_key(patient_id: str) -> Dict[str, Any]:
+async def generate_anonymization_key(patient_id: str) -> dict[str, Any]:
     """Retrieve or initialise the anonymization key for a patient.
 
     If a key file already exists on disk for this patient, loads and returns it.
@@ -375,7 +375,7 @@ async def generate_anonymization_key(patient_id: str) -> Dict[str, Any]:
 async def validate_deidentification(
     content: str,
     patient_id: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Three-layer validation that de-identified content contains no residual PII.
 
     Runs three independent layers:

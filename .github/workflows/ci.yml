@@ -18,6 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # mcp-server-boilerplate is deliberately absent. It is a template, not a
+        # server: its pyproject declares `name = "mcp-{{SERVER_NAME}}"`, which
+        # `uv sync` rejects as an invalid package name, so that leg failed on
+        # every run it was ever part of. Do not re-add it.
         server:
           - mcp-opentargets
           - mcp-geodownload
@@ -27,7 +31,6 @@ jobs:
           - mcp-genomic-results
           - mcp-cell-classify
           - mcp-spatialtools
-          - mcp-server-boilerplate
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

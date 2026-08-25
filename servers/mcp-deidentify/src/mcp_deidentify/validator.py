@@ -17,7 +17,7 @@ the difference between "clean" and "not actually checked".
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from mcp_deidentify import config
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # Layer 2 -- Regex patterns for structural PII
 # ---------------------------------------------------------------------------
 
-_REGEX_PATTERNS: List[Tuple[str, str]] = [
+_REGEX_PATTERNS: list[tuple[str, str]] = [
     ("SSN", r"\b\d{3}-\d{2}-\d{4}\b"),
     ("PHONE_PAREN", r"\(\d{3}\)\s?\d{3}[-.]\d{4}\b"),
     ("PHONE_DASH", r"\b\d{3}[-.]\d{3}[-.]\d{4}\b"),
@@ -42,7 +42,7 @@ _REGEX_PATTERNS: List[Tuple[str, str]] = [
 _COMPILED = [(name, re.compile(pat, re.IGNORECASE)) for name, pat in _REGEX_PATTERNS]
 
 
-def _active_patterns() -> List[Tuple[str, Any]]:
+def _active_patterns() -> list[tuple[str, Any]]:
     """Return the patterns that apply under the configured date policy.
 
     Under LIMITED_DATA_SET, full dates are permitted by 45 CFR 164.514(e), so
@@ -53,7 +53,7 @@ def _active_patterns() -> List[Tuple[str, Any]]:
     return _COMPILED
 
 
-def _run_regex_layer(content: str) -> Tuple[bool, List[Dict]]:
+def _run_regex_layer(content: str) -> tuple[bool, list[dict]]:
     """Run the active regex patterns against content. Returns (passed, hits)."""
     hits = []
     for name, pattern in _active_patterns():
@@ -74,7 +74,7 @@ def _run_regex_layer(content: str) -> Tuple[bool, List[Dict]]:
 # ---------------------------------------------------------------------------
 
 
-def _run_key_lookup_layer(content: str, session_key: Dict) -> Tuple[bool, List[Dict]]:
+def _run_key_lookup_layer(content: str, session_key: dict) -> tuple[bool, list[dict]]:
     """Check that no known entity_text appears verbatim in content (case-insensitive)."""
     hits = []
     content_lower = content.lower()
@@ -101,7 +101,7 @@ LAYER_SKIPPED_DRY_RUN = "skipped_dry_run"
 LAYER_ERROR = "error"
 
 
-async def _run_haiku_layer(content: str) -> Tuple[str, Optional[bool], List[Dict]]:
+async def _run_haiku_layer(content: str) -> tuple[str, bool | None, list[dict]]:
     """Call Haiku with the red-team prompt.
 
     Returns (status, passed, hits). ``passed`` is None whenever the layer did not
@@ -131,7 +131,7 @@ async def _run_haiku_layer(content: str) -> Tuple[str, Optional[bool], List[Dict
 # ---------------------------------------------------------------------------
 
 
-async def validate(content: str, session_key: Dict) -> Dict[str, Any]:
+async def validate(content: str, session_key: dict) -> dict[str, Any]:
     """Run all three validation layers against de-identified content.
 
     Args:

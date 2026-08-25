@@ -16,7 +16,7 @@ DRY_RUN=true: no file reads, no Haiku calls; returns synthetic fixture output.
 
 import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from mcp_deidentify import config
 from mcp_deidentify.engine import extract_entities, replace_entities
@@ -40,8 +40,8 @@ All values are synthetic. No real patient data present.
 async def deidentify_pdf_file(
     pdf_path: str,
     patient_id: str,
-    session_key: Dict,
-) -> Dict[str, Any]:
+    session_key: dict,
+) -> dict[str, Any]:
     """Extract and de-identify the text layer of a PDF file.
 
     Args:
@@ -73,7 +73,7 @@ async def deidentify_pdf_file(
 
     import pdfplumber
 
-    page_texts: List[str] = []
+    page_texts: list[str] = []
     with pdfplumber.open(pdf_path) as pdf:
         page_count = len(pdf.pages)
         for page in pdf.pages:
@@ -111,8 +111,8 @@ async def deidentify_pdf_file(
     tasks = [extract_entities(t) for t in page_texts if t.strip()]
     results = await asyncio.gather(*tasks)
 
-    all_entities: List[Dict] = []
-    deid_pages: List[str] = []
+    all_entities: list[dict] = []
+    deid_pages: list[str] = []
 
     result_iter = iter(results)
     for page_text in page_texts:
