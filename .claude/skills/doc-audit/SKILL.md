@@ -24,6 +24,26 @@ Run them in order: A feeds B, and B+C together surface D violations.
 
 ---
 
+## Step 0 — Prove the checks still fire
+
+A green audit is only meaningful if the checks are capable of going red. Three
+times a check in this suite reported a clean repo while being structurally unable
+to fail — an exemption added to quiet noise in one sub-rule, then applied to the
+whole check. Run this first:
+
+```bash
+python .claude/skills/doc-audit/scripts/self_test.py
+```
+
+It builds a small synthetic repo in a temp directory, confirms the audit reports
+it clean, then introduces one defect at a time and asserts the responsible check
+catches it. The real repo is never touched.
+
+**If any check does not fire, stop.** Fix that check before reading the audit
+output — a check that cannot fail reports green and stops anyone looking.
+
+---
+
 ## Step 1 — Run the automated audit script
 
 The bundled script does the mechanical work. Run it from the repo root:
@@ -178,11 +198,15 @@ Copy the skill into the repo:
 mkdir -p .claude/skills/doc-audit/scripts
 cp <this-skill-directory>/SKILL.md .claude/skills/doc-audit/SKILL.md
 cp <this-skill-directory>/scripts/audit.py .claude/skills/doc-audit/scripts/audit.py
+cp <this-skill-directory>/scripts/self_test.py .claude/skills/doc-audit/scripts/self_test.py
 git add .claude/skills/doc-audit/
 git commit -m "chore: add doc-audit skill for canonical reference checks"
 ```
 
-The script has no dependencies beyond the Python standard library.
+Both scripts have no dependencies beyond the Python standard library.
+
+When you add a check, add a matching case to `self_test.py`'s `CASES` list. A
+check with no self-test case is one refactor away from being silently inert.
 
 ---
 

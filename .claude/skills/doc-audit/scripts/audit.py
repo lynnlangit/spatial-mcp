@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 """
 Precision Medicine MCP — Doc Audit Script
-Runs four canonical-reference checks (A-D) against the repo.
+Runs five canonical-reference checks (A-E) against the repo.
 Run from the repo root: python .claude/skills/doc-audit/scripts/audit.py
+
+Set DOC_AUDIT_ROOT to point the checks at a different tree. self_test.py uses
+this to run every check against a small synthetic repo, so each check has to
+prove it still fires. Three times now a check in this file has reported a clean
+repo while being structurally unable to fail.
 """
 
+import os
 import re
 import sys
 from collections import defaultdict
 from hashlib import md5
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[4]  # adjust if skill moves
+REPO_ROOT = Path(
+    os.environ.get("DOC_AUDIT_ROOT") or Path(__file__).resolve().parents[4]
+)
 REGISTRY  = REPO_ROOT / "docs/reference/shared/server-registry.md"
 
 # ── canonical patient outcome values (update when fixtures change) ────────────
@@ -187,7 +195,10 @@ SUBSET_MARKERS = ("mvp", "subset", "minimum viable", "xai metadata")
 # ("test-7: 6 servers", "test-10: all 17"). Those server counts are scenario
 # scope, not platform claims, so the server-count rule is skipped there. Tool
 # counts are still checked -- these files can still carry a stale platform total.
-SCOPED_SUBSET_PREFIXES = ("docs/reference/testing/",)
+SCOPED_SUBSET_PREFIXES = (
+    "docs/reference/testing/",
+    "docs/reference/prompts/",   # scenario prompts: "All 3 servers contributed?"
+)
 # \d{1,3}, not \d{1,2}: tool counts passed 100 in Aug 2026 and a two-digit
 # pattern silently stopped matching them, so the check reported clean while a
 # dozen docs carried a stale total.
@@ -239,15 +250,22 @@ def check_B():
             for pat in SERVER_COUNT_PATTERNS:
                 for m in re.finditer(pat, line, re.IGNORECASE):
                     n = int(m.group(1))
-                    if not (4 <= n <= 200):
+                    if not (1 <= n <= 200):
                         continue
+                    # Set BEFORE any further filtering: the line carries a server
+                    # count whatever its magnitude, and that is what tells the
+                    # tool-count rule below that an adjacent "(N tools)" is a
+                    # platform total. A `4 <= n` floor here previously meant a
+                    # small server count silently disabled the tool-count rule on
+                    # the same line -- invisible in this repo only because it has
+                    # 19 servers.
                     server_count_on_line = True
                     if scoped:
                         continue
                     if reg_servers is not None and n != reg_servers:
-                        violations.append(
-                            f"{here}  '{m.group(0).strip()}'  →  registry says {reg_servers} servers"
-                        )
+                        v = f"{here}  '{n} servers'  →  registry says {reg_servers} servers"
+                        if v not in violations:
+                            violations.append(v)
 
             # 2/3. tool counts
             for m in re.finditer(TOOL_COUNT_PATTERN, line, re.IGNORECASE):
