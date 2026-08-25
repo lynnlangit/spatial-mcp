@@ -13,25 +13,25 @@
 
 ## Production Servers ✅
 
-| Server | Tools | Status | Key Capabilities | Documentation |
-|--------|-------|--------|------------------|---------------|
-| **mcp-deidentify** | 6 | 100% Real | Stage 0 preprocessing — HIPAA Safe Harbor de-identification for JSON, DOCX, PDF, VCF, h5ad; three-layer validation | [README](../../../servers/mcp-deidentify/README.md) |
-| **mcp-fgbio** | 4 | 95% Real | FASTQ/VCF QC, genome refs, variant calling | [README](../../../servers/mcp-fgbio/README.md) |
-| **mcp-multiomics** | 10 | 95% Real | HAllA integration, Stouffer meta-analysis, upstream regulators, heatmap, PCA | [README](../../../servers/mcp-multiomics/README.md) |
-| **mcp-spatialtools** | 16 | 95% Real | Spatial DE, STAR alignment, ComBat, pathway enrichment, patient-context resolution | [README](../../../servers/mcp-spatialtools/README.md) |
-| **mcp-perturbation** | 8 | 100% Real | GEARS GNN treatment response, perturbation prediction | [README](../../../servers/mcp-perturbation/README.md) |
-| **mcp-quantum-celltype-fidelity** | 6 | 100% Real | Quantum PQCs, fidelity analysis, Bayesian UQ, immune evasion | [README](../../../servers/mcp-quantum-celltype-fidelity/README.md) |
-| **mcp-deepcell** | 3 | 100% Real | DeepCell-TF segmentation, nuclear/membrane models, per-cell marker quantification | [README](../../../servers/mcp-deepcell/README.md) |
-| **mcp-cell-classify** | 3 | 100% Real | Cell phenotype classification, multi-marker phenotyping, phenotype visualization | [README](../../../servers/mcp-cell-classify/README.md) |
-| **mcp-epic** | 4 | 100% Real | FHIR R4 API, real EHR integration (local deployment only) | [README](../../../servers/mcp-epic/README.md) |
-| **mcp-openimagedata** | 5 | 100% Real | PIL image loading, scikit-image registration + feature extraction, MxIF compositing, H&E annotation | [README](../../../servers/mcp-openimagedata/README.md) |
-| **mcp-patient-report** | 5 | 100% Real | Patient-facing PDF reports, plain-language summaries, clinician review gate | [README](../../../servers/mcp-patient-report/README.md) |
-| **mcp-genomic-results** | 12 | 100% Real | Somatic variant/CNV parsing, clinical annotations, HRD scoring; allelic-imbalance copy-number suite (library-chemistry gate, heterozygous-site extraction + QC, tumour purity, detectability, imbalance testing, architecture comparison, UM prognostic class) — all returning graded results | [README](../../../servers/mcp-genomic-results/README.md) |
-| **mcp-geodownload** | 6 | 100% Real | GEO/SRA dataset download, Entrez REST, expression matrices | [README](../../../servers/mcp-geodownload/README.md) |
-| **mcp-opentargets** | 6 | 100% Real | Drug-target associations, disease ontology, GraphQL API | [README](../../../servers/mcp-opentargets/README.md) |
-| **mcp-cibersortx** | 5 | 100% Real | Immune deconvolution, LM22 signatures, job polling | [README](../../../servers/mcp-cibersortx/README.md) |
-| **mcp-neoantigen** | 6 | 100% Real | MHC binding prediction, IEDB API, neoantigen burden scoring | [README](../../../servers/mcp-neoantigen/README.md) |
-| **mcp-cardiometabolic** | 14 | 100% Real | Reynolds/Framingham/ASCVD risk scoring, biomarker panels, Lp(a), lipid patterns, FH scoring (DLCN), renal drug constraints, lipid treatment targets, post-COVID CV risk, PRS (PGS Catalog), APO CV risk, preventive reports | [README](../../../servers/mcp-cardiometabolic/README.md) |
+| Server | Tools | Key Capabilities | Documentation |
+|--------|-------|------------------|---------------|
+| **mcp-deidentify** | 6 | Stage 0 preprocessing — HIPAA Safe Harbor de-identification for JSON, DOCX, PDF, VCF, h5ad; three-layer validation | [README](../../../servers/mcp-deidentify/README.md) |
+| **mcp-fgbio** | 4 | FASTQ/VCF QC, genome refs, variant calling | [README](../../../servers/mcp-fgbio/README.md) |
+| **mcp-multiomics** | 10 | HAllA integration, Stouffer meta-analysis, upstream regulators, heatmap, PCA | [README](../../../servers/mcp-multiomics/README.md) |
+| **mcp-spatialtools** | 16 | Spatial DE, STAR alignment, ComBat, pathway enrichment, patient-context resolution | [README](../../../servers/mcp-spatialtools/README.md) |
+| **mcp-perturbation** | 8 | GEARS GNN treatment response, perturbation prediction | [README](../../../servers/mcp-perturbation/README.md) |
+| **mcp-quantum-celltype-fidelity** | 6 | Quantum PQCs, fidelity analysis, Bayesian UQ, immune evasion | [README](../../../servers/mcp-quantum-celltype-fidelity/README.md) |
+| **mcp-deepcell** | 3 | DeepCell-TF segmentation, nuclear/membrane models, per-cell marker quantification | [README](../../../servers/mcp-deepcell/README.md) |
+| **mcp-cell-classify** | 3 | Cell phenotype classification, multi-marker phenotyping, phenotype visualization | [README](../../../servers/mcp-cell-classify/README.md) |
+| **mcp-epic** | 4 | FHIR R4 API, real EHR integration (local deployment only) | [README](../../../servers/mcp-epic/README.md) |
+| **mcp-openimagedata** | 5 | PIL image loading, scikit-image registration + feature extraction, MxIF compositing, H&E annotation | [README](../../../servers/mcp-openimagedata/README.md) |
+| **mcp-patient-report** | 5 | Patient-facing PDF reports, plain-language summaries, clinician review gate | [README](../../../servers/mcp-patient-report/README.md) |
+| **mcp-genomic-results** | 12 | Somatic variant/CNV parsing, clinical annotations, HRD scoring; allelic-imbalance copy-number suite (library-chemistry gate, heterozygous-site extraction + QC, tumour purity, detectability, imbalance testing, architecture comparison, UM prognostic class) — all returning graded results | [README](../../../servers/mcp-genomic-results/README.md) |
+| **mcp-geodownload** | 6 | GEO/SRA dataset download, Entrez REST, expression matrices | [README](../../../servers/mcp-geodownload/README.md) |
+| **mcp-opentargets** | 6 | Drug-target associations, disease ontology, GraphQL API | [README](../../../servers/mcp-opentargets/README.md) |
+| **mcp-cibersortx** | 5 | Immune deconvolution, LM22 signatures, job polling | [README](../../../servers/mcp-cibersortx/README.md) |
+| **mcp-neoantigen** | 6 | MHC binding prediction, IEDB API, neoantigen burden scoring | [README](../../../servers/mcp-neoantigen/README.md) |
+| **mcp-cardiometabolic** | 14 | Reynolds/Framingham/ASCVD risk scoring, biomarker panels, Lp(a), lipid patterns, FH scoring (DLCN), renal drug constraints, lipid treatment targets, post-COVID CV risk, PRS (PGS Catalog), APO CV risk, preventive reports | [README](../../../servers/mcp-cardiometabolic/README.md) |
 
 ---
 
