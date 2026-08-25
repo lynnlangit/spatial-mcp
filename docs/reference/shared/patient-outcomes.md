@@ -8,7 +8,9 @@
 
 ---
 
-## PAT001 — HGSOC Stage IV {#pat001}
+<a id="pat001"></a>
+
+## PAT001 — HGSOC Stage IV
 
 **Profile:** 58-year-old female, Stage IV high-grade serous ovarian cancer (HGSOC),
 BRCA1+, platinum-resistant. Standard workup found BRCA1 germline mutation and initiated
@@ -40,7 +42,9 @@ additional therapeutic hypotheses.
 
 ---
 
-## PAT002 — ER+ Breast Cancer (Stage IIA) {#pat002}
+<a id="pat002"></a>
+
+## PAT002 — ER+ Breast Cancer (Stage IIA)
 
 **Profile:** Stage IIA invasive ductal carcinoma (IDC), ER+/PR+/HER2−, BRCA2+ germline,
 PIK3CA H1047R somatic. Standard workup identified ER+ status and initiated endocrine
@@ -84,7 +88,9 @@ code changes — validating architecture generalizability.
 
 ---
 
-## PAT003 — Preventive Cardiovascular Health {#pat003}
+<a id="pat003"></a>
+
+## PAT003 — Preventive Cardiovascular Health
 
 **Profile:** 67-year-old post-menopausal female. Standard annual physical + Helix Tier 1
 population genetic screen — all results returned as "normal." Standard lipid panel

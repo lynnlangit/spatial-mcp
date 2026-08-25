@@ -5,7 +5,7 @@
 [![MCP](https://img.shields.io/badge/MCP-2025--06--18-green.svg)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-<img src="https://github.com/lynnlangit/precision-medicine-mcp/blob/main/data/images/repo-image.png">
+![Precision Medicine MCP Platform — architecture overview](data/images/repo-image.png)
 
 > **Dedicated to PatientOne** -- a dear friend who passed from High-Grade Serous Ovarian Carcinoma in 2025.
 
