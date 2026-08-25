@@ -8,7 +8,7 @@ Central navigation for all documentation. Canonical references are in `reference
 
 | Doc | Covers |
 |-----|--------|
-| [Server Registry](reference/shared/server-registry.md) | 19 custom servers (119 tools) + 6 external |
+| [Server Registry](reference/shared/server-registry.md) | 19 custom servers (127 tools) + 6 external |
 | [Value Proposition](reference/shared/value-proposition.md) | Time savings, cost savings, ROI |
 | [PatientOne Profile (PAT001)](reference/shared/patientone-profile.md) | HGSOC Stage IV — clinical profile, genomic findings, 3 investigational findings |
 | [PAT002 Outcomes](reference/shared/patient-outcomes.md#pat002) | ER+ breast cancer — BRCA2 germline, PIK3CA H1047R, 3 investigational hypotheses |

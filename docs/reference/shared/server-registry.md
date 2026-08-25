@@ -23,7 +23,7 @@
 | **mcp-quantum-celltype-fidelity** | 6 | 100% Real | Quantum PQCs, fidelity analysis, Bayesian UQ, immune evasion | [README](../../../servers/mcp-quantum-celltype-fidelity/README.md) |
 | **mcp-deepcell** | 3 | 100% Real | DeepCell-TF segmentation, nuclear/membrane models, per-cell marker quantification | [README](../../../servers/mcp-deepcell/README.md) |
 | **mcp-cell-classify** | 3 | 100% Real | Cell phenotype classification, multi-marker phenotyping, phenotype visualization | [README](../../../servers/mcp-cell-classify/README.md) |
-| **mcp-epic** | 4 | 100% Real | FHIR R4 API, real EHR integration (local deployment only) | [Source](../../../servers/mcp-epic/) |
+| **mcp-epic** | 4 | 100% Real | FHIR R4 API, real EHR integration (local deployment only) | [README](../../../servers/mcp-epic/README.md) |
 | **mcp-openimagedata** | 5 | 100% Real | PIL image loading, scikit-image registration + feature extraction, MxIF compositing, H&E annotation | [README](../../../servers/mcp-openimagedata/README.md) |
 | **mcp-patient-report** | 5 | 100% Real | Patient-facing PDF reports, plain-language summaries, clinician review gate | [README](../../../servers/mcp-patient-report/README.md) |
 | **mcp-genomic-results** | 12 | 100% Real | Somatic variant/CNV parsing, clinical annotations, HRD scoring; allelic-imbalance copy-number suite (library-chemistry gate, heterozygous-site extraction + QC, tumour purity, detectability, imbalance testing, architecture comparison, UM prognostic class) — all returning graded results | [README](../../../servers/mcp-genomic-results/README.md) |
@@ -49,7 +49,7 @@
 | Server | Tools | Purpose | Documentation |
 |--------|-------|---------|---------------|
 | **mcp-mocktcga** | 5 | Mock TCGA cohort queries, survival analysis (synthetic) | [README](../../../servers/mcp-mocktcga/README.md) |
-| **mcp-mockepic** | 3 | Synthetic FHIR data for testing (by design) | [Source](../../../servers/mcp-mockepic/) |
+| **mcp-mockepic** | 3 | Synthetic FHIR data for testing (by design) | [README](../../../servers/mcp-mockepic/README.md) |
 
 ---
 

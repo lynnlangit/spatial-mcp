@@ -306,6 +306,26 @@ Run PCA on the integrated RNA + Protein data to visualize sample clustering.
 Compute 3 components and color samples by treatment response.
 ```
 
+### 6. estimate_analysis_cost
+
+Estimate the computational cost of a multi-omics analysis **before** running it,
+so a researcher can budget rather than discover the cost afterwards.
+
+**Parameters:**
+- `num_samples` (required): Number of samples to analyze
+- `modalities` (required): List of modalities, e.g. `["rna", "protein", "phospho"]`
+- `include_halla` (default: False): Include HAllA association testing
+- `include_upstream` (default: False): Include upstream regulator prediction
+
+**Returns:**
+- Cost estimates with a per-stage breakdown
+
+**Example:**
+```
+Before I run this, estimate the cost for 40 samples across RNA and protein
+with HAllA association testing included.
+```
+
 ## XAI Metadata
 
 Every tool returns an `xai_metadata` field with explainability information:

@@ -2,7 +2,7 @@
 
 Copy-paste prompts for clinical data retrieval and genomic variant analysis.
 
-**Servers used:** mcp-mockepic (3 tools), mcp-fgbio (4 tools), mcp-genomic-results (4 tools)
+**Servers used:** mcp-mockepic (3 tools), mcp-fgbio (4 tools), mcp-genomic-results (12 tools)
 
 ---
 

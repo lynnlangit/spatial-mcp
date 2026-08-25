@@ -8,9 +8,9 @@ Cheat sheet for common development tasks in the precision-medicine-mcp platform.
 
 ```
 precision-medicine-mcp/
-├── servers/                      # 19 MCP servers (119 tools) + boilerplate template
+├── servers/                      # 19 MCP servers (127 tools) + boilerplate template
 │   ├── mcp-fgbio/               # Reference genomes, VCF/FASTQ (4 tools)
-│   ├── mcp-genomic-results/     # Somatic variant/CNV parsing (4 tools)
+│   ├── mcp-genomic-results/     # Somatic variant/CNV parsing + allelic-imbalance CNV suite (12 tools)
 │   ├── mcp-multiomics/          # RNA/Protein/Phospho (10 tools, best reference)
 │   ├── mcp-spatialtools/        # Spatial transcriptomics (16 tools)
 │   ├── mcp-cibersortx/          # Immune deconvolution (5 tools)

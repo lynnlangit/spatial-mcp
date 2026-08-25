@@ -61,7 +61,7 @@ Scenario-level SYNTHETIC_DATA test prompts for file-based parsing are planned bu
 
 ## MCP Tools Used
 
-The mcp-cardiometabolic server provides 5 tools:
+The mcp-cardiometabolic server provides 14 tools:
 
 | Tool | Purpose |
 |------|---------|

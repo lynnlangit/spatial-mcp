@@ -100,6 +100,13 @@ uv run pytest eval/test_milestone_1.py eval/test_milestone_2.py -v
 
 ## Case Study: PAT001 & PAT002
 
+> **Scope — why not PAT003.** This case study covers the two oncology patients
+> only. PAT003 is a preventive-cardiovascular case whose outputs are risk
+> estimates and evidence gaps rather than the clinically unambiguous binary
+> questions this evaluation scores, so it is deliberately out of scope here.
+> For all three patient outcomes see
+> [Patient Outcomes Reference](../docs/reference/shared/patient-outcomes.md).
+
 **What it proves:** When provided patient-specific tool outputs from the platform's
 MCP servers, Claude Sonnet 4.6 answers clinically unambiguous binary questions with
 100% accuracy — vs. 33.3% without tool outputs. This 66.7 percentage-point gap

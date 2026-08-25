@@ -120,7 +120,7 @@ graph LR
 **Goal:** Deep dive into spatial, multi-omics, or genomic analysis
 
 **Spatial Transcriptomics:**
-- **Server:** mcp-spatialtools (95% real, 14 tools)
+- **Server:** mcp-spatialtools (95% real, 16 tools)
 - **Quick start:** [Spatial Quick Start](../../servers/mcp-spatialtools/QUICKSTART.md) (15 min)
 - **Capabilities:** STAR alignment, ComBat batch correction, pathway enrichment, Moran's I
 - **Example:** "Perform spatial pathway enrichment on PatientOne tumor regions"

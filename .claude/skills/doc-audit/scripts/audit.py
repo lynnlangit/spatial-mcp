@@ -75,10 +75,13 @@ def all_md_files():
             and "node_modules" not in p.parts
             and ".venv" not in p.parts
             and "venv" not in p.parts
-            and not any(x in str(p.relative_to(REPO_ROOT)) for x in (
-                "docs/book",
-                "docs/reference/testing/",  # per-patient test prompts share boilerplate by design
-            ))]
+            and "docs/book" not in str(p.relative_to(REPO_ROOT))]
+
+
+# Per-patient test prompts share boilerplate by design, so they are excluded from
+# the DRY check only. Excluding them globally (as this once did) also hid stale
+# counts and wrong patient values from checks B and C.
+DRY_EXEMPT_PREFIXES = ("docs/reference/testing/",)
 
 def registry_tool_counts():
     """Parse the registry table → {server_name: tool_count}."""
@@ -148,62 +151,131 @@ def check_A():
 
 # ── Check B: hardcoded counts in MD files ─────────────────────────────────────
 
-COUNT_PATTERNS = [
-    r"\b(\d{1,2})\s+custom\s+server",
-    r"\b(\d{1,2})-server\b",
-    r"\ball\s+(\d{1,2})\s+(custom\s+)?server",
-    r"\b(\d{1,2})\s+tool",
-    r"\bFull\s+(\d{1,2})-server",
+# A count in a doc is one of three things, and conflating them is why this check
+# was first noisy and then switched off entirely:
+#
+#   1. a SERVER count ("19 custom servers")   -> compare to the registry
+#   2. a per-server TOOL count named on the
+#      same line ("mcp-spatialtools (16 tools)") -> compare to THAT server's code
+#   3. anything else ("6 tools" for an external connector, a per-category
+#      subtotal in a diagram)                 -> not a platform claim; skip
+#
+# Only 1 and 2 are checkable. Flagging 3 buries the real findings.
+SERVER_COUNT_PATTERNS = [
+    r"\b(\d{1,3})\s+custom\s+servers?\b",
+    r"\b(\d{1,3})[- ]servers?\b",
+    r"\ball\s+(\d{1,3})\s+(?:custom\s+)?(?:MCP\s+)?servers?\b",
+    r"\b(\d{1,3})\s+(?:custom\s+)?MCP\s+servers?\b",
+    # "**Servers:** 19 custom (127 tools)" -- the word "server" is in the label
+    r"\b(\d{1,3})\s+custom\s*\(",
 ]
+
+# A count describing a deliberate SUBSET is not a claim about the platform.
+# "11 servers return per-tool XAI metadata" counts a capability subset, not the
+# platform. Same for an explicitly-scoped MVP pipeline.
+SUBSET_MARKERS = ("mvp", "subset", "minimum viable", "xai metadata")
+
+# Test-prompt docs describe a scenario that exercises N servers on purpose
+# ("test-7: 6 servers", "test-10: all 17"). Those server counts are scenario
+# scope, not platform claims, so the server-count rule is skipped there. Tool
+# counts are still checked -- these files can still carry a stale platform total.
+SCOPED_SUBSET_PREFIXES = ("docs/reference/testing/",)
+# \d{1,3}, not \d{1,2}: tool counts passed 100 in Aug 2026 and a two-digit
+# pattern silently stopped matching them, so the check reported clean while a
+# dozen docs carried a stale total.
+TOOL_COUNT_PATTERN = r"\b(\d{1,3})\s+tools?\b"
+
+# Lines that legitimately state a past count: a changelog row or a dated run log
+# is a historical record, not a claim about the platform today.
+HISTORICAL_MARKERS = (
+    "at that release",
+    "no dry_run | pass",
+)
+
 
 def check_B():
     print("\n━━━━ CHECK B — Hardcoded counts in MD files ━━━━")
     reg_servers, reg_tools = registry_header_counts()
+    code = code_tool_counts()
     violations = []
     for md in all_md_files():
         if md.name == "server-registry.md":
             continue
-        # skip per-server docs, developer config, UI, and all docs/ subtrees —
-        # per-server, per-subsystem, and audience-specific counts are intentional
+        # `docs/` is NOT skipped. It used to be, which disabled this check almost
+        # entirely -- docs/ is where the documentation lives, so excluding it left
+        # Check B looking at a handful of root files and reporting clean while a
+        # dozen docs carried a stale tool count.
+        #
+        # `servers/` is skipped because a server's own README is canonical for
+        # that server; check_E verifies it against the code instead.
         rel = str(md.relative_to(REPO_ROOT))
         if any(rel.startswith(p) for p in (
-            "servers/", ".claude/", "ui/", "docs/",
+            "servers/", ".claude/", "ui/", "docs/reference/archive/",
         )):
             continue
-        # CLAUDE.md at repo root lists per-server tool counts — skip it
         if md.name == "CLAUDE.md" and md.parent == REPO_ROOT:
             continue
-        # README.md at repo root: "46 tools" is external connectors, not custom servers
-        if md.name == "README.md" and md.parent == REPO_ROOT:
-            continue
-        text = md.read_text()
-        for pat in COUNT_PATTERNS:
-            for m in re.finditer(pat, text, re.IGNORECASE):
+
+        for line_no, line in enumerate(md.read_text().splitlines(), start=1):
+            low = line.lower()
+            if any(marker in low for marker in HISTORICAL_MARKERS):
+                continue
+            if any(marker in low for marker in SUBSET_MARKERS):
+                continue
+            here = f"  {md.relative_to(REPO_ROOT)}:{line_no}"
+
+            # 1. server counts -- a platform claim, unless this doc describes a
+            #    deliberately scoped scenario
+            scoped = rel.startswith(SCOPED_SUBSET_PREFIXES)
+            server_count_on_line = False
+            for pat in SERVER_COUNT_PATTERNS:
+                for m in re.finditer(pat, line, re.IGNORECASE):
+                    n = int(m.group(1))
+                    if not (4 <= n <= 200):
+                        continue
+                    server_count_on_line = True
+                    if scoped:
+                        continue
+                    if reg_servers is not None and n != reg_servers:
+                        violations.append(
+                            f"{here}  '{m.group(0).strip()}'  →  registry says {reg_servers} servers"
+                        )
+
+            # 2/3. tool counts
+            for m in re.finditer(TOOL_COUNT_PATTERN, line, re.IGNORECASE):
                 n = int(m.group(1))
-                # flag if the number looks like a stale server or tool count (4–200)
-                # skip counts that match the current registry values
-                if n in (reg_servers, reg_tools):
+                if not (1 <= n <= 200):
                     continue
-                if 4 <= n <= 200:
-                    line_no = text[:m.start()].count("\n") + 1
-                    violations.append(
-                        f"  {md.relative_to(REPO_ROOT)}:{line_no}  "
-                        f"'{m.group(0).strip()}'  →  replace with registry link"
-                    )
+                col = m.start()
+                named = [
+                    mm.group(0)
+                    for mm in re.finditer(r"mcp-[a-z0-9-]+", line)
+                    if mm.start() < col
+                ]
+                if named and named[-1] in code:
+                    owner = named[-1]
+                    if n != code[owner]:
+                        violations.append(
+                            f"{here}  '{m.group(0).strip()}' for {owner}  →  code has {code[owner]}"
+                        )
+                elif server_count_on_line:
+                    # "19 custom servers (119 tools)" -- a platform total
+                    if reg_tools is not None and n != reg_tools:
+                        violations.append(
+                            f"{here}  '{m.group(0).strip()}'  →  registry says {reg_tools} tools"
+                        )
+
     if violations:
-        # deduplicate (same file+line can match multiple patterns)
-        seen = set()
-        uniq = []
+        seen, uniq = set(), []
         for v in violations:
-            key = v.split("  '")[0]
-            if key not in seen:
-                seen.add(key)
+            if v not in seen:
+                seen.add(v)
                 uniq.append(v)
         print(f"  ✗ {len(uniq)} violation(s):")
         for v in uniq:
             print(v)
-    else:
-        print("  ✓ No hardcoded counts found outside server-registry.md")
+        return uniq
+    print("  ✓ No stale server or tool counts found outside server-registry.md")
     return violations
 
 # ── Check C: three patient outcomes ──────────────────────────────────────────
@@ -228,9 +300,15 @@ def check_C():
             )
         # accuracy: check known wrong numeric values
         for (pat, wrong), correct in KNOWN_WRONG_VALUES.items():
-            if pat in text and wrong in text:
-                line_no = text.find(wrong)
-                line_no = text[:line_no].count("\n") + 1
+            if pat not in text:
+                continue
+            # Numeric boundaries matter: a bare substring search made "7.9" match
+            # inside "17.9%" in an unrelated confidence distribution, and would
+            # equally match "7.85". Require the value not to sit inside a longer
+            # number on either side.
+            m = re.search(r"(?<![\d.])" + re.escape(wrong) + r"(?![\d])", text)
+            if m:
+                line_no = text[: m.start()].count("\n") + 1
                 violations.append(
                     f"  WRONG VALUE  {md.relative_to(REPO_ROOT)}:{line_no}  "
                     f"'{wrong}' for {pat} should be '{correct}'"
@@ -249,6 +327,8 @@ def check_D():
     print("\n━━━━ CHECK D — DRY: duplicate content blocks (>80 words) ━━━━")
     fingerprint_to_files = defaultdict(list)
     for md in all_md_files():
+        if str(md.relative_to(REPO_ROOT)).startswith(DRY_EXEMPT_PREFIXES):
+            continue
         text = md.read_text()
         for block in paragraphs(text):
             # normalise whitespace before hashing
@@ -276,6 +356,57 @@ def check_D():
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
+# ── Check E: server code vs the server's own README ──────────────────────────
+
+def check_E():
+    """A server's README is canonical for that server, so it must match the code.
+
+    Check A compares code to the aggregate registry. This compares code to the
+    per-server doc, which is where a reader actually looks up what a server can
+    do -- a README listing 4 tools for a 12-tool server is drift even when it
+    states no total.
+    """
+    print("\n━━━━ CHECK E — Server code vs server README ━━━━")
+    violations = []
+    for srv_dir in sorted(REPO_ROOT.glob("servers/mcp-*/")):
+        if srv_dir.name == "mcp-server-boilerplate":
+            continue
+        server_py = None
+        for p in srv_dir.rglob("server.py"):
+            if any(x in p.parts for x in ("venv", ".venv", "build", "site-packages")):
+                continue
+            server_py = p
+            break
+        if server_py is None:
+            continue
+        src = server_py.read_text(encoding="utf-8", errors="replace")
+        names = re.findall(r"@mcp\.tool\(\)\s*\n\s*(?:async\s+)?def\s+(\w+)", src)
+        readme = srv_dir / "README.md"
+        if not readme.exists():
+            violations.append(f"  {srv_dir.name}  has no README.md ({len(names)} tools undocumented)")
+            continue
+        text = readme.read_text(encoding="utf-8", errors="replace")
+        missing = [n for n in names if n not in text]
+        for n in missing:
+            violations.append(f"  {srv_dir.name}/README.md  does not document tool '{n}'")
+        # A stated total, if present, must match the code.
+        for m in re.finditer(r"\b(\d{1,3})\s+tools?\b", text, re.IGNORECASE):
+            stated = int(m.group(1))
+            if stated != len(names) and 1 <= stated <= 200:
+                line_no = text[: m.start()].count("\n") + 1
+                violations.append(
+                    f"  {srv_dir.name}/README.md:{line_no}  says '{m.group(0)}' "
+                    f"but code has {len(names)}"
+                )
+    if violations:
+        print(f"  ✗ {len(violations)} violation(s):")
+        for v in violations:
+            print(v)
+    else:
+        print("  ✓ Every server README matches its server.py")
+    return violations
+
+
 def main():
     print("=" * 60)
     print("Precision Medicine MCP — Doc Audit")
@@ -291,8 +422,9 @@ def main():
     b = check_B()
     c = check_C()
     d = check_D()
+    e = check_E()
 
-    total = len(a) + len(b) + len(c) + len(d)
+    total = len(a) + len(b) + len(c) + len(d) + len(e)
     print("\n" + "=" * 60)
     print("SUMMARY")
     print("=" * 60)
@@ -300,6 +432,7 @@ def main():
     print(f"  Check B (hardcoded counts):     {len(b):3d} violation(s)")
     print(f"  Check C (patient outcomes):     {len(c):3d} violation(s)")
     print(f"  Check D (DRY duplicates):       {len(d):3d} violation(s)")
+    print(f"  Check E (server README):        {len(e):3d} violation(s)")
     print(f"  {'─'*36}")
     print(f"  Total:                          {total:3d} violation(s)")
 

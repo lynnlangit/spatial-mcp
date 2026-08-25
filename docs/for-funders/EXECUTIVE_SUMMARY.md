@@ -2,7 +2,7 @@
 
 > **v17 update (April 2026):** Platform expanded from oncology to preventive health.
 > **v18 update (June 2026):** mcp-deidentify added — HIPAA Safe Harbor Stage 0 preprocessing.
-> 19 custom servers (119 tools). PAT003 (preventive CVD) validated April 23, 2026.
+> 19 custom servers (127 tools). PAT003 (preventive CVD) validated April 23, 2026.
 > See [ROADMAP.md](../../ROADMAP.md) for full version history.
 
 ## The Problem
@@ -17,7 +17,7 @@ All tools accessible via natural language. Every AI result requires **clinician 
 
 **Metrics:** 40 hours -> 2-5 hours (production), ~$324-702/patient vs $6,000-9,000 traditional. See [Value Proposition](../reference/shared/value-proposition.md) for details.
 
-**Servers:** 19 custom (119 tools) + 6 external connectors — see [Server Registry](../reference/shared/server-registry.md) for current counts.
+**Servers:** 19 custom (127 tools) + 6 external connectors — see [Server Registry](../reference/shared/server-registry.md) for current counts.
 
 ---
 

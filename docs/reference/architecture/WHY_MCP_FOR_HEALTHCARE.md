@@ -72,7 +72,7 @@ graph TD
         PLAN["1. Understand intent<br/>2. Plan workflow<br/>3. Execute across 19 servers"]
     end
 
-    subgraph Servers["🔧 19 MCP Servers — 7 Categories (119 tools)"]
+    subgraph Servers["🔧 19 MCP Servers — 7 Categories (127 tools)"]
         STAGE0["🔒 De-identification (6 tools)<br/>HIPAA Safe Harbor"]
         CLINICAL["🏥 Clinical & Genomic (20 tools)<br/>EHR context + variant calls"]
         OMICS["🧬 Multi-Omics & Spatial (37 tools)<br/>Pathway + spatial analysis"]
@@ -107,7 +107,7 @@ graph TD
 ```
 
 ### 3. Domain Expertise Encoded
-**Each category encapsulates bioinformatics best practices (19 servers, 119 tools):**
+**Each category encapsulates bioinformatics best practices (19 servers, 127 tools):**
 
 | Category | Encoded Expertise | Replaces |
 |----------|-------------------|----------|

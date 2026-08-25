@@ -6,7 +6,7 @@ Precision medicine workflow for Stage IIA ER+/PR+/HER2- Breast Cancer using all 
 
 > **Quick references:** [Test Prompts](test-prompts/) | [PAT002 Data](../../../data/patient-data/PAT002-BC-2026/README.md) | [Canonical Values](../../../tests/fixtures/pat002_canonical.py) | [DRY_RUN Mode](../shared/dry-run-mode.md)
 
-PatientTwo demonstrates cross-cancer portability of the platform — the same 19 servers and 119 tools used for HGSOC (PAT001) are applied to a completely different cancer type with **zero disease-specific code changes**.
+PatientTwo demonstrates cross-cancer portability of the platform — the same 19 servers and 127 tools used for HGSOC (PAT001) are applied to a completely different cancer type with **zero disease-specific code changes**.
 
 ### Clinical Scenario
 

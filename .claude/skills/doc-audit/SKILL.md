@@ -1,11 +1,12 @@
 ---
 name: precision-medicine-doc-audit
 description: >
-  Audits all Markdown files in the precision-medicine-mcp repo against four
+  Audits all Markdown files in the precision-medicine-mcp repo against five
   canonical principles: (A) server Python code is the authoritative tool count,
   (B) server-registry.md is the authoritative server/tool summary, (C) all
   three patient outcomes (PAT001/PAT002/PAT003) must be represented consistently,
-  (D) no content block may appear in more than one MD file (DRY). Use this skill
+  (D) no content block may appear in more than one MD file (DRY),
+  (E) each server's own README documents every tool in its server.py. Use this skill
   whenever a new version of the platform ships, a new server is added, a new
   patient use case is validated, or before any major doc update. Trigger phrases:
   "audit the docs", "check docs are correct", "doc cleanup", "canonical check",
@@ -18,7 +19,7 @@ description: >
 
 After every platform version update, run this audit to catch stale numbers,
 missing patient references, and repeated content before they spread further.
-The audit has four checks (A–D) that map directly to the four canonical principles.
+The audit has five checks (A–E) that map directly to the five canonical principles.
 Run them in order: A feeds B, and B+C together surface D violations.
 
 ---
@@ -31,14 +32,14 @@ The bundled script does the mechanical work. Run it from the repo root:
 python .claude/skills/doc-audit/scripts/audit.py 2>&1 | tee /tmp/doc-audit-report.txt
 ```
 
-The script outputs a structured report with four sections. Read the output — it
+The script outputs a structured report with five sections. Read the output — it
 will tell you exactly which files have violations and what the correct values are.
 
 If the script is not yet installed (first run), see **Installation** below.
 
 ---
 
-## Step 2 — Interpret the four check sections
+## Step 2 — Interpret the five check sections
 
 ### Check A — Tool counts: code vs registry
 
@@ -107,6 +108,20 @@ The canonical single-source for patient outcome narratives is:
 If that file doesn't exist yet, create it before resolving D violations — see
 **Creating patient-outcomes.md** below.
 
+### Check E — Server code vs the server's own README
+
+The script lists every `@mcp.tool()` in each `servers/mcp-*/**/server.py` and checks
+that the server's own `README.md` names each one, and that any total it states
+matches the code.
+
+**A violation means:** a server gained or lost a tool and its README was not
+updated, or the server has no README at all. A server's README is canonical for
+that server — it is where a reader looks up what the server can do — so Check B
+deliberately skips `servers/` and this check covers it instead.
+
+The fix is to document the tool in the server README. Do not "fix" it by editing
+the code to match the doc: **the code is canonical.**
+
 ---
 
 ## Step 3 — Generate the fix prompt
@@ -171,7 +186,7 @@ The script has no dependencies beyond the Python standard library.
 
 ---
 
-## Quick reference: the 4 principles
+## Quick reference: the 5 principles
 
 | # | Principle | Source of truth | Fix when violated |
 |---|---|---|---|
@@ -179,3 +194,4 @@ The script has no dependencies beyond the Python standard library.
 | B | Registry is canonical for counts in docs | `docs/reference/shared/server-registry.md` | Replace inline count with registry link |
 | C | Three patients, consistent outcomes | `tests/fixtures/pat00X_canonical.py` | Update doc to match fixture value |
 | D | No repeated content blocks | Designated canonical file per topic | Keep in one place; replace others with link |
+| E | Server README documents its own tools | `servers/mcp-*/**/server.py` | Document the tool in that server's README |
