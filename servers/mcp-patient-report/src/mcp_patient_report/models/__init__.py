@@ -1,5 +1,13 @@
 """Data models for patient report generation."""
 
+from .graded_placement import (
+    ALLOWED_SECTIONS,
+    PlacedGradedResult,
+    ReportActionability,
+    ReportDetectability,
+    ReportEvidenceGrade,
+    ReportSection,
+)
 from .patient_report import (
     PatientReportData,
     PatientInfo,
@@ -25,6 +33,12 @@ from .patient_report import (
 
 __all__ = [
     "PatientReportData",
+    "PlacedGradedResult",
+    "ReportSection",
+    "ReportEvidenceGrade",
+    "ReportActionability",
+    "ReportDetectability",
+    "ALLOWED_SECTIONS",
     "PatientInfo",
     "DiagnosisSummary",
     "GenomicFinding",

@@ -246,6 +246,31 @@ async def _get_target_disease_associations_impl(
     }
 
 
+# ---------------------------------------------------------------------------
+# DEFECT FIX (CNV_TOOLS_SPEC.md section 10.3): declare what this query covers
+# ---------------------------------------------------------------------------
+# Open Targets answers a TARGET-level question: which molecules bind this
+# protein. It was read as answering a THERAPY-level question: is this pathway
+# druggable. Those are different, and the gap between them is clinically
+# material.
+#
+# The case that prompted this: GNA11 returned zero known drugs across all
+# phases with all four tractability buckets false, and that was summarised as
+# "not directly druggable". True of GNA11 itself. Misleading as written,
+# because the druggable node sits one step downstream at PKC, where a
+# registrational-stage combination exists. A care team reading "zero drugs at
+# any phase" stops looking.
+
+DRUG_SCOPE_DECLARATION = {
+    "scope": "direct_binders_only",
+    "downstream_nodes_queried": False,
+    "interpretation_warning": (
+        "Zero direct binders does not mean the pathway is undruggable. Query downstream "
+        "signalling nodes before concluding a target is not therapeutically addressable."
+    ),
+}
+
+
 async def _get_target_drugs_impl(
     gene_symbol: str,
     phase_min: int = 0,
@@ -261,6 +286,7 @@ async def _get_target_drugs_impl(
             "target": symbol,
             "drugs": filtered,
             "total_drugs": len(filtered),
+            **DRUG_SCOPE_DECLARATION,
         })
 
     _, eid = await _resolve_target(gene_symbol=gene_symbol)
@@ -272,7 +298,11 @@ async def _get_target_drugs_impl(
     )
     target = data.get("target")
     if not target:
-        return {"status": "error", "message": f"Target not found: {symbol}"}
+        return {
+            "status": "error",
+            "message": f"Target not found: {symbol}",
+            **DRUG_SCOPE_DECLARATION,
+        }
 
     rows = target.get("drugAndClinicalCandidates", {}).get("rows", [])
 
@@ -332,6 +362,7 @@ async def _get_target_drugs_impl(
         "target": symbol,
         "drugs": drugs,
         "total_drugs": len(drugs),
+        **DRUG_SCOPE_DECLARATION,
     }
 
 
