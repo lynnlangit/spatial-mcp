@@ -701,3 +701,107 @@ li {
         print-color-adjust: exact;
     }
 }
+
+/* ==========================================================================
+   Graded analytic results (CNV_TOOLS_SPEC.md section 11)
+   --------------------------------------------------------------------------
+   Limits and detectability sit inside the same bordered block as the finding
+   they qualify. They are styled to be readable, not to be skipped: a caveat
+   set in 8pt grey at the foot of a page is a caveat nobody reads.
+   ========================================================================== */
+
+.graded-result {
+    border: 1px solid #c9d1d9;
+    border-left-width: 5px;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+}
+.graded-result.grade-definitive   { border-left-color: #1a7f37; }
+.graded-result.grade-high         { border-left-color: #2f81f7; }
+.graded-result.grade-moderate     { border-left-color: #bf8700; }
+.graded-result.grade-low          { border-left-color: #d1642a; }
+.graded-result.grade-not_assessable { border-left-color: #6e7781; background: #f6f8fa; }
+
+.graded-result-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.graded-result-title { font-weight: 700; font-size: 1.02em; margin-right: auto; }
+
+.graded-badge {
+    display: inline-block;
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: #eaeef2;
+    color: #24292f;
+    white-space: nowrap;
+}
+.graded-badge.badge-definitive { background: #dafbe1; color: #0a5c2b; }
+.graded-badge.badge-high       { background: #ddf4ff; color: #0a4a8a; }
+.graded-badge.badge-moderate   { background: #fff8c5; color: #6b5200; }
+.graded-badge.badge-low        { background: #ffe7d1; color: #8a3c05; }
+.graded-badge.badge-not_assessable { background: #eaeef2; color: #4a5058; }
+.graded-badge.badge-action-predictive      { background: #dafbe1; color: #0a5c2b; }
+.graded-badge.badge-action-prognostic_only { background: #fff1e5; color: #8a3c05; }
+.graded-badge.badge-synthetic  { background: #ffebe9; color: #a40e26; }
+
+.graded-finding { margin-bottom: 10px; line-height: 1.5; }
+
+.graded-not-assessable {
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px dashed #8c959f;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.graded-prognostic-notice {
+    background: #fff1e5;
+    border: 1px solid #f0b884;
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: 0.92em;
+    line-height: 1.45;
+}
+
+.graded-detectability,
+.graded-limits,
+.graded-assumptions {
+    margin-top: 8px;
+    font-size: 0.9em;
+    line-height: 1.45;
+}
+
+.graded-label {
+    display: inline-block;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.78em;
+    letter-spacing: 0.05em;
+    color: #4a5058;
+    margin-right: 4px;
+}
+
+.graded-limits-list { margin: 4px 0 0 18px; padding: 0; }
+.graded-limits-list li { margin-bottom: 3px; }
+
+.graded-provenance {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid #eaeef2;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72em;
+    color: #6e7781;
+}
+
+.section-intro { font-size: 0.93em; color: #4a5058; margin-bottom: 10px; }

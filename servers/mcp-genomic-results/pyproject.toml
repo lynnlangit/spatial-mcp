@@ -7,6 +7,9 @@ requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=2.13.0",
     "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "numpy>=1.26",
+    "scipy>=1.11",
 ]
 
 [project.urls]
@@ -15,6 +18,10 @@ Issues = "https://github.com/lynnlangit/precision-medicine-mcp/issues"
 Documentation = "https://github.com/lynnlangit/precision-medicine-mcp/tree/main/docs"
 
 [project.optional-dependencies]
+# pysam is optional: only detect_library_chemistry and BAM-backed allele
+# counting need it. Without it those tools return NOT_ASSESSABLE rather than
+# failing at import, so the VCF-only path stays usable.
+bam = ["pysam>=0.22"]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",

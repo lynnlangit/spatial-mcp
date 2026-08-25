@@ -1049,6 +1049,373 @@ async def generate_genomic_report(
     return await _generate_report_impl(vcf_path, cns_path, patient_id)
 
 
+# ============================================================================
+# Copy-number and governance tools (CNV_TOOLS_SPEC.md)
+# ============================================================================
+# These eight tools return a GradedResult envelope rather than a bare payload,
+# and they do NOT honour GENOMIC_RESULTS_DRY_RUN by fabricating data. A
+# dry-run fixture wearing the same envelope as a real result is precisely the
+# failure this package exists to prevent; a missing input returns
+# grade=NOT_ASSESSABLE with the reason stated instead.
+
+from .cnv import tools as _cnv  # noqa: E402
+from .cnv.imbalance import DepthEvidenceRefused  # noqa: E402,F401
+
+
+@mcp.tool()
+async def detect_library_chemistry(
+    bam_path: str,
+    sample_region: Optional[str] = None,
+    max_reads: int = 200_000,
+) -> Dict[str, Any]:
+    """Decide whether a BAM is an amplicon or hybrid-capture library.
+
+    This is a GATE. Its verdict is a required input to every copy-number tool
+    here, because depth-ratio copy-number calling is invalid on an amplicon
+    library and nothing else in the pipeline can rule that out.
+
+    An amplicon verdict also means deduplication must NOT be run (amplicon reads
+    sharing a start coordinate are independent molecules that share a primer)
+    and that primer trimming IS required (a variant under a primer is invisible).
+
+    Args:
+        bam_path: Path to the aligned BAM.
+        sample_region: Optional region string (e.g. "chr3:10000-20000"). By
+            default the densest mapped contigs are sampled.
+        max_reads: Cap on reads examined. The signals are library properties and
+            stabilise long before a full pass.
+
+    Returns:
+        A GradedResult. On a verdict, `value` carries chemistry,
+        depth_cnv_permitted, deduplication_recommended, primer_trimming_required
+        and the raw evidence. When the signals conflict the grade is
+        NOT_ASSESSABLE and no verdict is returned.
+    """
+    return _cnv.detect_library_chemistry_impl(bam_path, sample_region, max_reads)
+
+
+@mcp.tool()
+async def extract_heterozygous_sites(
+    vcf_path: str,
+    chemistry: Dict[str, Any],
+    bam_path: Optional[str] = None,
+    min_depth: int = 200,
+    baf_window_low: float = 0.20,
+    baf_window_high: float = 0.80,
+    block_window_bp: int = 1_000_000,
+    purity_hint: Optional[float] = None,
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Extract informative germline heterozygous loci and group them into haplotype blocks.
+
+    Germline/somatic separation rests on dbSNP membership plus a purity
+    argument, NOT a population-frequency cutoff: at low purity nothing somatic
+    can reach the BAF window, and an AF filter removes genuine rare het sites
+    from exactly the arms least able to spare them.
+
+    Emits `n_sites` and `n_blocks` separately, always. Sites clustered inside one
+    gene are one observation, not five.
+
+    Args:
+        vcf_path: Tumour-only panel VCF.
+        chemistry: The `value` payload from detect_library_chemistry. REQUIRED.
+        bam_path: Optional BAM. When supplied on an amplicon library, allele
+            counts are recomputed per amplicon with primers trimmed.
+        min_depth: Minimum total depth for a site to be retained.
+        baf_window_low / baf_window_high: Heterozygous BAF window. Must be much
+            wider than any achievable deviation or the statistic is biased toward
+            the null.
+        block_window_bp: Sites within this distance share a haplotype block.
+        purity_hint: When supplied, the BAF window is checked against the
+            somatic ceiling and a thin margin is reported.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult whose `value` carries the sites, per-arm and
+        per-chromosome site/block counts, and the rejection tally.
+    """
+    return _cnv.extract_heterozygous_sites_impl(
+        vcf_path=vcf_path,
+        chemistry=chemistry,
+        bam_path=bam_path,
+        min_depth=min_depth,
+        baf_window=(baf_window_low, baf_window_high),
+        block_window_bp=block_window_bp,
+        purity_hint=purity_hint,
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+@mcp.tool()
+async def qc_heterozygous_sites(
+    sites: List[Dict[str, Any]],
+    chemistry: Dict[str, Any],
+    min_amplicon_depth: int = 50,
+    block_alpha: float = 0.01,
+    amplicon_alpha: float = 0.01,
+    min_site_depth: int = 1000,
+    neutral_pool_exclude_arms: Optional[List[str]] = None,
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Decide which heterozygous sites may be used for copy-number inference.
+
+    Three rules plus an overdispersion fit, kept separate from extraction so the
+    governance step is independently auditable.
+
+    Rule A — within-block concordance. Sites in one haplotype block must agree on
+    the MAGNITUDE of |BAF - 0.5|; signs may differ. Disagreement reports a
+    mapping problem, not a copy-number event.
+
+    Rule B — within-amplicon concordance. Independent primer pairs covering one
+    site must agree. This vets single-site blocks, which Rule A cannot reach.
+
+    Rule C — per-site artifact screens: third-allele fraction, soft-clip
+    fraction, strand bias, and amplicons pinned at an extreme.
+
+    Args:
+        sites: Site dicts from extract_heterozygous_sites.
+        chemistry: The `value` payload from detect_library_chemistry. REQUIRED.
+        min_amplicon_depth: Floor of 50, enforced. A 28-read amplicon passes
+            Rule B trivially, which vets an artifact rather than catching one.
+        block_alpha / amplicon_alpha: Significance thresholds for Rules A and B.
+        min_site_depth: Sites shallower than this are dropped before Rule A.
+        neutral_pool_exclude_arms: Arms plausibly carrying an event, excluded
+            from the copy-neutral pool the overdispersion is fitted on.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult whose `value` carries the surviving sites, the
+        stage-by-stage attrition, the per-block and per-site reports, and the
+        fitted beta-binomial concentration.
+    """
+    return _cnv.qc_heterozygous_sites_impl(
+        sites=sites,
+        chemistry=chemistry,
+        min_amplicon_depth=min_amplicon_depth,
+        block_alpha=block_alpha,
+        amplicon_alpha=amplicon_alpha,
+        min_site_depth=min_site_depth,
+        neutral_pool_exclude_arms=neutral_pool_exclude_arms or [],
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+@mcp.tool()
+async def estimate_tumor_purity(
+    drivers: List[Dict[str, Any]],
+    copy_neutral_evidence: Optional[Dict[str, Any]] = None,
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Estimate tumour purity from clonal driver allele fractions.
+
+    For a clonal heterozygous somatic SNV at a copy-neutral locus,
+    purity = 2 x VAF. The three assumptions behind that — clonal, heterozygous,
+    copy-neutral locus — are emitted with every result.
+
+    The grade degrades from HIGH to MODERATE when a driver's chromosome has not
+    been verified copy-neutral, because silence is not confirmation.
+
+    Args:
+        drivers: One dict per driver with keys label, alt_count, depth, chrom,
+            and optionally assumed_zygosity ("heterozygous" by default).
+        copy_neutral_evidence: Per-chromosome imbalance results, keyed by
+            chromosome, used to check the third assumption.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult whose `value` carries the pooled purity with a Wilson
+        interval, the per-driver breakdown, and the pairwise consistency tests.
+    """
+    return _cnv.estimate_tumor_purity_impl(
+        drivers=drivers,
+        copy_neutral_evidence=copy_neutral_evidence,
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+@mcp.tool()
+async def assess_cnv_detectability(
+    purity: float,
+    region_sites: List[Dict[str, Any]],
+    overdispersion_s: float,
+    chemistry: Dict[str, Any],
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Answer "could we even have seen this effect?" before running the test.
+
+    Callable on its own, and its output is embedded in every imbalance result so
+    a number can never be read without its power context.
+
+    The standard error uses the BLOCK count, not the site count — using sites
+    overstates power by sqrt(sites / blocks).
+
+    Emits the depth-scaling ceiling: per-site variance approaches 0.25/(s+1) and
+    no sequencing depth crosses it, so any recommendation to sequence deeper
+    states what the extra depth actually buys.
+
+    Args:
+        purity: Tumour purity; every expected deviation is linear in it.
+        region_sites: Post-QC sites in the region of interest.
+        overdispersion_s: Beta-binomial concentration from qc_heterozygous_sites.
+        chemistry: The `value` payload from detect_library_chemistry. REQUIRED.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult carrying expected deviations for all four copy-number
+        events, the minimum detectable effect, the loss/gain separation, and the
+        depth-scaling table.
+    """
+    return _cnv.assess_cnv_detectability_impl(
+        purity=purity,
+        region_sites=region_sites,
+        overdispersion_s=overdispersion_s,
+        chemistry=chemistry,
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+@mcp.tool()
+async def test_allelic_imbalance(
+    region_sites: List[Dict[str, Any]],
+    neutral_pool: List[Dict[str, Any]],
+    overdispersion_s: float,
+    purity: float,
+    chemistry: Dict[str, Any],
+    depth_evidence: Optional[Dict[str, Any]] = None,
+    n_resample: int = 10_000,
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Test one region for allelic imbalance against a copy-neutral null.
+
+    A latent-sign beta-binomial mixture, with significance from resampling whole
+    haplotype BLOCKS rather than an asymptotic test.
+
+    THE DIRECTION GUARD: this statistic is a magnitude and is blind to
+    direction. `direction` is "undetermined" unless depth_evidence is supplied
+    AND chemistry.depth_cnv_permitted is true. Supplying depth evidence on a
+    chemistry that cannot support it RAISES rather than being ignored.
+
+    Args:
+        region_sites: Post-QC sites in the region under test.
+        neutral_pool: Post-QC sites on arms treated as copy-neutral.
+        overdispersion_s: Beta-binomial concentration from qc_heterozygous_sites.
+        purity: Tumour purity, for the expected-deviation comparisons.
+        chemistry: The `value` payload from detect_library_chemistry. REQUIRED.
+        depth_evidence: Optional dict with log2_ratio and optionally
+            log2_ratio_ci95. Only usable when the chemistry permits depth CNV.
+        n_resample: Block-resampling iterations for the null.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult carrying the imbalance magnitude, its interval and
+        p-value, the site and block counts, the direction verdict with its
+        reasoning, and the embedded detectability analysis.
+    """
+    return _cnv.allelic_imbalance_impl(
+        region_sites=region_sites,
+        neutral_pool=neutral_pool,
+        overdispersion_s=overdispersion_s,
+        purity=purity,
+        chemistry=chemistry,
+        depth_evidence=depth_evidence,
+        n_resample=n_resample,
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+@mcp.tool()
+async def compare_cnv_architectures(
+    region_sites: List[Dict[str, Any]],
+    overdispersion_s: float,
+    candidate_breakpoints: Optional[List[int]] = None,
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Rank three copy-number structures for a region by AIC and likelihood ratio.
+
+    M0 neutral, M1 one event across the region, M2 two segments with a
+    breakpoint. Answers whether conflicting loci point to a localised structural
+    change rather than a whole-chromosome event.
+
+    The `caution` field fires when the winning model rests on a single locus in
+    any segment — with few independent loci this comparison is easy to over-read.
+
+    Args:
+        region_sites: Post-QC sites in the region.
+        overdispersion_s: Beta-binomial concentration from qc_heterozygous_sites.
+        candidate_breakpoints: Optional explicit positions. By default the
+            midpoints between consecutive haplotype blocks are scanned, since a
+            breakpoint inside a block is not identifiable.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult carrying the ranked models, the M2-vs-M1 likelihood-ratio
+        test, the breakpoint scan, and the caution flag.
+    """
+    return _cnv.compare_cnv_architectures_impl(
+        region_sites=region_sites,
+        overdispersion_s=overdispersion_s,
+        candidate_breakpoints=candidate_breakpoints,
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+@mcp.tool()
+async def assess_um_prognostic_class(
+    chr3_status: Optional[str] = None,
+    chr8q_status: Optional[str] = None,
+    chr6p_status: Optional[str] = None,
+    chr1p_status: Optional[str] = None,
+    bap1_status: Optional[str] = None,
+    sf3b1_status: Optional[str] = None,
+    eif1ax_status: Optional[str] = None,
+    gene_expression_class: Optional[str] = None,
+    metastasis_confirmed: bool = False,
+    metastasis_interval_years: Optional[float] = None,
+    synthetic_inputs: bool = False,
+) -> Dict[str, Any]:
+    """Integrate uveal melanoma prognostic markers into a single graded statement.
+
+    actionability is HARD-CODED to PROGNOSTIC_ONLY and is not configurable.
+    Chromosome 3 status estimates the risk that a PRIMARY tumour will
+    metastasise; no published evidence makes it a therapy-selection biomarker in
+    established metastatic disease.
+
+    Emits a `management_implication` field, defaulting to "None. Prognostic
+    markers do not select therapy in established metastatic disease." When the
+    record shows confirmed metastasis it appends "The prognostic question this
+    marker addresses has been answered by events."
+
+    Args:
+        chr3_status, chr8q_status, chr6p_status, chr1p_status: Arm-level status
+            strings (e.g. "loss", "disomy", "gain"). Unrecognised or absent
+            values are treated as undetermined, never as absent.
+        bap1_status, sf3b1_status, eif1ax_status: Gene status strings.
+        gene_expression_class: Any prior gene-expression class call. Reported
+            alongside rather than reconciled.
+        metastasis_confirmed: Whether the record shows confirmed metastasis.
+        metastasis_interval_years: Interval from primary treatment to metastasis.
+        synthetic_inputs: Declare that the inputs are synthetic; propagates.
+
+    Returns:
+        A GradedResult with actionability PROGNOSTIC_ONLY, carrying the risk
+        class, the per-marker states, and the management implication.
+    """
+    return _cnv.assess_um_prognostic_class_impl(
+        chr3_status=chr3_status,
+        chr8q_status=chr8q_status,
+        chr6p_status=chr6p_status,
+        chr1p_status=chr1p_status,
+        bap1_status=bap1_status,
+        sf3b1_status=sf3b1_status,
+        eif1ax_status=eif1ax_status,
+        gene_expression_class=gene_expression_class,
+        metastasis_confirmed=metastasis_confirmed,
+        metastasis_interval_years=metastasis_interval_years,
+        synthetic_inputs=synthetic_inputs,
+    )
+
+
+
 # ---------------------------------------------------------------------------
 # Server entry point
 # ---------------------------------------------------------------------------

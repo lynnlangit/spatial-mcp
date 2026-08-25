@@ -1,4 +1,5 @@
 {% extends "_base.html.j2" %}
+{% from "_graded_results.html.j2" import all_graded_sections %}
 
 {% block title %}Patient Summary Report - {{ report.patient_info.name }}{% endblock %}
 
@@ -380,6 +381,10 @@
     </div>
     {% endif %}
 </section>
+{% endif %}
+
+{% if report.graded_results %}
+{{ all_graded_sections(report.graded_results) }}
 {% endif %}
 
 <!-- Final Disclaimer -->

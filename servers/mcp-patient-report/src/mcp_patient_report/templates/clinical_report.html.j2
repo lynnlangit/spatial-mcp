@@ -1,3 +1,4 @@
+{% from "_graded_results.html.j2" import all_graded_sections %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -373,6 +374,10 @@ UNKNOWN
 {% endif %}
 
 {# ── Medical Disclaimer ── #}
+{% if report.graded_results %}
+{{ all_graded_sections(report.graded_results) }}
+{% endif %}
+
 <div class="disclaimer-box">
     <strong>Medical Disclaimer:</strong>
     {{ report.metadata.disclaimer }}

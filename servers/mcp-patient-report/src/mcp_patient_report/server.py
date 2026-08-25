@@ -111,6 +111,14 @@ ONCOLOGY_TOOL_LABELS = {
 }
 
 
+def _count_by(items, key) -> dict:
+    """Tally a list of graded results by some attribute, for the validation summary."""
+    counts: dict = {}
+    for item in items:
+        counts[key(item)] = counts.get(key(item), 0) + 1
+    return counts
+
+
 def _build_evidence_table(
     xai_collection: Dict[str, dict],
     tool_labels: Dict[str, str],
@@ -606,6 +614,28 @@ async def validate_report_data(
         if not report_data.family_implications:
             warnings.append("No family implications included (optional)")
 
+        # Graded-result governance. Placement violations and empty assumption
+        # lists are rejected by the model itself and surface in the except
+        # branch below; what remains here is reporting on what was accepted.
+        graded = report_data.graded_results
+        if not graded:
+            warnings.append(
+                "No GradedResult objects supplied. Analytic findings assembled outside "
+                "the graded pipeline carry no evidence grade, no stated assumptions and "
+                "no limits."
+            )
+        for result in graded:
+            if result.synthetic_inputs:
+                warnings.append(
+                    f"'{result.display_title}' was derived from synthetic inputs and must "
+                    "not be read as a patient finding."
+                )
+            if not result.limits and not result.is_not_assessable:
+                warnings.append(
+                    f"'{result.display_title}' states no limits. Every computational result "
+                    "has something it cannot show."
+                )
+
         return {
             "valid": True,
             "errors": [],
@@ -621,6 +651,15 @@ async def validate_report_data(
                 "has_spatial": report_data.spatial_findings is not None,
                 "has_histology": report_data.histology_findings is not None,
                 "report_status": report_data.metadata.report_status,
+                "graded_results_count": len(graded),
+                "graded_results_by_section": _count_by(graded, lambda r: r.section.value),
+                "graded_results_by_grade": _count_by(graded, lambda r: r.grade.value),
+                "graded_results_by_actionability": _count_by(
+                    graded, lambda r: r.actionability.value
+                ),
+                "not_assessable_results": [
+                    r.display_title for r in graded if r.is_not_assessable
+                ],
             }
         }
 

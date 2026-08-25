@@ -1,0 +1,120 @@
+{# ===========================================================================
+   Graded analytic results.
+
+   Every result renders its limits and its detectability ADJACENT to the number
+   they qualify — never collected into a footnote, where they detach from the
+   figure and stop doing their job. A reader who sees the number sees what it
+   rests on and what it cannot show, in the same block, without scrolling.
+
+   A NOT_ASSESSABLE result renders as an explicit statement of what could not be
+   determined. It is never omitted: an absent finding reads as "nothing to
+   report", which is the opposite of "we could not tell".
+   =========================================================================== #}
+
+{% macro graded_result_block(result) %}
+<div class="graded-result grade-{{ result.grade.value }}">
+    <div class="graded-result-header">
+        <span class="graded-result-title">{{ result.display_title }}</span>
+        <span class="graded-badge badge-{{ result.grade.value }}">
+            {{ result.grade.value | replace('_', ' ') | upper }}
+        </span>
+        <span class="graded-badge badge-action-{{ result.actionability.value }}">
+            {{ result.actionability.value | replace('_', ' ') | upper }}
+        </span>
+        {% if result.synthetic_inputs %}
+        <span class="graded-badge badge-synthetic">SYNTHETIC INPUTS</span>
+        {% endif %}
+    </div>
+
+    {% if result.is_not_assessable %}
+    <div class="graded-not-assessable">
+        <strong>Could not be determined.</strong>
+        {{ result.confidence_note }}
+        <ul class="graded-limits-list">
+        {% for limit in result.limits %}
+            <li>{{ limit }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="graded-finding">{{ result.confidence_note }}</div>
+
+    {% if result.actionability.value == 'prognostic_only' %}
+    <div class="graded-prognostic-notice">
+        This is a prognostic marker. It estimates risk and does not select therapy.
+        {% if result.value.get('management_implication') %}
+        <br><strong>Management implication:</strong> {{ result.value.get('management_implication') }}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if result.detectability %}
+    <div class="graded-detectability">
+        <span class="graded-label">Could this have been detected?</span>
+        {{ result.detectability.power_note }}
+        {% if not result.detectability.measurable %}
+        <strong>No effect of the expected size was detectable here, so a null result
+        carries no information.</strong>
+        {% endif %}
+        {% if result.detectability.min_detectable_effect is not none %}
+        <br><span class="graded-label">Smallest detectable effect:</span>
+        {{ "%.4f"|format(result.detectability.min_detectable_effect) }}
+        across {{ result.detectability.independent_units }}
+        {{ result.detectability.unit_type | replace('_', ' ') }}{{ "s" if result.detectability.independent_units != 1 }}.
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if result.limits %}
+    <div class="graded-limits">
+        <span class="graded-label">What this cannot show</span>
+        <ul class="graded-limits-list">
+        {% for limit in result.limits %}
+            <li>{{ limit }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if result.assumptions %}
+    <div class="graded-assumptions">
+        <span class="graded-label">Assumptions this rests on</span>
+        <ul class="graded-limits-list">
+        {% for assumption in result.assumptions %}
+            <li>{{ assumption }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="graded-provenance">
+        {{ result.tool }}{% if result.tool_version %} v{{ result.tool_version }}{% endif %}
+        {% if result.input_digest %} &middot; input {{ result.input_digest[:12] }}{% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro graded_section(results, section, heading, intro) %}
+{% set placed = results | selectattr('section.value', 'equalto', section) | list %}
+{% if placed %}
+<section class="section">
+    <h2 class="section-title">{{ heading }}</h2>
+    {% if intro %}<p class="section-intro">{{ intro }}</p>{% endif %}
+    {% for result in placed %}
+        {{ graded_result_block(result) }}
+    {% endfor %}
+</section>
+{% endif %}
+{% endmacro %}
+
+{% macro all_graded_sections(results) %}
+{{ graded_section(results, 'treatment_hypotheses', 'Treatment Hypotheses',
+   'Findings that bear on which therapy to consider. Every item here is graded PREDICTIVE.') }}
+{{ graded_section(results, 'prognostic_findings', 'Prognostic Findings',
+   'Findings that estimate risk. None of these select a therapy.') }}
+{{ graded_section(results, 'context', 'Context',
+   'Background findings that inform interpretation without directing management.') }}
+{{ graded_section(results, 'methods', 'Methods and Analytic Provenance',
+   'How each number above was produced, and what each measurement rests on.') }}
+{% endmacro %}

@@ -12,6 +12,16 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+from .graded_placement import (
+    ALLOWED_SECTIONS,
+    PlacedGradedResult,
+    ReportActionability,
+    ReportDetectability,
+    ReportEvidenceGrade,
+    ReportSection,
+)
+
+
 class EvidenceLevel(str, Enum):
     """Evidence levels for treatment options (oncology + preventive cardiology)."""
     # Oncology: ESMO ESCAT
@@ -429,6 +439,15 @@ class PatientReportData(BaseModel):
     perturbation_results: list[PerturbationResult] = Field(
         default_factory=list,
         description="GEARS perturbation predictions (clinical report only)"
+    )
+    graded_results: list[PlacedGradedResult] = Field(
+        default_factory=list,
+        description=(
+            "GradedResult envelopes from analytic tools, each declaring the report "
+            "section it appears in. Placement is validated: a PROGNOSTIC_ONLY result "
+            "cannot appear in treatment hypotheses, and a result with no stated "
+            "assumptions is rejected."
+        ),
     )
     open_targets_hits: list[OpenTargetsHit] = Field(
         default_factory=list,
