@@ -1,12 +1,13 @@
 ---
 name: precision-medicine-doc-audit
 description: >
-  Audits all Markdown files in the precision-medicine-mcp repo against five
+  Audits all Markdown files in the precision-medicine-mcp repo against six
   canonical principles: (A) server Python code is the authoritative tool count,
   (B) server-registry.md is the authoritative server/tool summary, (C) all
   three patient outcomes (PAT001/PAT002/PAT003) must be represented consistently,
   (D) no content block may appear in more than one MD file (DRY),
-  (E) each server's own README documents every tool in its server.py. Use this skill
+  (E) each server's own README documents every tool in its server.py,
+  (F) every relative link and fragment resolves. Use this skill
   whenever a new version of the platform ships, a new server is added, a new
   patient use case is validated, or before any major doc update. Trigger phrases:
   "audit the docs", "check docs are correct", "doc cleanup", "canonical check",
@@ -19,7 +20,7 @@ description: >
 
 After every platform version update, run this audit to catch stale numbers,
 missing patient references, and repeated content before they spread further.
-The audit has five checks (A–E) that map directly to the five canonical principles.
+The audit has six checks (A–F) that map directly to the six canonical principles.
 Run them in order: A feeds B, and B+C together surface D violations.
 
 ---
@@ -52,14 +53,14 @@ The bundled script does the mechanical work. Run it from the repo root:
 python .claude/skills/doc-audit/scripts/audit.py 2>&1 | tee /tmp/doc-audit-report.txt
 ```
 
-The script outputs a structured report with five sections. Read the output — it
+The script outputs a structured report with six sections. Read the output — it
 will tell you exactly which files have violations and what the correct values are.
 
 If the script is not yet installed (first run), see **Installation** below.
 
 ---
 
-## Step 2 — Interpret the five check sections
+## Step 2 — Interpret the six check sections
 
 ### Check A — Tool counts: code vs registry
 
@@ -142,6 +143,30 @@ deliberately skips `servers/` and this check covers it instead.
 The fix is to document the tool in the server README. Do not "fix" it by editing
 the code to match the doc: **the code is canonical.**
 
+### Check F — Link integrity
+
+The script checks every relative link and image in every Markdown file: the target
+exists, and any `#fragment` resolves to a real anchor in the target file. It also
+flags two things that look fine on disk and break only in GitHub's renderer:
+
+- **A `blob` URL used as an image source.** `github.com/<o>/<r>/blob/...` serves the
+  file *viewer page* — `content-type: text/html` — so the image silently does not
+  render. Use a relative path.
+- **Pandoc's `{#custom-id}` heading syntax.** GitHub Flavored Markdown does not
+  support it: the braces render as literal text and GitHub derives its own slug, so
+  links to the intended short anchor land on the page but never the section. Use
+  `<a id="foo"></a>` above the heading instead.
+
+Anchors are resolved the way GitHub does — heading text lowercased, punctuation
+stripped, spaces to hyphens — plus any explicit `<a id=>` / `<a name=>`.
+
+**Deliberately offline.** External `http(s)` URLs are not fetched. A check that
+needs the network fails for the wrong reasons and gets switched off. Verify those
+by hand when a page changes.
+
+Links inside code fences and inline backticks are skipped — those are examples,
+not links.
+
 ---
 
 ## Step 3 — Generate the fix prompt
@@ -210,7 +235,7 @@ check with no self-test case is one refactor away from being silently inert.
 
 ---
 
-## Quick reference: the 5 principles
+## Quick reference: the 6 principles
 
 | # | Principle | Source of truth | Fix when violated |
 |---|---|---|---|
@@ -219,3 +244,4 @@ check with no self-test case is one refactor away from being silently inert.
 | C | Three patients, consistent outcomes | `tests/fixtures/pat00X_canonical.py` | Update doc to match fixture value |
 | D | No repeated content blocks | Designated canonical file per topic | Keep in one place; replace others with link |
 | E | Server README documents its own tools | `servers/mcp-*/**/server.py` | Document the tool in that server's README |
+| F | Links and fragments resolve | The file tree | Fix the path, or the anchor in the target |

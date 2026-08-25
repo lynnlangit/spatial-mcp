@@ -104,6 +104,28 @@ IC50 7.8 nM. PAT002 HRD score is 35. PAT003 Reynolds risk is 14.3%.
 
 FILLER = " ".join(f"word{i}" for i in range(120))
 
+# Exercises Check F: a working relative link, a working fragment, a heading with
+# a real HTML anchor, and an inline image by relative path.
+LINKS_DOC = """\
+# Links
+
+<a id="deep"></a>
+
+## Deep Section
+
+See [the registry](reference/shared/server-registry.md) and
+[the deep section](#deep) and [outcomes](outcomes.md#outcomes-heading).
+
+![diagram](img/diagram.png)
+"""
+
+OUTCOMES_EXTRA = """
+
+## Outcomes Heading
+
+Text under a heading whose GitHub slug is outcomes-heading.
+"""
+
 
 def build_repo(root: Path) -> None:
     """Write a synthetic repo the audit should report clean."""
@@ -114,7 +136,10 @@ def build_repo(root: Path) -> None:
     (root / "docs/reference/shared").mkdir(parents=True)
     (root / "docs/reference/shared/server-registry.md").write_text(REGISTRY_MD)
     (root / "docs/guide.md").write_text(AUDIENCE_DOC)
-    (root / "docs/outcomes.md").write_text(PATIENT_DOC)
+    (root / "docs/outcomes.md").write_text(PATIENT_DOC + OUTCOMES_EXTRA)
+    (root / "docs/links.md").write_text(LINKS_DOC)
+    (root / "docs/img").mkdir(parents=True)
+    (root / "docs/img/diagram.png").write_bytes(b"\x89PNG\r\n\x1a\n")
 
 
 # --------------------------------------------------------------------------- #
@@ -174,6 +199,29 @@ def mut_server_readme_missing(root):
     (root / "servers/mcp-alpha/README.md").unlink()
 
 
+def mut_broken_relative_link(root):
+    _sub(root / "docs/links.md",
+         "reference/shared/server-registry.md", "reference/shared/moved-away.md")
+
+
+def mut_broken_fragment(root):
+    _sub(root / "docs/links.md", "outcomes.md#outcomes-heading", "outcomes.md#no-such-heading")
+
+
+def mut_broken_same_page_fragment(root):
+    _sub(root / "docs/links.md", "(#deep)", "(#not-there)")
+
+
+def mut_blob_url_image(root):
+    _sub(root / "docs/links.md", "img/diagram.png",
+         "https://github.com/o/r/blob/main/img/diagram.png")
+
+
+def mut_pandoc_heading_id(root):
+    """GitHub ignores {#id}; it renders the braces and derives its own slug."""
+    _sub(root / "docs/links.md", "## Deep Section", "## Deep Section {#deep-section}")
+
+
 CASES = [
     ("A", "registry tool count drifts from code", mut_registry_drifts),
     ("B", "stale platform tool count in a doc", mut_stale_platform_tool_count),
@@ -185,6 +233,11 @@ CASES = [
     ("E", "server README drops a tool", mut_server_readme_drops_tool),
     ("E", "server README states a wrong total", mut_server_readme_total_wrong),
     ("E", "server has no README", mut_server_readme_missing),
+    ("F", "relative link target missing", mut_broken_relative_link),
+    ("F", "fragment missing in target file", mut_broken_fragment),
+    ("F", "same-page fragment missing", mut_broken_same_page_fragment),
+    ("F", "image uses a GitHub blob URL", mut_blob_url_image),
+    ("F", "Pandoc {#id} heading syntax", mut_pandoc_heading_id),
 ]
 
 
@@ -201,7 +254,7 @@ def run_checks(root: Path) -> dict:
     importlib.reload(audit)
     out = {}
     with contextlib.redirect_stdout(io.StringIO()):
-        for letter in "ABCDE":
+        for letter in "ABCDEF":
             out[letter] = len(getattr(audit, f"check_{letter}")())
     return out
 
@@ -232,7 +285,7 @@ def main() -> int:
         print("  The synthetic repo should report zero violations. Fix it first —")
         print("  a dirty baseline makes every result below meaningless.")
         return 1
-    print("\n  ✓ baseline: synthetic repo reports clean on all five checks")
+    print("\n  ✓ baseline: synthetic repo reports clean on all six checks")
 
     # 2. Each defect must be caught by its check.
     print()

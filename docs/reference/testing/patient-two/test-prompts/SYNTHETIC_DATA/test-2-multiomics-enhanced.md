@@ -1,7 +1,7 @@
 TEST 2: Multi-Omics Endocrine Resistance Analysis (SYNTHETIC_DATA Mode)
 ========================================================================
 
-> **Data Mode:** This test uses **SYNTHETIC_DATA** — `*_DRY_RUN=false`. The multiomics server parses the actual CSV files in `/data/patient-data/PAT002-BC-2026/multiomics/`. No heavy bioinformatics tools required, but Python parsing dependencies (pandas, numpy, scipy) must be installed. See [Data Modes Guide](../../data-modes-guide.md) for details.
+> **Data Mode:** This test uses **SYNTHETIC_DATA** — `*_DRY_RUN=false`. The multiomics server parses the actual CSV files in `/data/patient-data/PAT002-BC-2026/multiomics/`. No heavy bioinformatics tools required, but Python parsing dependencies (pandas, numpy, scipy) must be installed. See [Data Modes Guide](../../../patient-one/data-modes-guide.md) for details.
 
 Patient ID: PAT002-BC-2026
 

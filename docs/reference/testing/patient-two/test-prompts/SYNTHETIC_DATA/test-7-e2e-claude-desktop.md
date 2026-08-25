@@ -4,7 +4,7 @@
 
 **Setup:** See [desktop-configs/](../../../../../getting-started/desktop-configs/) for Claude Desktop configuration. Set all `*_DRY_RUN` env vars to `false` in your `claude_desktop_config.json`.
 
-**See also:** [DRY_RUN version](../DRY_RUN/test-7-e2e-claude-desktop.md) | [Data Modes Guide](../../data-modes-guide.md)
+**See also:** [DRY_RUN version](../DRY_RUN/test-7-e2e-claude-desktop.md) | [Data Modes Guide](../../../patient-one/data-modes-guide.md)
 
 ---
 

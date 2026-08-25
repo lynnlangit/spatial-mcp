@@ -63,7 +63,7 @@ Negative Tier 1 genetic screen rules out monogenic familial hypercholesterolemia
 
 ## Canonical Reference
 
-See [`tests/fixtures/pat003_canonical.py`](../../../../../tests/fixtures/pat003_canonical.py) for all validated values.
+See [`tests/fixtures/pat003_canonical.py`](../../../../../../tests/fixtures/pat003_canonical.py) for all validated values.
 
 ---
 

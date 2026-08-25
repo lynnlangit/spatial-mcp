@@ -101,7 +101,7 @@ graph TB
 **Rate Limiting:** 1000 requests/hour with exponential backoff
 **De-identification:** HIPAA Safe Harbor - removes all 18 identifiers
 
-**For detailed specifications:** [mcp-epic README](../../../../servers/README.md#mcp-epic)
+**For detailed specifications:** [mcp-epic README](../../../../servers/mcp-epic/README.md)
 
 ---
 
@@ -121,7 +121,7 @@ graph TB
 **Use Case:** Development, testing, public demos (no credentials needed)
 **Resource:** `ehr://patients/mock` - Patient database metadata
 
-**For detailed specifications:** [mcp-mockepic README](../../../../servers/README.md#mcp-mockepic)
+**For detailed specifications:** [mcp-mockepic README](../../../../servers/mcp-mockepic/README.md)
 
 ---
 
@@ -306,13 +306,13 @@ export DEIDENTIFY_ENABLED="true"
 ## 📖 Detailed Documentation
 
 ### Server Documentation
-- **mcp-epic:** [/servers/mcp-epic/README.md](../../../../servers/README.md#mcp-epic)
+- **mcp-epic:** [/servers/mcp-epic/README.md](../../../../servers/mcp-epic/README.md)
   - OAuth 2.0 setup and credentials
   - De-identification implementation details
   - Tool specifications with examples
   - FHIR resource mapping
 
-- **mcp-mockepic:** [/servers/mcp-mockepic/README.md](../../../../servers/README.md#mcp-mockepic)
+- **mcp-mockepic:** [/servers/mcp-mockepic/README.md](../../../../servers/mcp-mockepic/README.md)
   - Synthetic data generation methodology
   - Tool specifications with examples
   - Resource endpoints

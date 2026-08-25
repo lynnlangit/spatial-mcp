@@ -1,7 +1,7 @@
 TEST 1: Clinical Data and Genomic Analysis (SYNTHETIC_DATA Mode)
 =================================================================
 
-> **Data Mode:** This test uses **SYNTHETIC_DATA** — `*_DRY_RUN=false`. Servers parse the actual generated files in `/data/patient-data/PAT002-BC-2026/`. No heavy bioinformatics tools required, but Python parsing dependencies must be installed. See [Data Modes Guide](../../data-modes-guide.md) for details.
+> **Data Mode:** This test uses **SYNTHETIC_DATA** — `*_DRY_RUN=false`. Servers parse the actual generated files in `/data/patient-data/PAT002-BC-2026/`. No heavy bioinformatics tools required, but Python parsing dependencies must be installed. See [Data Modes Guide](../../../patient-one/data-modes-guide.md) for details.
 
 Patient ID: PAT002-BC-2026
 

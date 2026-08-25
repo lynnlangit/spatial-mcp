@@ -449,6 +449,145 @@ def check_E():
     return violations
 
 
+# ── Check F: link integrity ──────────────────────────────────────────────────
+#
+# Every one of these was a real defect that survived a local check, because on
+# disk the file is there and only GitHub's renderer disagrees:
+#
+#   * a `blob` URL in an <img> tag serves the file VIEWER page (text/html), so
+#     the image silently does not render
+#   * Pandoc's {#custom-id} heading syntax is not supported by GitHub Flavored
+#     Markdown: the braces render as literal text and GitHub derives its own
+#     slug, so links to the intended short anchor land on the page but not the
+#     section
+#
+# Deliberately offline: external http(s) URLs are not fetched. A check that
+# needs the network is a check that fails for the wrong reasons.
+
+_LINK_RE = re.compile(r"(!?)\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
+_HTML_IMG_RE = re.compile(r"<img[^>]*src=\"([^\"]+)\"", re.I)
+_HTML_ANCHOR_RE = re.compile(r"<a[^>]*\b(?:id|name)=\"([^\"]+)\"", re.I)
+_PANDOC_ID_RE = re.compile(r"^#{1,6} .*\{#([\w-]+)\}\s*$", re.M)
+
+
+def _mask_code(text: str) -> str:
+    """Blank out code fences and inline spans, preserving offsets.
+
+    Links inside code are examples, not links. The doc-audit SKILL.md documents
+    the standard fix as a fenced markdown sample containing
+    `(../reference/shared/patient-outcomes.md#pat001)`; checking that path would
+    report a broken link in a snippet whose whole job is to be illustrative.
+    Offsets are preserved so line numbers stay accurate.
+    """
+    out = list(text)
+    for m in re.finditer(r"^```.*?^```", text, re.S | re.M):
+        for i in range(m.start(), m.end()):
+            if out[i] != "\n":
+                out[i] = " "
+    masked = "".join(out)
+    for m in re.finditer(r"`[^`\n]*`", masked):
+        for i in range(m.start(), m.end()):
+            out[i] = " "
+    return "".join(out)
+
+
+def _github_slug(heading: str) -> str:
+    """Reproduce GitHub's heading -> anchor slug.
+
+    Lowercase, drop everything that is not a word character, space or hyphen,
+    then spaces to hyphens. An em dash surrounded by spaces therefore collapses
+    to a double hyphen, which is why the real anchors look like
+    "pat001--hgsoc-stage-iv".
+    """
+    s = heading.strip().lower()
+    s = re.sub(r"[^\w\s-]", "", s, flags=re.UNICODE)
+    return re.sub(r"\s", "-", s)
+
+
+def _anchors_in(path: Path) -> set:
+    """Every fragment that resolves inside `path`: headings plus HTML anchors."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return set()
+    out = {m.group(1) for m in _HTML_ANCHOR_RE.finditer(text)}
+    for line in text.splitlines():
+        if line.startswith("#"):
+            out.add(_github_slug(line.lstrip("#")))
+    return out
+
+
+# Archived docs are frozen snapshots; their links point at the layout that
+# existed when they were archived. Check B skips this tree for the same reason.
+LINK_EXEMPT_PREFIXES = ("docs/reference/archive/",)
+
+
+def check_F():
+    print("\n━━━━ CHECK F — Link integrity ━━━━")
+    violations = []
+    anchor_cache = {}
+
+    for md in all_md_files():
+        rel = str(md.relative_to(REPO_ROOT))
+        if rel.startswith(LINK_EXEMPT_PREFIXES):
+            continue
+        raw = md.read_text(encoding="utf-8", errors="replace")
+        text = _mask_code(raw)
+
+        for m in _PANDOC_ID_RE.finditer(text):
+            line_no = text[: m.start()].count("\n") + 1
+            violations.append(
+                f"  {rel}:{line_no}  Pandoc '{{#{m.group(1)}}}' heading id — GitHub "
+                f"ignores this; use <a id=\"{m.group(1)}\"></a> above the heading"
+            )
+
+        found = [(m.group(1) == "!", m.group(2), m.start()) for m in _LINK_RE.finditer(text)]
+        found += [(True, m.group(1), m.start()) for m in _HTML_IMG_RE.finditer(text)]
+
+        for is_image, href, pos in found:
+            line_no = text[:pos].count("\n") + 1
+            here = f"  {rel}:{line_no}"
+
+            if is_image and re.match(r"https?://github\.com/[^/]+/[^/]+/blob/", href):
+                violations.append(
+                    f"{here}  image points at a GitHub 'blob' URL, which serves "
+                    f"text/html not an image: {href}"
+                )
+                continue
+            if href.startswith(("http://", "https://", "mailto:", "tel:")):
+                continue  # external: not fetched, on purpose
+
+            target_part, _, frag = href.partition("#")
+            if target_part:
+                target = (md.parent / target_part).resolve()
+                if not target.exists():
+                    violations.append(f"{here}  target does not exist: {href}")
+                    continue
+            else:
+                target = md
+
+            if frag and target.is_file() and target.suffix == ".md":
+                if target not in anchor_cache:
+                    anchor_cache[target] = {a.lower() for a in _anchors_in(target)}
+                if frag.lower() not in anchor_cache[target]:
+                    violations.append(
+                        f"{here}  fragment '#{frag}' not found in {target_part or md.name}"
+                    )
+
+    if violations:
+        seen, uniq = set(), []
+        for v in violations:
+            if v not in seen:
+                seen.add(v)
+                uniq.append(v)
+        print(f"  ✗ {len(uniq)} violation(s):")
+        for v in uniq:
+            print(v)
+        return uniq
+    print("  ✓ All relative links and fragments resolve; no blob-URL images")
+    return violations
+
+
 def main():
     print("=" * 60)
     print("Precision Medicine MCP — Doc Audit")
@@ -465,8 +604,9 @@ def main():
     c = check_C()
     d = check_D()
     e = check_E()
+    f = check_F()
 
-    total = len(a) + len(b) + len(c) + len(d) + len(e)
+    total = len(a) + len(b) + len(c) + len(d) + len(e) + len(f)
     print("\n" + "=" * 60)
     print("SUMMARY")
     print("=" * 60)
@@ -475,6 +615,7 @@ def main():
     print(f"  Check C (patient outcomes):     {len(c):3d} violation(s)")
     print(f"  Check D (DRY duplicates):       {len(d):3d} violation(s)")
     print(f"  Check E (server README):        {len(e):3d} violation(s)")
+    print(f"  Check F (link integrity):       {len(f):3d} violation(s)")
     print(f"  {'─'*36}")
     print(f"  Total:                          {total:3d} violation(s)")
 

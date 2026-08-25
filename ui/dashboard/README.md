@@ -49,7 +49,7 @@ streamlit run streamlit_app.py
 - **Live Mode:** live traffic summary — total requests, error count, avg latency, and per-server request chart from Cloud Logging
 - **Live Mode:** live token usage & costs — actual LLM token consumption and costs from audit log
 
-![Overview](https://github.com/lynnlangit/precision-medicine-mcp/blob/main/data/images/dash-1.png)
+![Overview](../../data/images/dash-1.png)
 
 ### 💰 Cost Analysis
 - Detailed cost breakdown by server and tool
@@ -58,7 +58,7 @@ streamlit run streamlit_app.py
 - Monthly/annual cost projections
 - **Live Mode:** live token costs — actual usage from Streamlit client audit logs
 
-![Cost Analysis](https://github.com/lynnlangit/precision-medicine-mcp/blob/main/data/images/dash-2.png)
+![Cost Analysis](../../data/images/dash-2.png)
 
 ### ⚡ Performance
 - Latency analysis by server
@@ -75,7 +75,7 @@ streamlit run streamlit_app.py
 - **Live Mode:** live error-signal warnings per server (error count, rate) from Cloud Logging
 - **Live Mode:** high-cost server detection — flags servers exceeding $0.50/24h with per-query breakdown
 
-![Optimization](https://github.com/lynnlangit/precision-medicine-mcp/blob/main/data/images/dash-4.png)
+![Optimization](../../data/images/dash-4.png)
 
 ---
 

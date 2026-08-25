@@ -172,7 +172,7 @@ Modify one PAT001 parameter (e.g., set HRD = 35 instead of 54) and discuss how t
 
 **Suggested reading:**
 - [HIPAA Checklist](../for-hospitals/HIPAA_CHECKLIST.md) (if available)
-- [Known Limitations in README](../../README.md#known-limitations)
+- [Scope of the claim](../../README.md#what-this-changes-for-the-patient)
 
 **Hands-on exercise:**
 Review the HIPAA checklist and identify one gap in the current platform deployment. Propose a technical remediation (e.g., "add field-level encryption for genomic results at rest") and estimate implementation effort (hours/days/weeks).

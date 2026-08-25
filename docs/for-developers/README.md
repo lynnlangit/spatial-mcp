@@ -401,7 +401,7 @@ Restart Claude Desktop and test:
 
 ## See It In Action
 
-<kbd><img src="https://github.com/lynnlangit/precision-medicine-mcp/blob/main/data/images/Claude-client.png" width=800></kbd>
+<kbd><img src="../../data/images/Claude-client.png" width=800></kbd>
 
 *MCP servers orchestrating bioinformatics workflows through Claude Desktop*
 
