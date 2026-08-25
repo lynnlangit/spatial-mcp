@@ -118,6 +118,30 @@ When `DEIDENTIFY_DRY_RUN=true`, tools return synthetic fixture data. No Haiku ca
 
 `passed` is **never** `true` when any layer was skipped. Hits from the layers that did run are still reported — they are real findings — but their absence does not mean the content is clean. The same shape (`status: "incomplete"`) is returned if the Haiku call fails at runtime.
 
+### Extraction failures
+
+An empty entity list means **"this text contains no PII"** — a finding. It never means "extraction did not run". Conflating the two is what makes a de-identifier hand back the original document as though it had been redacted, so every failure path in the engine raises `ExtractionFailure` instead of returning `[]`:
+
+- the `anthropic` package is missing
+- Haiku returns malformed JSON (previously: chunk skipped, its PII silently dropped)
+- any API or transport error
+- retries exhausted after rate limiting
+
+**Extraction is all-or-nothing per document.** One failed chunk fails the whole document; a partial result would redact some chunks and leave others untouched while still presenting as a completed de-identification.
+
+At the tool boundary this becomes:
+
+```json
+{
+  "status": "extraction_failed",
+  "error": "Haiku returned malformed JSON: ...",
+  "patient_id": "PAT004",
+  "_SAFETY_NOTE": "PII extraction did not complete. NO de-identified content is returned. ..."
+}
+```
+
+The envelope carries **no** `deidentified`, `deidentified_text`, `deidentified_content` or `extracted_text` key. On failure the source is unmodified, so returning it under a name asserting it is safe would be the original defect wearing an error message.
+
 ---
 
 ## Security Notes
@@ -125,7 +149,7 @@ When `DEIDENTIFY_DRY_RUN=true`, tools return synthetic fixture data. No Haiku ca
 - **No real PII in the repo.** All test fixtures use synthetic data.
 - **Anonymization key separation.** The key file is written to `DEIDENTIFY_KEY_DIR`, never embedded in the de-identified record, and never passed downstream.
 - **Deterministic codes.** The same `(patient_id, entity_type, entity_text)` triple always produces the same code, making re-runs idempotent.
-- **Fail-safe chunking.** If Haiku returns malformed JSON for a text chunk, the chunk is skipped and a warning is logged — the server never crashes mid-de-identification.
+- **Extraction failure is never silent.** A failed Haiku call aborts the whole document rather than skipping a chunk. See [Extraction failures](#extraction-failures) below.
 
 ---
 

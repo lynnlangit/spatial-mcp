@@ -143,13 +143,29 @@ def _chunk_text(
 # ---------------------------------------------------------------------------
 
 
+class ExtractionFailure(Exception):
+    """PII extraction did not complete, so nothing may be called de-identified.
+
+    Every failure path in this module raises this rather than returning an empty
+    entity list. An empty list is a *finding* -- "this text contains no PII" --
+    and `replace_entities` acts on it by returning the text unchanged. Conflating
+    "found nothing" with "could not look" is what makes a de-identifier hand back
+    the original document as though it had been redacted.
+    """
+
+
 async def _call_haiku(prompt_prefix: str, text_chunk: str) -> list[dict]:
-    """Call Haiku and parse entity list. Returns [] on failure (fail-safe)."""
+    """Call Haiku and parse the entity list.
+
+    Raises:
+        ExtractionFailure: on any failure to obtain a parsed entity list.
+    """
     try:
         import anthropic
-    except ImportError:
-        logger.error("anthropic package not installed; run: uv pip install anthropic")
-        return []
+    except ImportError as exc:
+        raise ExtractionFailure(
+            "anthropic package not installed; run: uv pip install anthropic"
+        ) from exc
 
     client = anthropic.Anthropic()
     full_prompt = prompt_prefix + text_chunk
@@ -171,23 +187,14 @@ async def _call_haiku(prompt_prefix: str, text_chunk: str) -> list[dict]:
                 f"(attempt {attempt + 1}/{MAX_RETRIES})"
             )
             await asyncio.sleep(wait)
-        except json.JSONDecodeError as e:
-            logger.warning(f"Haiku returned malformed JSON: {e}. Skipping chunk.")
-            return []
-        # The suppression below silences the lint, not the concern. Every failure
-        # path here returns [], and [] means "no PII entities in this chunk":
-        # replace_entities() then returns the text unchanged. So a failed Haiku
-        # call yields UN-REDACTED text that reads downstream as successfully
-        # de-identified — the same silent-failure shape as the half-stubbed
-        # validator. Fixing it properly means deciding what a partial extraction
-        # failure should do (raise, or mark the result NOT_ASSESSABLE), which is
-        # a behaviour change rather than a lint fix.
-        except Exception as e:  # noqa: BLE001 - see comment above
-            logger.error(f"Haiku call failed: {e}")
-            return []
+        except json.JSONDecodeError as exc:
+            # Previously "skipping chunk" -- which silently dropped whatever PII
+            # that chunk held. An unparseable response is a failed extraction.
+            raise ExtractionFailure(f"Haiku returned malformed JSON: {exc}") from exc
+        except Exception as exc:
+            raise ExtractionFailure(f"Haiku call failed: {exc}") from exc
 
-    logger.error("Haiku call failed after max retries.")
-    return []
+    raise ExtractionFailure(f"Haiku call failed after {MAX_RETRIES} attempts (rate limited).")
 
 
 # ---------------------------------------------------------------------------
@@ -207,7 +214,13 @@ async def extract_entities(text: str, red_team: bool = False) -> list[dict]:
         red_team: If True, use the aggressive red-team prompt (for validate_deidentification).
 
     Returns:
-        List of entity dicts with keys: text, entity_type, start, end.
+        List of entity dicts with keys: text, entity_type, start, end. An empty
+        list means "no PII found", never "extraction did not run".
+
+    Raises:
+        ExtractionFailure: if ANY chunk fails. Extraction is all-or-nothing per
+            document: a partial result would redact some chunks and leave others
+            untouched, while still presenting as a completed de-identification.
     """
     if config.DRY_RUN:
         logger.info("DEIDENTIFY_DRY_RUN=true: returning synthetic entity fixture")
@@ -216,7 +229,8 @@ async def extract_entities(text: str, red_team: bool = False) -> list[dict]:
     prompt = _REDTEAM_PROMPT if red_team else _EXTRACTION_PROMPT
     chunks = _chunk_text(text)
 
-    # Dispatch all chunks in parallel
+    # Dispatch all chunks in parallel. gather() propagates the first exception,
+    # which is the behaviour we want: one failed chunk fails the document.
     tasks = [_call_haiku(prompt, chunk["text"]) for chunk in chunks]
     chunk_results = await asyncio.gather(*tasks)
 

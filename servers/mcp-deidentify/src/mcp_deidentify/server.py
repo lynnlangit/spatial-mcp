@@ -27,6 +27,7 @@ from common.dry_run import add_dry_run_warning as _add_dry_run_warning
 from common.transport import run_server as _run_server
 
 from mcp_deidentify import config
+from mcp_deidentify.engine import ExtractionFailure
 
 _SYNTHETIC_PREFIX = "SYNTHETIC:"
 
@@ -56,6 +57,30 @@ def _mark_synthetic(value: Any) -> Any:
             for k, v in value.items()
         }
     return value
+
+
+def _extraction_failed(exc: Exception, patient_id: str, **extra: Any) -> dict:
+    """Failure envelope for a tool whose PII extraction did not complete.
+
+    Deliberately carries NO de-identified content. On failure the source text is
+    unmodified, so returning it under a `deidentified*` key would hand the caller
+    the original document in a field whose name asserts it is safe. Absence is
+    the only honest answer.
+    """
+    logger.error("De-identification aborted for %s: %s", patient_id, exc)
+    return add_dry_run_warning(
+        {
+            "status": "extraction_failed",
+            "error": str(exc),
+            "patient_id": patient_id,
+            "_SAFETY_NOTE": (
+                "PII extraction did not complete. NO de-identified content is "
+                "returned. The source is unmodified and must NOT be treated as "
+                "de-identified."
+            ),
+            **extra,
+        }
+    )
 
 
 def add_dry_run_warning(result: dict) -> dict:
@@ -125,9 +150,12 @@ async def deidentify_json(
             }
 
     # De-identify
-    deidentified, entities = await deidentify_json_dict(
-        record, patient_id=patient_id, session_key=km.session_key
-    )
+    try:
+        deidentified, entities = await deidentify_json_dict(
+            record, patient_id=patient_id, session_key=km.session_key
+        )
+    except ExtractionFailure as exc:
+        return _extraction_failed(exc, patient_id)
 
     # Persist key
     key_path = km.save()
@@ -185,12 +213,15 @@ async def deidentify_text(
     km = KeyManager(patient_id)
 
     if source_format == "docx":
-        deid_text, written_path, entities = await deidentify_docx_file(
-            docx_path=text,
-            patient_id=patient_id,
-            session_key=km.session_key,
-            output_path=output_path,
-        )
+        try:
+            deid_text, written_path, entities = await deidentify_docx_file(
+                docx_path=text,
+                patient_id=patient_id,
+                session_key=km.session_key,
+                output_path=output_path,
+            )
+        except ExtractionFailure as exc:
+            return _extraction_failed(exc, patient_id, source_format=source_format)
         key_path = km.save()
         return add_dry_run_warning(
             {
@@ -204,9 +235,12 @@ async def deidentify_text(
             }
         )
     else:
-        deid_text, entities = await deidentify_text_string(
-            text=text, patient_id=patient_id, session_key=km.session_key
-        )
+        try:
+            deid_text, entities = await deidentify_text_string(
+                text=text, patient_id=patient_id, session_key=km.session_key
+            )
+        except ExtractionFailure as exc:
+            return _extraction_failed(exc, patient_id, source_format=source_format)
         key_path = km.save()
         return add_dry_run_warning(
             {
@@ -255,9 +289,12 @@ async def deidentify_pdf_text(
     from mcp_deidentify.key_manager import KeyManager
 
     km = KeyManager(patient_id)
-    res = await deidentify_pdf_file(
-        pdf_path=pdf_path, patient_id=patient_id, session_key=km.session_key
-    )
+    try:
+        res = await deidentify_pdf_file(
+            pdf_path=pdf_path, patient_id=patient_id, session_key=km.session_key
+        )
+    except ExtractionFailure as exc:
+        return _extraction_failed(exc, patient_id)
 
     payload: dict[str, Any] = {
         "status": res["status"],
@@ -316,6 +353,8 @@ async def deidentify_genomics_file(
             session_key=km.session_key,
             file_type=file_type,
         )
+    except ExtractionFailure as exc:
+        return _extraction_failed(exc, patient_id, file_type=file_type)
     except ValueError as e:
         return add_dry_run_warning({"error": str(e), "patient_id": patient_id})
 
